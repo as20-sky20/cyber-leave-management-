@@ -94,14 +94,18 @@ function loadFromLocalStorage() {
   }
 }
 
-// Connect and Sync with Shared Office Database (database.json via server)
+// Central Cloud Database Endpoint for Real-time Multi-Device Sync over Internet
+const CLOUD_DB_URL = "https://extendsclass.com/api/json-storage/bin/cbffbde";
+let isCloudConnected = false;
+
+// Connect and Sync with Shared Office Database (Local LAN server OR Central Cloud DB)
 async function syncWithOfficeDatabase() {
+  // 1. First try Local Office LAN Server (if running via start_server.ps1)
   try {
     const res = await fetch("/api/data", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data && data.users && data.leaves && data.branches) {
-        // Shared database exists on office server, load it!
         AppState.branches = data.branches;
         AppState.users = data.users;
         AppState.leaves = data.leaves;
@@ -117,26 +121,51 @@ async function syncWithOfficeDatabase() {
         renderNavigationTabs();
         renderApp();
         return;
-      } else {
-        // Server running but database.json not initialized yet, push initial seed data
-        isLanServerConnected = true;
-        updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
-        await pushDataToOfficeServer();
       }
     }
   } catch (e) {
-    console.log("Office server API offline or running file:// standalone", e);
-    isLanServerConnected = false;
-    updateSyncIndicator(false, "लोकल मोड (लोकलहोस्ट)");
+    // Local server not available, seamlessly fall through to central Cloud Database
   }
+
+  // 2. Connect to Central Real-time Cloud Database (works across ANY computer, mobile, or network!)
+  try {
+    const cloudRes = await fetch(CLOUD_DB_URL, { cache: "no-store" });
+    if (cloudRes.ok) {
+      const cloudData = await cloudRes.json();
+      if (cloudData && cloudData.users && cloudData.leaves && cloudData.branches) {
+        AppState.branches = cloudData.branches;
+        AppState.users = cloudData.users;
+        AppState.leaves = cloudData.leaves;
+        if (cloudData.notices && Array.isArray(cloudData.notices)) {
+          AppState.notices = cloudData.notices;
+        } else if (!AppState.notices || AppState.notices.length === 0) {
+          AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+        }
+        isCloudConnected = true;
+        updateSyncIndicator(true, "क्लाउड लाइव सिंक (Online) ✓");
+        saveToLocalStorageOnly();
+        populateUserSwitcher();
+        renderNavigationTabs();
+        renderApp();
+        return;
+      }
+    }
+  } catch (e) {
+    console.log("Central Cloud DB unavailable, using local storage", e);
+  }
+
+  isLanServerConnected = false;
+  isCloudConnected = false;
+  updateSyncIndicator(false, "लोकल मोड (ऑफ़लाइन)");
 }
 
-// Save data to localStorage & Push to Shared Office Database
+// Save data to localStorage, Local LAN Server and Central Cloud Database
 function saveData() {
   saveToLocalStorageOnly();
   if (isLanServerConnected) {
     pushDataToOfficeServer();
   }
+  pushDataToCloudServer();
 }
 
 function saveToLocalStorageOnly() {
@@ -151,7 +180,6 @@ function saveToLocalStorageOnly() {
 
 async function pushDataToOfficeServer() {
   try {
-    updateSyncIndicator(true, "सिंक हो रहा है...");
     const payload = {
       branches: AppState.branches,
       users: AppState.users,
@@ -169,47 +197,93 @@ async function pushDataToOfficeServer() {
       updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
     }
   } catch (e) {
-    console.warn("Failed to push data to office server", e);
     isLanServerConnected = false;
-    updateSyncIndicator(false, "लोकल मोड");
   }
 }
 
-// Multi-computer real-time sync polling every 10 seconds
+// Push data to Central Cloud Database so all other computers and phones update in real time
+async function pushDataToCloudServer() {
+  try {
+    updateSyncIndicator(true, "क्लाउड सिंक हो रहा है...");
+    const payload = {
+      branches: AppState.branches,
+      users: AppState.users,
+      leaves: AppState.leaves,
+      notices: AppState.notices || [],
+      updatedAt: new Date().toISOString()
+    };
+    const res = await fetch(CLOUD_DB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      isCloudConnected = true;
+      updateSyncIndicator(true, "क्लाउड लाइव सिंक (Online) ✓");
+    }
+  } catch (e) {
+    console.warn("Could not push to Cloud DB", e);
+  }
+}
+
+// Multi-device real-time background sync polling every 6 seconds
 function startLanBackgroundSync() {
   if (lanSyncPollingId) clearInterval(lanSyncPollingId);
   lanSyncPollingId = setInterval(async () => {
     if (document.hidden) return; // Save resources when tab is minimized
-    try {
-      const res = await fetch("/api/data", { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.leaves && data.users) {
-          const currentLeavesJson = JSON.stringify(AppState.leaves);
-          const newLeavesJson = JSON.stringify(data.leaves);
-          const currentNoticesJson = JSON.stringify(AppState.notices || []);
-          const newNoticesJson = JSON.stringify(data.notices || []);
 
-          if (currentLeavesJson !== newLeavesJson || currentNoticesJson !== newNoticesJson) {
-            AppState.leaves = data.leaves;
-            AppState.users = data.users;
-            if (data.notices) AppState.notices = data.notices;
-            saveToLocalStorageOnly();
-            renderNavigationTabs();
-            // Re-render active view if on list/table tabs
-            if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices"].includes(AppState.activeTab)) {
-              renderApp();
-            }
-          }
-          isLanServerConnected = true;
-          updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+    // If local LAN server is connected, poll LAN first
+    if (isLanServerConnected) {
+      try {
+        const res = await fetch("/api/data", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          handleIncomingSyncData(data, "ऑफिस LAN सिंक ✓");
+          return;
         }
+      } catch (e) {
+        isLanServerConnected = false;
+      }
+    }
+
+    // Poll Central Cloud Database for cross-computer and mobile real-time sync
+    try {
+      const cloudRes = await fetch(CLOUD_DB_URL, { cache: "no-store" });
+      if (cloudRes.ok) {
+        const data = await cloudRes.json();
+        handleIncomingSyncData(data, "क्लाउड लाइव सिंक (Online) ✓");
       }
     } catch (e) {
-      isLanServerConnected = false;
-      updateSyncIndicator(false, "लोकल मोड");
+      // Keep running silently
     }
-  }, 10000);
+  }, 6000);
+}
+
+function handleIncomingSyncData(data, syncLabel) {
+  if (!data || !data.leaves || !data.users) return;
+
+  const currentLeavesJson = JSON.stringify(AppState.leaves);
+  const newLeavesJson = JSON.stringify(data.leaves);
+  const currentNoticesJson = JSON.stringify(AppState.notices || []);
+  const newNoticesJson = JSON.stringify(data.notices || []);
+
+  if (currentLeavesJson !== newLeavesJson || currentNoticesJson !== newNoticesJson) {
+    const isNewLeaveAdded = data.leaves.length > AppState.leaves.length;
+    AppState.leaves = data.leaves;
+    AppState.users = data.users;
+    if (data.notices) AppState.notices = data.notices;
+
+    saveToLocalStorageOnly();
+    renderNavigationTabs();
+    if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves"].includes(AppState.activeTab)) {
+      renderApp();
+    }
+
+    if (isNewLeaveAdded) {
+      showToast("🔔 नया अवकाश आवेदन दूसरे कंप्यूटर से प्राप्त हुआ (New Application Synced)", "info");
+    }
+  }
+  updateSyncIndicator(true, syncLabel);
 }
 
 // Reset Demo Data
