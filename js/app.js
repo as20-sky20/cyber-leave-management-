@@ -279,6 +279,21 @@ function handleUserSwitch(userId) {
   AppState.currentUser = user;
   saveData();
 
+  // Automatic smart tab redirection based on switched role
+  if (user.role === "branch_incharge") {
+    if (AppState.activeTab === "apply_leave" || AppState.activeTab === "my_leaves" || AppState.activeTab === "sp_desk") {
+      AppState.activeTab = "incharge_desk";
+    }
+  } else if (user.role === "sp_cyber") {
+    if (AppState.activeTab === "apply_leave" || AppState.activeTab === "my_leaves" || AppState.activeTab === "incharge_desk") {
+      AppState.activeTab = "sp_desk";
+    }
+  } else if (user.role === "member") {
+    if (AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk") {
+      AppState.activeTab = "dashboard";
+    }
+  }
+
   updateHeaderUserInfo();
   renderNavigationTabs();
   renderApp();
@@ -749,6 +764,15 @@ function renderDashboard(container) {
   // STANDARD DASHBOARD FOR MEMBERS & BRANCH INCHARGES
   // ----------------------------------------------------
   const isReaderUser = user && (user.id === "INCH-ADMIN" || user.role === "admin");
+  const isBranchInchargeUser = user && (user.role === "branch_incharge" || user.role === "admin");
+  const isSPUser = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+
+  // Branch pending leaves for Incharges / Admin
+  const branchPendingLeaves = isBranchInchargeUser ? AppState.leaves.filter(l => {
+    if (l.status !== "PENDING_INCHARGE") return false;
+    if (user.role === "admin" || user.id === "INCH-ADMIN") return true;
+    return l.branchId === user.branchId;
+  }) : [];
 
   let html = `
     <div class="page-header">
@@ -760,6 +784,12 @@ function renderDashboard(container) {
         <p>शाखा: <strong>${branchName}</strong> | पद: <strong>${user.rank}</strong> | प्रणाली स्थिति: सामान्य एवं सक्रिय</p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        ${isBranchInchargeUser ? `
+          <button class="btn btn-primary" onclick="switchTab('incharge_desk')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+            शाखा प्रभारी पटल (${branchPendingLeaves.length} लंबित)
+          </button>
+        ` : ''}
         ${isReaderUser ? `
           <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="डेटा बैकअप एवं सुरक्षा केंद्र">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -779,6 +809,65 @@ function renderDashboard(container) {
 
     <!-- OFFICIAL NOTICE BOARD WIDGET -->
     ${renderDashboardNoticesWidget()}
+
+    <!-- FEATURE: INCHARGE PENDING ACTION ALERT ON DASHBOARD -->
+    ${isBranchInchargeUser && branchPendingLeaves.length > 0 ? `
+      <div class="card-table-wrap" style="border: 2px solid #2563eb; margin-bottom: 22px; box-shadow: var(--shadow-md); background: #fff;">
+        <div class="table-toolbar" style="background: #eff6ff; border-bottom: 1px solid #bfdbfe; padding: 12px 16px;">
+          <div class="table-title" style="color: #1e3a8a; font-weight: 700; font-size: 0.96rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            🚨 आपकी शाखा के जवानों के अवकाश आवेदन समीक्षा हेतु लंबित हैं (Pending Branch Applications)
+            <span class="tab-badge" style="background: #dc2626; color: #fff; margin-left: 8px;">${branchPendingLeaves.length} लंबित</span>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
+              शाखा प्रभारी पटल खोलें (Open Incharge Desk)
+            </button>
+          </div>
+        </div>
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>आवेदन आईडी</th>
+                <th>कर्मचारी विवरण</th>
+                <th>अवकाश प्रकार</th>
+                <th>अवधि (Period)</th>
+                <th>दिन (Days)</th>
+                <th>कारण (Reason)</th>
+                <th>कार्रवाई (Action)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${branchPendingLeaves.map(leave => `
+                <tr style="background: #f8fafc;">
+                  <td><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
+                  <td>
+                    <strong>${leave.applicantName}</strong><br>
+                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
+                    <span class="branch-tag">${leave.branchName}</span>
+                  </td>
+                  <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName.split("(")[0]}</small></td>
+                  <td>${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)}</td>
+                  <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> दिन</td>
+                  <td style="max-width: 200px;">${leave.reason}</td>
+                  <td>
+                    <div style="display: flex; gap: 6px;">
+                      <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
+                        समीक्षा व अनुशंसा (Review)
+                      </button>
+                      <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
+                        विवरण
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ` : ''}
 
     <!-- STATS CARDS -->
     <div class="stats-grid">
@@ -802,11 +891,13 @@ function renderDashboard(container) {
 
       <div class="stat-card gold">
         <div class="stat-header">
-          <span class="stat-title">प्रक्रियाधीन आवेदन (Pending)</span>
+          <span class="stat-title">${isBranchInchargeUser ? 'शाखा लंबित आवेदन' : 'प्रक्रियाधीन आवेदन'}</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
-        <div class="stat-number">${pendingLeaves.length}</div>
-        <div class="stat-subtext">स्वीकृति हेतु विचाराधीन</div>
+        <div class="stat-number" style="color: ${(isBranchInchargeUser ? branchPendingLeaves.length : pendingLeaves.length) > 0 ? '#dc2626' : '#15803d'};">
+          ${isBranchInchargeUser ? branchPendingLeaves.length : pendingLeaves.length}
+        </div>
+        <div class="stat-subtext">${isBranchInchargeUser ? 'शाखा में अनुशंसा हेतु लंबित' : 'स्वीकृति हेतु विचाराधीन'}</div>
       </div>
 
       <div class="stat-card purple">
@@ -1943,7 +2034,8 @@ function renderMyLeaves(container) {
 // ==========================================
 function renderInchargeDesk(container) {
   const user = AppState.currentUser;
-  const isBranchIncharge = user && (user.role === "branch_incharge" || user.role === "admin");
+  const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const isBranchIncharge = user && (user.role === "branch_incharge" || user.role === "admin" || isSP);
   const isSPRole = user && (user.role === "sp_cyber");
 
   if (!isBranchIncharge) {
@@ -1964,17 +2056,17 @@ function renderInchargeDesk(container) {
   }
 
   const branch = AppState.branches.find(b => b.id === user.branchId);
-  const branchName = branch ? branch.name : "Cyber Branch";
+  const branchName = branch ? `${branch.name} (${branch.hindi})` : "Cyber Branch";
 
-  // Filter pending leaves for this branch
+  // Filter pending leaves for this branch (or all branches for Admin / Reader / SP)
   const branchPendingLeaves = AppState.leaves.filter(l => {
     if (l.status !== "PENDING_INCHARGE") return false;
-    return l.branchId === user.branchId;
+    return isSP ? true : (l.branchId === user.branchId);
   });
 
   const branchProcessedLeaves = AppState.leaves.filter(l => {
     if (l.status === "PENDING_INCHARGE") return false;
-    return l.branchId === user.branchId;
+    return isSP ? true : (l.branchId === user.branchId);
   });
 
   let html = `
@@ -1984,7 +2076,13 @@ function renderInchargeDesk(container) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
           शाखा प्रभारी डेस्क (Branch Incharge Verification Desk)
         </h2>
-        <p>शाखा: <strong>${isSP ? "सभी 13 शाखाएं (SP विशेषाधिकार)" : branchName}</strong> | प्रभारी: <strong>${user.name}</strong></p>
+        <p>शाखा: <strong>${isSP ? "समस्त 13 साइबर शाखाएं (SP / रीडर विशेषाधिकार)" : branchName}</strong> | प्रभारी: <strong>${user.name} (${user.rank})</strong></p>
+      </div>
+      <div>
+        <button class="btn btn-outline btn-sm" onclick="renderApp()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          रिफ्रेश (Refresh)
+        </button>
       </div>
     </div>
 
@@ -2017,7 +2115,7 @@ function renderInchargeDesk(container) {
           </thead>
           <tbody>
             ${branchPendingLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 24px;">✓ वर्तमान में कोई आवेदन अनुशंसा हेतु लंबित नहीं है। सभी निपटाए जा चुके हैं।</td></tr>
+              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 24px; background: #f0fdf4;">✓ वर्तमान में कोई आवेदन अनुशंसा हेतु लंबित नहीं है। सभी निपटाए जा चुके हैं।</td></tr>
             ` : branchPendingLeaves.map(leave => `
               <tr>
                 <td><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
@@ -2026,15 +2124,20 @@ function renderInchargeDesk(container) {
                   <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
                   <span class="branch-tag">${leave.branchName}</span>
                 </td>
-                <td><span style="font-weight: 700;">${leave.leaveType}</span><br><small>${leave.leaveTypeName.split("(")[0]}</small></td>
+                <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName.split("(")[0]}</small></td>
                 <td>${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)}</td>
-                <td><strong>${leave.totalDays}</strong> दिन</td>
+                <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> दिन</td>
                 <td style="max-width: 200px;">${leave.reason}</td>
                 <td>${leave.handoverTo || "-"}</td>
                 <td>
-                  <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
-                    समीक्षा व अनुशंसा (Review)
-                  </button>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
+                      समीक्षा व अनुशंसा (Review)
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
+                      विवरण
+                    </button>
+                  </div>
                 </td>
               </tr>
             `).join("")}
@@ -3529,6 +3632,10 @@ function openLeaveDetailsModal(leaveId) {
   const modalBody = document.getElementById("leaveDetailsModalBody");
   if (!modalBody) return;
 
+  const user = AppState.currentUser;
+  const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const canActAsIncharge = user && (user.role === "branch_incharge" || user.role === "admin" || isSP) && (isSP || user.branchId === leave.branchId);
+
   const isPendingIncharge = leave.status === "PENDING_INCHARGE";
   const isRecommended = leave.status === "RECOMMENDED";
   const isApproved = leave.status === "APPROVED";
@@ -3666,6 +3773,32 @@ function openLeaveDetailsModal(leaveId) {
           </div>
         </div>
       </div>
+
+      <!-- INCHARGE ACTION DIRECT BUTTON -->
+      ${canActAsIncharge && isPendingIncharge ? `
+        <div style="grid-column: 1 / -1; margin-top: 10px; background: #eff6ff; border: 2px solid #2563eb; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <strong style="color: #1e3a8a; font-size: 0.95rem;">👮‍♂️ यह आवेदन आपकी अनुशंसा हेतु प्रतीक्षारत है</strong>
+            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">आप इस अवकाश को अनुशंसित कर एसपी साइबर को अग्रेषित कर सकते हैं अथवा अस्वीकार कर सकते हैं।</div>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="closeModals(); openInchargeActionModal('${leave.id}')">
+            समीक्षा व अनुशंसा करें (Review Application)
+          </button>
+        </div>
+      ` : ''}
+
+      <!-- SP ACTION DIRECT BUTTON -->
+      ${user && user.role === "sp_cyber" && isRecommended ? `
+        <div style="grid-column: 1 / -1; margin-top: 10px; background: #fefce8; border: 2px solid #ca8a04; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <strong style="color: #854d0e; font-size: 0.95rem;">★ एसपी साइबर अंतिम स्वीकृति हेतु अनुशंसित</strong>
+            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">शाखा प्रभारी द्वारा अनुशंसित। स्वीकृति आदेश जारी करने हेतु क्लिक करें।</div>
+          </div>
+          <button type="button" class="btn btn-gold" onclick="closeModals(); openSPActionModal('${leave.id}')">
+            स्वीकृति आदेश जारी करें (Approve Leave)
+          </button>
+        </div>
+      ` : ''}
     </div>
   `;
 
