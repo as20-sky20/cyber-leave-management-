@@ -1381,3 +1381,191 @@ table.data-table tr:hover {
   width: 32%;
 }
 
+/* LAN LIVE SYNC PILL */
+.lan-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: default;
+  transition: all 0.2s ease;
+}
+.lan-sync-pill.offline {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseDot 2s infinite;
+}
+.lan-sync-pill.offline .sync-dot {
+  background: #ef4444;
+  box-shadow: none;
+  animation: none;
+}
+@keyframes pulseDot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* DAILY ROZNAMCHA / SITREP STYLES */
+.sitrep-official-sheet {
+  background: #fff;
+  border: 2px solid #0f274c;
+  border-radius: 8px;
+  padding: 30px;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-md);
+}
+.sitrep-official-header {
+  text-align: center;
+  border-bottom: 2px solid #0f274c;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+}
+.sitrep-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f274c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 6px 0 2px;
+}
+.sitrep-subtitle {
+  font-size: 0.84rem;
+  color: #475569;
+}
+.sitrep-meta-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  margin-top: 10px;
+  font-weight: 600;
+}
+.sitrep-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.sitrep-metric-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+}
+.sitrep-metric-card.green {
+  border-top: 3px solid #16a34a;
+  background: #f0fdf4;
+}
+.sitrep-metric-card.amber {
+  border-top: 3px solid #d97706;
+  background: #fffbeb;
+}
+.sitrep-metric-card.blue {
+  border-top: 3px solid #2563eb;
+  background: #eff6ff;
+}
+.sitrep-metric-card.navy {
+  border-top: 3px solid #0f274c;
+  background: #f1f5f9;
+}
+.sitrep-metric-num {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f274c;
+  margin: 4px 0 2px;
+}
+.sitrep-metric-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+}
+.sitrep-section-header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f274c;
+  background: #e2e8f0;
+  padding: 8px 14px;
+  border-radius: 4px;
+  margin: 22px 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sitrep-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+}
+.sitrep-table th, .sitrep-table td {
+  border: 1px solid #cbd5e1;
+  padding: 7px 10px;
+  text-align: left;
+}
+.sitrep-table th {
+  background: #f8fafc;
+  color: #0f274c;
+  font-weight: 700;
+}
+.sitrep-table tr:nth-child(even) td {
+  background: #fafafa;
+}
+.sitrep-signature-block {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+}
+.sitrep-sig-box {
+  text-align: center;
+  width: 260px;
+}
+.sitrep-sig-line {
+  border-top: 1px dashed #475569;
+  margin-top: 50px;
+  padding-top: 6px;
+  font-weight: 600;
+}
+
+/* PRINT MEDIA OVERRIDE FOR SITREP */
+@media print {
+  .sitrep-official-sheet {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    padding: 10px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  .sitrep-toolbar-row {
+    display: none !important;
+  }
+}
+
+

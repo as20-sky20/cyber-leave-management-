@@ -14,16 +14,38 @@ const AppState = {
   currentAttachment: null
 };
 
+// LAN Shared Database Sync State
+let isLanServerConnected = false;
+let lanSyncPollingId = null;
+
 // Initialize Application
 function initApp() {
-  loadData();
+  loadFromLocalStorage();
   populateUserSwitcher();
   setupEventListeners();
   renderApp();
+
+  // Connect to shared LAN office database in background
+  syncWithOfficeDatabase();
+  startLanBackgroundSync();
+}
+
+function updateSyncIndicator(isConnected, statusText) {
+  const indicator = document.getElementById("lanSyncIndicator");
+  const textEl = document.getElementById("syncStatusText");
+  if (!indicator) return;
+
+  if (isConnected) {
+    indicator.classList.remove("offline");
+    if (textEl) textEl.textContent = statusText || "ऑफिस LAN सिंक ✓";
+  } else {
+    indicator.classList.add("offline");
+    if (textEl) textEl.textContent = statusText || "लोकल मोड (ऑफ़लाइन)";
+  }
 }
 
 // Load data from localStorage or Seed Data
-function loadData() {
+function loadFromLocalStorage() {
   try {
     const storedBranches = localStorage.getItem("cyber_police_branches");
     AppState.branches = storedBranches ? JSON.parse(storedBranches) : BRANCHES;
@@ -63,14 +85,111 @@ function loadData() {
   }
 }
 
-// Save data to localStorage
+// Connect and Sync with Shared Office Database (database.json via server)
+async function syncWithOfficeDatabase() {
+  try {
+    const res = await fetch("/api/data", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.users && data.leaves && data.branches) {
+        // Shared database exists on office server, load it!
+        AppState.branches = data.branches;
+        AppState.users = data.users;
+        AppState.leaves = data.leaves;
+        isLanServerConnected = true;
+        updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+        saveToLocalStorageOnly();
+        populateUserSwitcher();
+        renderNavigationTabs();
+        renderApp();
+        return;
+      } else {
+        // Server running but database.json not initialized yet, push initial seed data
+        isLanServerConnected = true;
+        updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+        await pushDataToOfficeServer();
+      }
+    }
+  } catch (e) {
+    console.log("Office server API offline or running file:// standalone", e);
+    isLanServerConnected = false;
+    updateSyncIndicator(false, "लोकल मोड (लोकलहोस्ट)");
+  }
+}
+
+// Save data to localStorage & Push to Shared Office Database
 function saveData() {
+  saveToLocalStorageOnly();
+  if (isLanServerConnected) {
+    pushDataToOfficeServer();
+  }
+}
+
+function saveToLocalStorageOnly() {
   localStorage.setItem("cyber_police_branches", JSON.stringify(AppState.branches));
   localStorage.setItem("cyber_police_users", JSON.stringify(AppState.users));
   localStorage.setItem("cyber_police_leaves", JSON.stringify(AppState.leaves));
   if (AppState.currentUser) {
     localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
   }
+}
+
+async function pushDataToOfficeServer() {
+  try {
+    updateSyncIndicator(true, "सिंक हो रहा है...");
+    const payload = {
+      branches: AppState.branches,
+      users: AppState.users,
+      leaves: AppState.leaves,
+      updatedAt: new Date().toISOString()
+    };
+    const res = await fetch("/api/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      isLanServerConnected = true;
+      updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+    }
+  } catch (e) {
+    console.warn("Failed to push data to office server", e);
+    isLanServerConnected = false;
+    updateSyncIndicator(false, "लोकल मोड");
+  }
+}
+
+// Multi-computer real-time sync polling every 10 seconds
+function startLanBackgroundSync() {
+  if (lanSyncPollingId) clearInterval(lanSyncPollingId);
+  lanSyncPollingId = setInterval(async () => {
+    if (document.hidden) return; // Save resources when tab is minimized
+    try {
+      const res = await fetch("/api/data", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.leaves && data.users) {
+          const currentLeavesJson = JSON.stringify(AppState.leaves);
+          const newLeavesJson = JSON.stringify(data.leaves);
+          if (currentLeavesJson !== newLeavesJson) {
+            AppState.leaves = data.leaves;
+            AppState.users = data.users;
+            saveToLocalStorageOnly();
+            renderNavigationTabs();
+            // Re-render active view if on list/table tabs
+            if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register"].includes(AppState.activeTab)) {
+              renderApp();
+            }
+          }
+          isLanServerConnected = true;
+          updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+        }
+      }
+    } catch (e) {
+      isLanServerConnected = false;
+      updateSyncIndicator(false, "लोकल मोड");
+    }
+  }, 10000);
 }
 
 // Reset Demo Data
@@ -80,7 +199,11 @@ function resetDemoData() {
     localStorage.removeItem("cyber_police_users");
     localStorage.removeItem("cyber_police_leaves");
     localStorage.removeItem("cyber_police_current_user_id");
-    loadData();
+    AppState.branches = BRANCHES;
+    AppState.users = DEFAULT_USERS;
+    AppState.leaves = DEFAULT_LEAVES;
+    AppState.currentUser = DEFAULT_USERS[0];
+    saveData();
     populateUserSwitcher();
     renderApp();
     showToast("डेटा सफलतापूर्वक रीसेट कर दिया गया (Data reset to defaults)", "success");
@@ -300,6 +423,9 @@ function renderApp() {
     case "master_register":
       renderMasterRegister(container);
       break;
+    case "daily_sitrep":
+      renderDailySitrep(container);
+      break;
     case "directory":
       renderPersonnelDirectory(container);
       break;
@@ -348,7 +474,11 @@ function renderDashboard(container) {
           </h2>
           <p>सर्वोच्च स्वीकृति प्राधिकारी | <strong>समस्त 13 साइबर शाखाएं</strong> | स्थिति: सामान्य एवं सक्रिय</p>
         </div>
-        <div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            दैनिक रोज़नामचा (Daily Sitrep)
+          </button>
           <button class="btn btn-gold" onclick="switchTab('sp_desk')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
             एसपी स्वीकृति पटल खोलें (SP Approval Desk)
@@ -538,7 +668,11 @@ function renderDashboard(container) {
         </h2>
         <p>शाखा: <strong>${branchName}</strong> | पद: <strong>${user.rank}</strong> | प्रणाली स्थिति: सामान्य एवं सक्रिय</p>
       </div>
-      <div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          दैनिक रोज़नामचा (Daily Sitrep)
+        </button>
         <button class="btn btn-gold" onclick="switchTab('apply_leave')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           छुट्टी के लिए नया आवेदन करें (Apply Leave)
@@ -2253,6 +2387,347 @@ function renderPersonnelDirectory(container) {
             }).join("")}
           </tbody>
         </table>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+// ==========================================
+// VIEW 9: DAILY LEAVE ROZNAMCHA / SITREP REPORT
+// ==========================================
+let currentSitrepDate = new Date().toISOString().split("T")[0];
+
+function changeSitrepDate(dateStr) {
+  if (!dateStr) return;
+  currentSitrepDate = dateStr;
+  renderDailySitrep(document.getElementById("tabContentContainer"));
+}
+
+function setSitrepQuickDate(offsetDays) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  currentSitrepDate = d.toISOString().split("T")[0];
+  renderDailySitrep(document.getElementById("tabContentContainer"));
+}
+
+function printSitrepReport() {
+  window.print();
+}
+
+function exportSitrepCSV(targetDate) {
+  const dateStr = targetDate || currentSitrepDate;
+  const onLeaveList = AppState.leaves.filter(l => {
+    if (l.status !== "APPROVED") return false;
+    return l.fromDate <= dateStr && l.toDate >= dateStr;
+  });
+
+  let csvContent = "\uFEFF"; // UTF-8 BOM for Excel Hindi support
+  csvContent += `हरियाणा पुलिस - राज्य साइबर अपराध शाखा पंचकूला\n`;
+  csvContent += `दैनिक नफरी एवं अवकाश रोज़नामचा रिपोर्ट (Daily Sitrep)\n`;
+  csvContent += `दिनांक: ${dateStr}, कुल नफरी: ${AppState.users.length}, ऑन-ड्यूटी: ${AppState.users.length - onLeaveList.length}, अवकाश पर: ${onLeaveList.length}\n\n`;
+  
+  csvContent += `क्र. सं.,आईडी,आवेदक का नाम,पद (Rank),बेल्ट नं.,शाखा,अवकाश प्रकार,प्रारंभ तिथि,समाप्ति तिथि,कुल दिन,स्टेशन लीव गंतव्य,आपातकालीन संपर्क\n`;
+
+  if (onLeaveList.length === 0) {
+    csvContent += `1,-,कोई पुलिस कर्मी अवकाश पर नहीं है (समस्त नफरी ड्यूटी पर उपस्थित),-,-,-,-,-,-,0,-,-\n`;
+  } else {
+    onLeaveList.forEach((l, idx) => {
+      csvContent += `${idx + 1},"${l.id}","${l.applicantName}","${l.rank}","${l.beltNo}","${l.branchName}","${l.leaveType} - ${l.leaveTypeName}","${l.fromDate}","${l.toDate}",${l.totalDays},"${l.stationLeave ? (l.stationDestination || l.stationLeaveAddress || 'स्वीकृत') : 'मुख्यालय पर'}","${l.emergencyContact || ''}"\n`;
+    });
+  }
+
+  csvContent += `\n\nसमस्त 13 शाखाओं की नफरी स्थिति:\n`;
+  csvContent += `शाखा क्र.,शाखा का नाम,शाखा प्रभारी,कुल नफरी,ऑन-ड्यूटी,अवकाश पर,स्थिति\n`;
+
+  AppState.branches.forEach((b, idx) => {
+    const branchUsers = AppState.users.filter(u => u.branchId === b.id);
+    const branchIncharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
+    const branchOnLeave = onLeaveList.filter(l => l.branchId === b.id).length;
+    const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
+    const statusText = branchOnLeave > 0 ? `${branchOnLeave} अवकाश पर` : "100% उपस्थित";
+    csvContent += `${idx + 1},"${b.name}","${branchIncharge ? branchIncharge.name : 'नोडल अधिकारी'}",${branchUsers.length},${branchOnDuty},${branchOnLeave},"${statusText}"\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `Cyber_Daily_Sitrep_${dateStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast(`दैनिक रोज़नामचा CSV (${dateStr}) सफलतापूर्वक डाउनलोड हुई।`, "success");
+}
+
+function renderDailySitrep(container) {
+  if (!container) return;
+
+  const targetDate = currentSitrepDate;
+  const totalForce = AppState.users.length;
+
+  // Active leaves on targetDate
+  const onLeaveLeaves = AppState.leaves.filter(l => {
+    if (l.status !== "APPROVED") return false;
+    return l.fromDate <= targetDate && l.toDate >= targetDate;
+  });
+
+  const onLeaveCount = onLeaveLeaves.length;
+  const onDutyCount = Math.max(0, totalForce - onLeaveCount);
+
+  // 1930 Helpline branch metrics
+  const helplineUsers = AppState.users.filter(u => u.branchId === "cyber_helpline_1930");
+  const helplineOnLeave = onLeaveLeaves.filter(l => l.branchId === "cyber_helpline_1930").length;
+  const helplineOnDuty = Math.max(0, helplineUsers.length - helplineOnLeave);
+
+  // Station leave count
+  const stationLeaveCount = onLeaveLeaves.filter(l => l.stationLeave).length;
+
+  // Formatted date
+  const displayDate = formatDate(targetDate);
+  const todayIso = new Date().toISOString().split("T")[0];
+  const isToday = targetDate === todayIso;
+
+  let html = `
+    <!-- SITREP TOP TOOLBAR (HIDDEN IN PRINT) -->
+    <div class="page-header sitrep-toolbar-row">
+      <div class="page-title-group">
+        <h2>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          दैनिक नफरी व अवकाश रोज़नामचा (Daily Force & Leave Sitrep)
+        </h2>
+        <p>हरियाणा राज्य साइबर अपराध मुख्यालय, पंचकूला | A4 प्रिंटेबल जनरल डायरी रोज़नामचा रिपोर्ट</p>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <!-- Date Selector -->
+        <div style="display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin: 0;">दिनांक:</label>
+          <input type="date" value="${targetDate}" onchange="changeSitrepDate(this.value)" class="form-control" style="padding: 4px 8px; font-size: 0.84rem; border: none; width: auto; font-weight: 600;">
+        </div>
+
+        <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-outline'}" onclick="setSitrepQuickDate(0)" title="आज की रिपोर्ट">आज</button>
+        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(1)" title="कल की रिपोर्ट">कल</button>
+        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(-1)" title="बीते कल की रिपोर्ट">बीता कल</button>
+
+        <button class="btn btn-gold btn-sm" onclick="printSitrepReport()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          प्रिंट / A4 रिपोर्ट (Print Sitrep)
+        </button>
+
+        <button class="btn btn-outline btn-sm" onclick="exportSitrepCSV('${targetDate}')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          CSV / Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- OFFICIAL PRINTABLE A4 SITREP SHEET -->
+    <div class="sitrep-official-sheet">
+      <!-- Top Emblem / Watermark Header -->
+      <div class="sitrep-official-header">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 1px;">HARYANA POLICE | STATE CYBER CRIME HEADQUARTERS</div>
+        <div class="sitrep-title">दैनिक नफरी एवं अवकाश रोज़नामचा रिपोर्ट (Daily Sitrep / GD Entry)</div>
+        <div class="sitrep-subtitle">हरियाणा राज्य साइबर अपराध शाखा, सेक्टर 20, पंचकूला | सक्षम प्राधिकारी: Mayank Gupta, IPS, SP Cyber Crime</div>
+        
+        <div class="sitrep-meta-bar">
+          <div>रपट दिनांक: <strong>${displayDate}</strong></div>
+          <div>रपट पंजी क्रमांक: <strong>CYB/PKL/ROZ/${targetDate.replace(/-/g, '')}/01</strong></div>
+          <div>सत्र / समय: <strong>09:00 AM (मॉर्निंग परेड व रवानगी स्थिति)</strong></div>
+        </div>
+      </div>
+
+      <!-- SITREP SUMMARY METRIC GRID -->
+      <div class="sitrep-summary-grid">
+        <div class="sitrep-metric-card navy">
+          <div class="sitrep-metric-title">कुल स्वीकृत नफरी (Total Force)</div>
+          <div class="sitrep-metric-num">${totalForce}</div>
+          <small style="color: #64748b; font-size: 0.72rem;">पंजीकृत साइबर पुलिस बल</small>
+        </div>
+
+        <div class="sitrep-metric-card green">
+          <div class="sitrep-metric-title">ड्यूटी पर उपस्थित (On Duty)</div>
+          <div class="sitrep-metric-num" style="color: #15803d;">${onDutyCount}</div>
+          <small style="color: #15803d; font-size: 0.72rem;">विभिन्न विंग्स व डेस्क पर तैनात</small>
+        </div>
+
+        <div class="sitrep-metric-card amber">
+          <div class="sitrep-metric-title">स्वीकृत अवकाश पर (On Leave)</div>
+          <div class="sitrep-metric-num" style="color: #b45309;">${onLeaveCount}</div>
+          <small style="color: #b45309; font-size: 0.72rem;">सक्षम स्तर से आदेशित</small>
+        </div>
+
+        <div class="sitrep-metric-card blue">
+          <div class="sitrep-metric-title">1930 हेल्पलाइन डेस्क</div>
+          <div class="sitrep-metric-num" style="color: #1d4ed8;">${helplineOnDuty} / ${helplineUsers.length}</div>
+          <small style="color: #1d4ed8; font-size: 0.72rem;">24x7 कॉल सेंटर सक्रिय नफरी</small>
+        </div>
+
+        <div class="sitrep-metric-card navy">
+          <div class="sitrep-metric-title">स्टेशन लीव (HQ से बाहर)</div>
+          <div class="sitrep-metric-num" style="color: #6b21a8;">${stationLeaveCount}</div>
+          <small style="color: #6b21a8; font-size: 0.72rem;">मुख्यालय त्याग अनुमति प्राप्त</small>
+        </div>
+      </div>
+
+      <!-- SECTION 1: PERSONNEL CURRENTLY ON LEAVE -->
+      <div class="sitrep-section-header">
+        <span>भाग - 1: आज अवकाश पर रहने वाले पुलिस जवानों की सूची (Personnel on Sanctioned Leave)</span>
+        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">दिनांक: ${displayDate}</span>
+      </div>
+
+      ${onLeaveLeaves.length === 0 ? `
+        <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 6px; padding: 22px; text-align: center; color: #166534; margin-bottom: 20px;">
+          <div style="font-size: 1.1rem; font-weight: 700;">✓ चयनित तिथि को कोई भी पुलिस कर्मी अवकाश पर नहीं है।</div>
+          <div style="font-size: 0.85rem; margin-top: 4px; color: #15803d;">मुख्यालय की समस्त 13 शाखाओं की कुल ${totalForce} नफरी पूर्णतः ऑन-ड्यूटी उपस्थित है।</div>
+        </div>
+      ` : `
+        <table class="sitrep-table">
+          <thead>
+            <tr>
+              <th style="width: 40px; text-align: center;">क्र.</th>
+              <th>नाम, पद व बेल्ट नं.</th>
+              <th>संबद्ध शाखा (Branch)</th>
+              <th>अवकाश का प्रकार</th>
+              <th>अवकाश अवधि (From - To)</th>
+              <th style="text-align: center;">कुल दिन</th>
+              <th>स्टेशन लीव / गंतव्य</th>
+              <th>आपातकालीन मोबाइल</th>
+              <th>वापसी ड्यूटी संभावित</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${onLeaveLeaves.map((l, idx) => {
+              let returnDateStr = "अगले कार्यदिवस";
+              try {
+                const toD = new Date(l.toDate);
+                toD.setDate(toD.getDate() + 1);
+                returnDateStr = formatDate(toD.toISOString().split("T")[0]);
+              } catch(e) {}
+
+              return `
+                <tr>
+                  <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                  <td>
+                    <strong>${l.applicantName}</strong><br>
+                    <small style="color: #475569;">${l.rank} (${l.beltNo})</small>
+                  </td>
+                  <td><span class="branch-tag">${l.branchName}</span></td>
+                  <td>
+                    <strong style="color: #1e3a8a;">${l.leaveType}</strong><br>
+                    <small style="color: #64748b;">${l.leaveTypeName}</small>
+                  </td>
+                  <td>
+                    <strong>${formatDate(l.fromDate)}</strong> से<br>
+                    <strong>${formatDate(l.toDate)}</strong>
+                  </td>
+                  <td style="text-align: center; font-weight: 700; color: #0f172a;">${l.totalDays} दिन</td>
+                  <td>
+                    ${l.stationLeave ? `
+                      <span style="color: #b45309; font-weight: 700;">★ स्टेशन लीव</span><br>
+                      <small style="color: #475569;">${l.stationDestination || l.stationLeaveAddress || 'स्वीकृत पते पर'}</small>
+                    ` : `
+                      <span style="color: #166534; font-weight: 600;">मुख्यालय पर</span>
+                    `}
+                  </td>
+                  <td><strong>${l.emergencyContact || '-'}</strong></td>
+                  <td><strong style="color: #15803d;">${returnDateStr}</strong></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `}
+
+      <!-- SECTION 2: 13 BRANCHES FORCE STRENGTH MATRIX -->
+      <div class="sitrep-section-header">
+        <span>भाग - 2: समस्त 13 साइबर शाखाओं की नफरी व उपस्थिति स्थिति (13 Branches Deployment Matrix)</span>
+        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">कुल शाखाएं: 13 | मुख्यालय पंचकूला</span>
+      </div>
+
+      <table class="sitrep-table">
+        <thead>
+          <tr>
+            <th style="width: 40px; text-align: center;">क्र.</th>
+            <th>शाखा का नाम (Cyber Branch)</th>
+            <th>शाखा प्रभारी (Branch Incharge)</th>
+            <th style="text-align: center;">स्वीकृत नफरी</th>
+            <th style="text-align: center;">ड्यूटी उपस्थित</th>
+            <th style="text-align: center;">अवकाश पर</th>
+            <th>संचालन स्थिति (Operational Status)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${AppState.branches.map((b, idx) => {
+            const branchUsers = AppState.users.filter(u => u.branchId === b.id);
+            const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
+            const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
+            const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
+            const isFullStrength = branchOnLeave === 0;
+
+            return `
+              <tr>
+                <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                <td>
+                  <strong>${b.hindi || b.name}</strong><br>
+                  <small style="color: #64748b;">${b.name}</small>
+                </td>
+                <td>
+                  ${incharge ? `<strong>${incharge.name}</strong><br><small style="color: #64748b;">${incharge.rank}</small>` : '<span style="color: #94a3b8;">नोडल अधिकारी</span>'}
+                </td>
+                <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
+                <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
+                <td style="text-align: center; font-weight: 700; color: ${branchOnLeave > 0 ? '#dc2626' : '#64748b'};">${branchOnLeave}</td>
+                <td>
+                  ${isFullStrength ? `
+                    <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d; font-weight: 600; font-size: 0.78rem;">
+                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a;"></span>
+                      पूर्ण सक्रिय (100% On-Duty)
+                    </span>
+                  ` : `
+                    <span style="display: inline-flex; align-items: center; gap: 4px; color: #b45309; font-weight: 600; font-size: 0.78rem;">
+                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span>
+                      सक्रिय (${branchOnDuty} उपस्थित, ${branchOnLeave} अवकाश पर)
+                    </span>
+                  `}
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+
+      <!-- OFFICIAL VERIFICATION & SIGNATURES BLOCK -->
+      <div class="sitrep-signature-block">
+        <div class="sitrep-sig-box">
+          <div style="font-size: 0.78rem; color: #64748b;">तैयारकर्ता / उपस्थिति मिलान:</div>
+          <div class="sitrep-sig-line">
+            मुंशी / रीडर एसपी साइबर<br>
+            <span style="font-size: 0.76rem; font-weight: normal; color: #64748b;">Reader to SP Cyber Crime, Panchkula</span>
+          </div>
+        </div>
+
+        <div class="sitrep-sig-box">
+          <div style="font-size: 0.78rem; color: #64748b;">सत्यापनकर्ता अधिकारी:</div>
+          <div class="sitrep-sig-line">
+            डीएसपी साइबर / नोडल अधिकारी<br>
+            <span style="font-size: 0.76rem; font-weight: normal; color: #64748b;">DSP Cyber / Establishment Incharge</span>
+          </div>
+        </div>
+
+        <div class="sitrep-sig-box">
+          <div style="font-size: 0.78rem; color: #64748b;">सक्षम स्वीकृति प्राधिकारी:</div>
+          <div class="sitrep-sig-line">
+            Mayank Gupta, IPS<br>
+            <span style="font-size: 0.76rem; font-weight: 600; color: #0f274c;">पुलिस अधीक्षक, राज्य साइबर अपराध</span><br>
+            <span style="font-size: 0.74rem; font-weight: normal; color: #64748b;">पंचकूला (हरियाणा)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 18px; font-size: 0.74rem; color: #94a3b8; text-align: center; border-top: 1px dotted #cbd5e1; padding-top: 8px;">
+        यह दैनिक रोज़नामचा रपट हरियाणा राज्य साइबर अपराध मुख्यालय पंचकूला के डिजिटल अवकाश प्रबंधन सर्वर द्वारा स्वतः संकलित की गई है।
       </div>
     </div>
   `;
