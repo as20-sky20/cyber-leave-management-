@@ -8,6 +8,7 @@ const AppState = {
   users: [],
   leaves: [],
   branches: [],
+  notices: [],
   currentUser: null,
   activeTab: "dashboard",
   selectedLeaveForAction: null,
@@ -69,6 +70,13 @@ function loadFromLocalStorage() {
       AppState.leaves = DEFAULT_LEAVES;
     }
 
+    const storedNotices = localStorage.getItem("cyber_police_notices");
+    if (storedNotices) {
+      AppState.notices = JSON.parse(storedNotices);
+    } else {
+      AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+    }
+
     const savedUserId = localStorage.getItem("cyber_police_current_user_id");
     if (savedUserId) {
       AppState.currentUser = AppState.users.find(u => u.id === savedUserId) || AppState.users[0];
@@ -81,6 +89,7 @@ function loadFromLocalStorage() {
     AppState.branches = BRANCHES;
     AppState.users = DEFAULT_USERS;
     AppState.leaves = DEFAULT_LEAVES;
+    AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
     AppState.currentUser = DEFAULT_USERS[0];
   }
 }
@@ -96,6 +105,11 @@ async function syncWithOfficeDatabase() {
         AppState.branches = data.branches;
         AppState.users = data.users;
         AppState.leaves = data.leaves;
+        if (data.notices && Array.isArray(data.notices)) {
+          AppState.notices = data.notices;
+        } else if (!AppState.notices || AppState.notices.length === 0) {
+          AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+        }
         isLanServerConnected = true;
         updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
         saveToLocalStorageOnly();
@@ -129,6 +143,7 @@ function saveToLocalStorageOnly() {
   localStorage.setItem("cyber_police_branches", JSON.stringify(AppState.branches));
   localStorage.setItem("cyber_police_users", JSON.stringify(AppState.users));
   localStorage.setItem("cyber_police_leaves", JSON.stringify(AppState.leaves));
+  localStorage.setItem("cyber_police_notices", JSON.stringify(AppState.notices || []));
   if (AppState.currentUser) {
     localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
   }
@@ -141,6 +156,7 @@ async function pushDataToOfficeServer() {
       branches: AppState.branches,
       users: AppState.users,
       leaves: AppState.leaves,
+      notices: AppState.notices || [],
       updatedAt: new Date().toISOString()
     };
     const res = await fetch("/api/save", {
@@ -171,13 +187,17 @@ function startLanBackgroundSync() {
         if (data && data.leaves && data.users) {
           const currentLeavesJson = JSON.stringify(AppState.leaves);
           const newLeavesJson = JSON.stringify(data.leaves);
-          if (currentLeavesJson !== newLeavesJson) {
+          const currentNoticesJson = JSON.stringify(AppState.notices || []);
+          const newNoticesJson = JSON.stringify(data.notices || []);
+
+          if (currentLeavesJson !== newLeavesJson || currentNoticesJson !== newNoticesJson) {
             AppState.leaves = data.leaves;
             AppState.users = data.users;
+            if (data.notices) AppState.notices = data.notices;
             saveToLocalStorageOnly();
             renderNavigationTabs();
             // Re-render active view if on list/table tabs
-            if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register"].includes(AppState.activeTab)) {
+            if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices"].includes(AppState.activeTab)) {
               renderApp();
             }
           }
@@ -198,10 +218,12 @@ function resetDemoData() {
     localStorage.removeItem("cyber_police_branches");
     localStorage.removeItem("cyber_police_users");
     localStorage.removeItem("cyber_police_leaves");
+    localStorage.removeItem("cyber_police_notices");
     localStorage.removeItem("cyber_police_current_user_id");
     AppState.branches = BRANCHES;
     AppState.users = DEFAULT_USERS;
     AppState.leaves = DEFAULT_LEAVES;
+    AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
     AppState.currentUser = DEFAULT_USERS[0];
     saveData();
     populateUserSwitcher();
@@ -402,6 +424,21 @@ function renderNavigationTabs() {
     directoryTabBtn.style.display = canViewDirectory ? "flex" : "none";
   }
 
+  // Notices Badge
+  const noticesBadge = document.getElementById("noticesBadge");
+  if (noticesBadge) {
+    const totalNotices = (AppState.notices || []).length;
+    noticesBadge.textContent = totalNotices;
+    noticesBadge.style.display = totalNotices > 0 ? "inline-block" : "none";
+  }
+
+  // Header Backup Button (SP Cyber & Reader Desk only)
+  const canBackup = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const headerBackupBtn = document.getElementById("headerBackupBtn");
+  if (headerBackupBtn) {
+    headerBackupBtn.style.display = canBackup ? "inline-flex" : "none";
+  }
+
   // If SP is currently on apply_leave, my_leaves or incharge_desk, redirect to sp_desk
   if (isSPRole && (AppState.activeTab === "apply_leave" || AppState.activeTab === "my_leaves" || AppState.activeTab === "incharge_desk")) {
     AppState.activeTab = "sp_desk";
@@ -446,6 +483,9 @@ function renderApp() {
   switch (AppState.activeTab) {
     case "dashboard":
       renderDashboard(container);
+      break;
+    case "notices":
+      renderNoticesView(container);
       break;
     case "apply_leave":
       renderApplyLeave(container);
@@ -517,6 +557,10 @@ function renderDashboard(container) {
           <p>सर्वोच्च स्वीकृति प्राधिकारी | <strong>समस्त 13 साइबर शाखाएं</strong> | स्थिति: सामान्य एवं सक्रिय</p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="डेटा बैकअप एवं सुरक्षा केंद्र">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            डेटा बैकअप
+          </button>
           <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             दैनिक रोज़नामचा (Daily Sitrep)
@@ -527,6 +571,9 @@ function renderDashboard(container) {
           </button>
         </div>
       </div>
+
+      <!-- OFFICIAL NOTICE BOARD WIDGET -->
+      ${renderDashboardNoticesWidget()}
 
       <!-- SP EXECUTIVE STATS CARDS -->
       <div class="stats-grid">
@@ -714,6 +761,10 @@ function renderDashboard(container) {
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         ${isReaderUser ? `
+          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="डेटा बैकअप एवं सुरक्षा केंद्र">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            डेटा बैकअप
+          </button>
           <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             दैनिक रोज़नामचा (Daily Sitrep)
@@ -725,6 +776,9 @@ function renderDashboard(container) {
         </button>
       </div>
     </div>
+
+    <!-- OFFICIAL NOTICE BOARD WIDGET -->
+    ${renderDashboardNoticesWidget()}
 
     <!-- STATS CARDS -->
     <div class="stats-grid">
@@ -2248,10 +2302,14 @@ function renderMasterRegister(container) {
         </h2>
         <p>समस्त साइबर शाखाओं का समेकित अवकाश रिकॉर्ड, फ़िल्टर एवं एक्सेल एक्सपोर्ट</p>
       </div>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn btn-outline" onclick="exportLeavesToCSV()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           एक्सेल एक्सपोर्ट (Export to Excel)
+        </button>
+        <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          डेटा बैकअप केंद्र (Backup & Restore)
         </button>
         <button class="btn btn-primary" onclick="window.print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -2338,7 +2396,7 @@ function filterRegisterTable() {
   }
 }
 
-// Export to CSV / Excel
+// Export to CSV / Excel (Enhanced with UTF-8 BOM for Microsoft Excel)
 function exportLeavesToCSV() {
   const user = AppState.currentUser;
   const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
@@ -2347,40 +2405,615 @@ function exportLeavesToCSV() {
     return;
   }
 
-  const headers = ["Application ID", "Applicant Name", "Belt No", "Rank", "Branch", "Leave Type", "From Date", "To Date", "Total Days", "Reason", "Station Leave", "Station Address", "Handover To", "Emergency Contact", "Status", "Applied At", "Incharge Remarks", "SP Remarks", "Sanction No"];
+  const headers = [
+    "क्र. सं.",
+    "आवेदन क्रमांक (ID)",
+    "स्वीकृति आदेश सं. (Sanction No)",
+    "आवेदक का नाम",
+    "बेल्ट नंबर / PNO",
+    "पद (Rank)",
+    "शाखा (Branch)",
+    "अवकाश प्रकार (Leave Type)",
+    "कब से (From Date)",
+    "कब तक (To Date)",
+    "कुल स्वीकृत दिन (Days)",
+    "मूल आवेदित दिन",
+    "अवकाश का कारण (Reason)",
+    "स्टेशन लीव (Station Permission)",
+    "स्टेशन पर पता / गंतव्य",
+    "कार्यभार सुपुर्द (Handover To)",
+    "आपातकालीन संपर्क नंबर",
+    "वर्तमान स्थिति (Status)",
+    "आवेदन दिनांक (Applied At)",
+    "शाखा प्रभारी संस्तुति (Incharge Remarks)",
+    "एसपी साइबर अंतिम आदेश (SP Sanction Remarks)"
+  ];
   
-  const rows = AppState.leaves.map(l => [
+  const rows = AppState.leaves.map((l, idx) => [
+    idx + 1,
     `"${l.id}"`,
+    `"${l.sanctionNo || '-'}"`,
     `"${l.applicantName}"`,
     `"${l.beltNo}"`,
     `"${l.rank}"`,
     `"${l.branchName}"`,
-    `"${l.leaveType}"`,
+    `"${l.leaveType} (${l.leaveTypeName || ''})"`,
     `"${l.fromDate}"`,
     `"${l.toDate}"`,
     l.totalDays,
+    l.originalDays || l.totalDays,
     `"${(l.reason || '').replace(/"/g, '""')}"`,
-    l.stationLeave ? "Yes" : "No",
+    l.stationLeave ? "स्वीकृत (Yes)" : "मुख्यालय पर (No)",
     `"${(l.stationLeaveAddress || '').replace(/"/g, '""')}"`,
     `"${(l.handoverTo || '').replace(/"/g, '""')}"`,
     `"${l.emergencyContact || ''}"`,
     `"${l.status}"`,
-    `"${l.appliedAt}"`,
+    `"${l.appliedAt || ''}"`,
     `"${(l.inchargeRemarks || '').replace(/"/g, '""')}"`,
-    `"${(l.spRemarks || '').replace(/"/g, '""')}"`,
-    `"${l.sanctionNo || ''}"`
+    `"${(l.spRemarks || '').replace(/"/g, '""')}"`
   ]);
 
-  const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `Cyber_Police_Leave_Register_${new Date().toISOString().split("T")[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dateStr = new Date().toISOString().split("T")[0];
+  a.href = url;
+  a.download = `Cyber_Police_Leave_Register_${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 
   showToast("अवकाश रजिस्टर सफलतापूर्वक एक्सेल (CSV) में डाउनलोड किया गया।", "success");
+}
+
+// Export Personnel Staff Directory to CSV / Excel
+function exportStaffToCSV() {
+  const user = AppState.currentUser;
+  const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const targetUsers = isSP ? AppState.users : AppState.users.filter(u => u.branchId === user.branchId);
+
+  const headers = [
+    "क्र.",
+    "कर्मचारी आईडी",
+    "पूरा नाम",
+    "बेल्ट नंबर / PNO",
+    "पद (Rank)",
+    "शाखा (Branch)",
+    "प्रणाली भूमिका (Role)",
+    "मोबाइल नंबर",
+    "ईमेल",
+    "CL शेष",
+    "EL शेष",
+    "ML शेष",
+    "PL शेष",
+    "CCL शेष",
+    "C-OFF शेष",
+    "HPL शेष",
+    "RH शेष"
+  ];
+
+  const rows = targetUsers.map((u, idx) => {
+    const branch = AppState.branches.find(b => b.id === u.branchId);
+    const branchName = branch ? branch.name : u.branchId;
+    const b = u.leaveBalances || {};
+    return [
+      idx + 1,
+      `"${u.id}"`,
+      `"${u.name}"`,
+      `"${u.beltNo}"`,
+      `"${u.rank}"`,
+      `"${branchName}"`,
+      `"${u.role}"`,
+      `"${u.mobile || ''}"`,
+      `"${u.email || ''}"`,
+      b.CL || 0,
+      b.EL || 0,
+      b.ML || 0,
+      b.PL || 0,
+      b.CCL || 0,
+      b["C-OFF"] || 0,
+      b.HPL || 0,
+      b.RH || 0
+    ].join(",");
+  });
+
+  const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dateStr = new Date().toISOString().split("T")[0];
+  a.href = url;
+  a.download = `Cyber_Police_Personnel_Directory_${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast("स्टाफ डायरेक्टरी एक्सेल (CSV) सफलतापूर्वक डाउनलोड हो गई।", "success");
+}
+
+// Open Database Backup & Excel Center Modal
+function openBackupModal() {
+  const user = AppState.currentUser;
+  const canAccess = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canAccess) {
+    showToast("डेटा बैकअप केंद्र केवल एसपी साइबर एवं रीडर पटल हेतु उपलब्ध है।", "error");
+    return;
+  }
+
+  const statsEl = document.getElementById("backupDbStats");
+  if (statsEl) {
+    statsEl.innerHTML = `
+      शाखाएं: <strong>${AppState.branches.length}</strong> | 
+      दर्ज पुलिस नफरी: <strong>${AppState.users.length}</strong> | 
+      अवकाश रिकॉर्ड: <strong>${AppState.leaves.length}</strong> | 
+      सक्रिय नोटिस/आदेश: <strong>${(AppState.notices || []).length}</strong> | 
+      सर्वर LAN सिंक: <strong style="color: ${isLanServerConnected ? '#15803d' : '#b45309'};">${isLanServerConnected ? 'सक्रिय (LAN पोर्ट 8085)' : 'लोकल मोड (ऑफ़लाइन)'}</strong>
+    `;
+  }
+  const previewBox = document.getElementById("restorePreviewBox");
+  if (previewBox) {
+    previewBox.style.display = "none";
+    previewBox.innerHTML = "";
+  }
+  const fileInput = document.getElementById("restoreBackupFileInput");
+  if (fileInput) fileInput.value = "";
+
+  const modal = document.getElementById("backupRestoreModal");
+  if (modal) modal.classList.add("active");
+}
+
+// Download 1-Click Full JSON Snapshot Backup
+function downloadFullJsonBackup() {
+  const user = AppState.currentUser;
+  const now = new Date();
+  const dateStr = now.toISOString().split("T")[0];
+  const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+
+  const backupPayload = {
+    system: "Haryana State Cyber Crime Branch - Leave & Personnel Management Portal",
+    headquarters: "Sector 20, Panchkula (Haryana)",
+    version: "2.5-OFFICE",
+    backupTimestamp: now.toISOString(),
+    backupDateReadable: now.toLocaleString("hi-IN"),
+    exportedBy: user ? `${user.name} (${user.rank})` : "SP Cyber",
+    statistics: {
+      branches: AppState.branches.length,
+      users: AppState.users.length,
+      leaves: AppState.leaves.length,
+      notices: (AppState.notices || []).length
+    },
+    branches: AppState.branches,
+    users: AppState.users,
+    leaves: AppState.leaves,
+    notices: AppState.notices || []
+  };
+
+  const jsonString = JSON.stringify(backupPayload, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Cyber_Police_Full_Database_Backup_${dateStr}_${timeStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast("डेटाबेस का संपूर्ण बैकअप सफलतापूर्वक सुरक्षित डाउनलोड हो गया (.json)", "success");
+}
+
+// Handle Database Restore from Selected JSON File
+function handleRestoreBackupSubmit() {
+  const fileInput = document.getElementById("restoreBackupFileInput");
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    showToast("कृपया पहले कोई बैकअप JSON फ़ाइल चुनें", "error");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.users || !data.leaves || !data.branches) {
+        showToast("अमान्य बैकअप फ़ाइल: आवश्यक फ़ील्ड (users, leaves, branches) अनुपस्थित हैं।", "error");
+        return;
+      }
+
+      const usersCount = data.users.length;
+      const leavesCount = data.leaves.length;
+      const noticesCount = (data.notices || []).length;
+      const exportDate = data.backupDateReadable || data.backupTimestamp || "अज्ञात";
+
+      const confirmMsg = `फ़ाइल सत्यापन विवरण:\n\n• कुल नफरी (Users): ${usersCount}\n• कुल अवकाश रिकॉर्ड: ${leavesCount}\n• नोटिस व आदेश: ${noticesCount}\n• बैकअप दिनांक: ${exportDate}\n\nसावधानी: क्या आप वास्तव में वर्तमान डेटाबेस को इस बैकअप से बदलना चाहते हैं?`;
+
+      if (confirm(confirmMsg)) {
+        AppState.branches = data.branches;
+        AppState.users = data.users;
+        AppState.leaves = data.leaves;
+        AppState.notices = data.notices || [];
+
+        saveData();
+        populateUserSwitcher();
+        renderNavigationTabs();
+        renderApp();
+        closeModals();
+
+        showToast("डेटाबेस सफलतापूर्वक रिस्टोर कर दिया गया!", "success");
+      }
+    } catch (err) {
+      console.error("Backup parse error", err);
+      showToast("फ़ाइल पढ़ने में त्रुटि: कृपया वैध JSON फ़ाइल चुनें।", "error");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+// ==========================================
+// VIEW: OFFICIAL CYBER NOTICE BOARD & ORDERS
+// ==========================================
+
+function getNoticeCategoryHindi(category) {
+  switch (category) {
+    case "ORDER": return "📋 कार्यालय आदेश";
+    case "MEETING": return "📅 समीक्षा बैठक";
+    case "DIRECTIVE": return "⚡ तत्काल निर्देश";
+    case "GENERAL": return "ℹ️ सामान्य सूचना";
+    default: return "📢 आधिकारिक नोटिस";
+  }
+}
+
+// Top Dashboard Widget for Active Notices & Orders
+function renderDashboardNoticesWidget() {
+  const user = AppState.currentUser;
+  const isAuthorizedToPost = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const allNotices = AppState.notices || [];
+
+  // Filter notices for current user: either "ALL" or their specific branch
+  const relevantNotices = allNotices.filter(n => {
+    if (!n.targetBranch || n.targetBranch === "ALL") return true;
+    return user && n.targetBranch === user.branchId;
+  });
+
+  if (relevantNotices.length === 0 && !isAuthorizedToPost) {
+    return "";
+  }
+
+  // Sort: pinned first, then recent
+  const sortedNotices = [...relevantNotices].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return new Date(b.postedAt || 0) - new Date(a.postedAt || 0);
+  });
+
+  const previewNotices = sortedNotices.slice(0, 3);
+
+  return `
+    <div class="notice-hero-section">
+      <div class="notice-hero-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          साइबर सेल आधिकारिक नोटिस एवं कार्यालय आदेश (Official Notices & Orders)
+        </h3>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          ${isAuthorizedToPost ? `
+            <button class="btn btn-gold btn-sm" onclick="openCreateNoticeModal()" style="padding: 4px 10px; font-size: 0.8rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              + नया आदेश / नोटिस जारी करें
+            </button>
+          ` : ''}
+          <button class="btn btn-outline btn-sm" onclick="switchTab('notices')" style="color: #fff; border-color: rgba(255,255,255,0.4); padding: 4px 10px; font-size: 0.8rem;">
+            सभी नोटिस देखें (${allNotices.length}) &rarr;
+          </button>
+        </div>
+      </div>
+      <div class="notice-hero-body">
+        ${previewNotices.length === 0 ? `
+          <div style="text-align: center; color: #64748b; padding: 14px; font-size: 0.88rem;">
+            वर्तमान में कोई सक्रिय कार्यालय नोटिस नहीं है।
+          </div>
+        ` : previewNotices.map(n => `
+          <div class="notice-item-row ${n.priority === 'URGENT' ? 'urgent' : ''} ${n.pinned ? 'pinned' : ''}">
+            <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1;">
+              <span class="notice-badge ${n.priority === 'URGENT' ? 'urgent' : (n.category ? n.category.toLowerCase() : 'general')}">
+                ${n.priority === 'URGENT' ? '🚨 तत्काल' : getNoticeCategoryHindi(n.category)}
+              </span>
+              <div>
+                <strong style="color: #0f274c; font-size: 0.95rem; cursor: pointer;" onclick="openViewNoticeModal('${n.id}')">
+                  ${n.pinned ? '📌 ' : ''}${n.title}
+                </strong>
+                <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">
+                  <span>जारीकर्ता: <strong>${n.postedBy}</strong></span> | 
+                  <span>लक्षित: <span class="branch-tag" style="padding: 1px 6px; font-size: 0.72rem;">${n.targetBranchName || 'समस्त शाखाएं'}</span></span> | 
+                  <span>${n.postedAt}</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-left: 14px; flex-shrink: 0;">
+              <button class="btn btn-outline btn-sm" onclick="openViewNoticeModal('${n.id}')" style="padding: 3px 10px; font-size: 0.8rem;">
+                आदेश पढ़ें
+              </button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// Full Notice Board View
+function renderNoticesView(container) {
+  if (!container) return;
+  const user = AppState.currentUser;
+  const isAuthorizedToPost = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const allNotices = AppState.notices || [];
+
+  let html = `
+    <div class="page-header">
+      <div class="page-title-group">
+        <h2>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          साइबर सेल आधिकारिक नोटिस बोर्ड एवं आदेश (Official Notice Board & Orders)
+        </h2>
+        <p>हरियाणा राज्य साइबर अपराध शाखा, पंचकूला मुख्यालय | आधिकारिक सर्कुलर, बैठक सूचना एवं निर्देश</p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        ${isAuthorizedToPost ? `
+          <button class="btn btn-primary" onclick="openCreateNoticeModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            + नया आदेश / नोटिस जारी करें
+          </button>
+          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            डेटा बैकअप केंद्र
+          </button>
+        ` : ''}
+      </div>
+    </div>
+
+    <!-- FILTER TOOLBAR -->
+    <div class="card-table-wrap">
+      <div class="table-toolbar">
+        <div class="table-filters" style="width: 100%;">
+          <input type="text" id="noticeSearchInput" class="search-input" placeholder="शीर्षक, विषय अथवा निर्देश से खोजें..." oninput="filterNoticesGrid()" style="min-width: 260px;">
+          
+          <select id="noticeCategoryFilter" class="select-filter" onchange="filterNoticesGrid()">
+            <option value="">-- सभी श्रेणियां (All Categories) --</option>
+            <option value="ORDER">कार्यालय आदेश (Official Orders)</option>
+            <option value="MEETING">समीक्षा बैठकें (Review Meetings)</option>
+            <option value="DIRECTIVE">तत्काल निर्देश (Directives)</option>
+            <option value="GENERAL">सामान्य सूचना (General Notices)</option>
+          </select>
+
+          <select id="noticeBranchFilter" class="select-filter" onchange="filterNoticesGrid()">
+            <option value="">-- समस्त शाखाएं / लक्षित --</option>
+            <option value="ALL">समस्त 13 साइबर शाखाएं</option>
+            ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
+          </select>
+
+          <select id="noticePriorityFilter" class="select-filter" onchange="filterNoticesGrid()">
+            <option value="">-- सभी प्राथमिकताएं --</option>
+            <option value="URGENT">केवल तत्काल / High Priority</option>
+            <option value="NORMAL">सामान्य प्राथमिकता</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- NOTICES GRID CONTAINER -->
+      <div id="noticesGridContainer" class="notices-grid" style="padding: 0 18px 20px;">
+        <!-- Rendered by renderNoticesGridCards() -->
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+  renderNoticesGridCards(allNotices);
+}
+
+function renderNoticesGridCards(noticesList) {
+  const container = document.getElementById("noticesGridContainer");
+  if (!container) return;
+
+  const user = AppState.currentUser;
+  const isAuthorizedToPost = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+
+  if (!noticesList || noticesList.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b; background: #fff; border-radius: 8px;">
+        <div style="font-size: 2rem; margin-bottom: 8px;">📭</div>
+        <h4 style="color: #0f274c; margin-bottom: 6px;">कोई नोटिस या आदेश उपलब्ध नहीं है</h4>
+        <p style="font-size: 0.85rem;">चयनित फ़िल्टर के अनुसार कोई रिकॉर्ड नहीं मिला।</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Sort: pinned first, then recent
+  const sorted = [...noticesList].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return new Date(b.postedAt || 0) - new Date(a.postedAt || 0);
+  });
+
+  container.innerHTML = sorted.map(n => `
+    <div class="notice-card ${n.priority === 'URGENT' ? 'urgent' : ''} ${n.pinned ? 'pinned' : ''}">
+      <div class="notice-card-header">
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="notice-badge ${n.priority === 'URGENT' ? 'urgent' : (n.category ? n.category.toLowerCase() : 'general')}">
+            ${n.priority === 'URGENT' ? '🚨 तत्काल' : getNoticeCategoryHindi(n.category)}
+          </span>
+          ${n.pinned ? `<span class="notice-badge pinned">📌 PINNED</span>` : ''}
+        </div>
+        <span class="branch-tag" style="font-size: 0.72rem;">${n.targetBranchName || 'समस्त शाखाएं'}</span>
+      </div>
+
+      <div class="notice-card-body">
+        <div class="notice-card-title">${n.title}</div>
+        <div class="notice-card-desc">${n.content}</div>
+      </div>
+
+      <div class="notice-card-footer">
+        <div>
+          <strong>${n.postedBy}</strong><br>
+          <span style="font-size: 0.75rem; color: #94a3b8;">${n.postedAt}</span>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-outline btn-sm" onclick="openViewNoticeModal('${n.id}')" style="padding: 4px 8px; font-size: 0.78rem;">
+            पूर्ण आदेश
+          </button>
+          ${isAuthorizedToPost ? `
+            <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n.id}')" title="नोटिस हटाएं" style="padding: 4px 8px; font-size: 0.78rem;">
+              🗑️
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filterNoticesGrid() {
+  const search = (document.getElementById("noticeSearchInput")?.value || "").toLowerCase().trim();
+  const cat = document.getElementById("noticeCategoryFilter")?.value || "";
+  const branch = document.getElementById("noticeBranchFilter")?.value || "";
+  const priority = document.getElementById("noticePriorityFilter")?.value || "";
+
+  const filtered = (AppState.notices || []).filter(n => {
+    if (cat && n.category !== cat) return false;
+    if (branch && branch !== "ALL" && n.targetBranch !== branch && n.targetBranch !== "ALL") return false;
+    if (priority && n.priority !== priority) return false;
+    if (search) {
+      const matchTitle = (n.title || "").toLowerCase().includes(search);
+      const matchContent = (n.content || "").toLowerCase().includes(search);
+      const matchPoster = (n.postedBy || "").toLowerCase().includes(search);
+      if (!matchTitle && !matchContent && !matchPoster) return false;
+    }
+    return true;
+  });
+
+  renderNoticesGridCards(filtered);
+}
+
+function openCreateNoticeModal() {
+  const branchSelect = document.getElementById("noticeTargetBranch");
+  if (branchSelect) {
+    branchSelect.innerHTML = `
+      <option value="ALL">समस्त 13 साइबर शाखाएं (All Cyber Branches)</option>
+      ${AppState.branches.map(b => `<option value="${b.id}">${b.name} (${b.hindi})</option>`).join("")}
+    `;
+  }
+  document.getElementById("noticeTitle").value = "";
+  document.getElementById("noticeContent").value = "";
+  document.getElementById("noticePinTop").checked = false;
+  document.getElementById("noticeCategory").value = "ORDER";
+  document.getElementById("noticePriority").value = "NORMAL";
+
+  document.getElementById("addNoticeModal").classList.add("active");
+}
+
+function handleCreateNoticeSubmit(e) {
+  e.preventDefault();
+  const user = AppState.currentUser;
+  const title = document.getElementById("noticeTitle").value.trim();
+  const category = document.getElementById("noticeCategory").value;
+  const priority = document.getElementById("noticePriority").value;
+  const targetBranch = document.getElementById("noticeTargetBranch").value;
+  const content = document.getElementById("noticeContent").value.trim();
+  const pinned = document.getElementById("noticePinTop").checked;
+
+  let targetBranchName = "समस्त 13 साइबर शाखाएं";
+  if (targetBranch !== "ALL") {
+    const b = AppState.branches.find(x => x.id === targetBranch);
+    targetBranchName = b ? b.name : targetBranch;
+  }
+
+  const now = new Date();
+  const formattedDate = now.toISOString().split("T")[0] + " " + now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+  const newNotice = {
+    id: `NOT-2026-0${(AppState.notices || []).length + 10}`,
+    title: title,
+    category: category,
+    priority: priority,
+    targetBranch: targetBranch,
+    targetBranchName: targetBranchName,
+    content: content,
+    postedBy: user ? `${user.name} (${user.rank})` : "SP Cyber Crime",
+    postedByRole: user ? user.role : "sp_cyber",
+    postedAt: formattedDate,
+    pinned: pinned
+  };
+
+  if (!AppState.notices) AppState.notices = [];
+  AppState.notices.unshift(newNotice);
+
+  saveData();
+  closeModals();
+  renderNavigationTabs();
+  renderApp();
+  showToast(`कार्यालय आदेश/नोटिस सफलतापूर्वक जारी किया गया (${newNotice.id})`, "success");
+}
+
+function openViewNoticeModal(noticeId) {
+  const notice = (AppState.notices || []).find(n => n.id === noticeId);
+  if (!notice) return;
+
+  const bodyEl = document.getElementById("viewNoticeModalBody");
+  if (!bodyEl) return;
+
+  bodyEl.innerHTML = `
+    <div class="notice-print-sheet">
+      <div class="notice-print-header">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #475569; letter-spacing: 1px;">हरियाणा सरकार | GOVERNMENT OF HARYANA</div>
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f274c; margin: 6px 0 2px;">राज्य साइबर अपराध शाखा (STATE CYBER CRIME BRANCH)</h2>
+        <div style="font-size: 0.9rem; font-weight: 600; color: #1e3a8a;">पुलिस मुख्यालय, सेक्टर-20, पंचकूला (हरियाणा)</div>
+        <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.84rem; color: #334155; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+          <span><strong>पत्रांक:</strong> CYB/HQ/ORD/2026/${notice.id.replace('NOT-2026-', '')}</span>
+          <span><strong>दिनांक:</strong> ${notice.postedAt}</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <span class="notice-badge ${notice.priority === 'URGENT' ? 'urgent' : (notice.category ? notice.category.toLowerCase() : 'general')}" style="font-size: 0.8rem; padding: 4px 10px;">
+          ${notice.priority === 'URGENT' ? '🚨 तत्काल / आवश्यक' : getNoticeCategoryHindi(notice.category)}
+        </span>
+        <span class="branch-tag" style="margin-left: 8px;">लक्षित: ${notice.targetBranchName || 'समस्त शाखाएं'}</span>
+      </div>
+
+      <h3 style="font-size: 1.15rem; color: #0f274c; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+        विषय: ${notice.title}
+      </h3>
+
+      <div style="font-size: 0.95rem; line-height: 1.7; color: #1e293b; white-space: pre-line; margin-bottom: 30px;">
+        ${notice.content}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 40px; padding-top: 20px; border-top: 1px solid #cbd5e1;">
+        <div style="text-align: center; min-width: 220px;">
+          <div style="font-weight: 700; color: #0f274c; font-size: 0.95rem;">${notice.postedBy}</div>
+          <div style="font-size: 0.84rem; color: #475569;">राज्य साइबर अपराध शाखा</div>
+          <div style="font-size: 0.8rem; color: #64748b;">पंचकूला (हरियाणा)</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("viewNoticeModal").classList.add("active");
+}
+
+function deleteNotice(noticeId) {
+  if (confirm("क्या आप इस नोटिस/आदेश को हटाना चाहते हैं?")) {
+    AppState.notices = (AppState.notices || []).filter(n => n.id !== noticeId);
+    saveData();
+    renderNavigationTabs();
+    renderApp();
+    showToast("नोटिस सफलतापूर्वक हटा दिया गया।", "info");
+  }
 }
 
 // ==========================================
@@ -2428,7 +3061,11 @@ function renderPersonnelDirectory(container) {
             : `केवल आपकी शाखा (<strong>${userBranchName}</strong>) में पदस्थ पुलिस अधिकारियों व जवानों की सूची`}
         </p>
       </div>
-      <div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-outline" onclick="exportStaffToCSV()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          स्टाफ एक्सेल डाउनलोड
+        </button>
         <button class="btn btn-primary" onclick="openAddUserModal()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           ${isSP ? 'नया पुलिस जवान जोड़ें (Add Member)' : `अपनी शाखा में जवान जोड़ें (Add Member)`}

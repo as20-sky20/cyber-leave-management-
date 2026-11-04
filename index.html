@@ -60,6 +60,11 @@
         </div>
       </div>
 
+      <button class="btn btn-outline btn-sm" id="headerBackupBtn" onclick="openBackupModal()" title="डेटा बैकअप एवं सुरक्षा केंद्र" style="color: #fff; border-color: rgba(255,255,255,0.3); display: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        डेटा बैकअप
+      </button>
+
       <button class="btn btn-outline btn-sm" onclick="resetDemoData()" title="डेटा रीसेट करें" style="color: #fff; border-color: rgba(255,255,255,0.3);">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
         डेटा रीसेट
@@ -72,6 +77,12 @@
     <button class="nav-tab-btn active" data-tab="dashboard">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
       डैशबोर्ड (Dashboard)
+    </button>
+
+    <button class="nav-tab-btn" data-tab="notices" id="tabBtnNotices">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      नोटिस एवं आदेश (Notice Board)
+      <span class="tab-badge" id="noticesBadge" style="display: none;">0</span>
     </button>
 
     <button class="nav-tab-btn" data-tab="my_leaves" id="tabBtnMyLeaves">
@@ -319,6 +330,198 @@
           <button type="submit" class="btn btn-primary">जवान जोड़ें (Add Member)</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 7. ADD NOTICE / OFFICIAL ORDER MODAL -->
+  <div class="modal-overlay" id="addNoticeModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          नया साइबर नोटिस / कार्यालय आदेश जारी करें
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <form onsubmit="handleCreateNoticeSubmit(event)">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="noticeTitle">नोटिस / आदेश का शीर्षक (Title) <span class="required">*</span></label>
+              <input type="text" id="noticeTitle" class="form-control" required placeholder="उदा: साप्ताहिक समीक्षा बैठक अथवा आगामी त्योहारों हेतु विशेष ड्यूटी निर्देश">
+            </div>
+
+            <div class="form-group">
+              <label for="noticeCategory">श्रेणी (Category) <span class="required">*</span></label>
+              <select id="noticeCategory" class="form-control" required>
+                <option value="ORDER">कार्यालय आदेश (Official Order)</option>
+                <option value="MEETING">महत्वपूर्ण बैठक (Review Meeting)</option>
+                <option value="DIRECTIVE">तत्काल निर्देश (Urgent Directive)</option>
+                <option value="GENERAL">सामान्य सूचना (General Notice)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="noticePriority">प्राथमिकता (Priority) <span class="required">*</span></label>
+              <select id="noticePriority" class="form-control" required>
+                <option value="NORMAL">सामान्य (Normal)</option>
+                <option value="URGENT">अति-महत्वपूर्ण / तत्काल (Urgent / High Priority)</option>
+              </select>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="noticeTargetBranch">लक्षित शाखा (Target Audience / Branch) <span class="required">*</span></label>
+              <select id="noticeTargetBranch" class="form-control" required>
+                <option value="ALL">समस्त 13 साइबर शाखाएं (All Cyber Branches)</option>
+                <!-- Populated with branch options dynamically -->
+              </select>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="noticeContent">आदेश / निर्देश का विस्तृत विवरण (Details & Instructions) <span class="required">*</span></label>
+              <textarea id="noticeContent" class="form-control" rows="5" required placeholder="आदेश, दिशा-निर्देश, समय, स्थान अथवा विशेष निर्देशों का पूर्ण विवरण यहां अंकित करें..."></textarea>
+            </div>
+
+            <div class="form-group form-full">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #0f274c;">
+                <input type="checkbox" id="noticePinTop" style="width: 18px; height: 18px;">
+                डैशबोर्ड के शीर्ष पर पिन करें (Pin to Top on Dashboard)
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModals()">रद्द करें</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            नोटिस जारी करें (Publish Notice)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. VIEW NOTICE DETAILS MODAL -->
+  <div class="modal-overlay" id="viewNoticeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="viewNoticeModalHeader">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          कार्यालय नोटिस / आदेश विवरण
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <div class="modal-body" id="viewNoticeModalBody">
+        <!-- Injected dynamically by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModals()">बंद करें (Close)</button>
+        <button class="btn btn-primary" onclick="window.print()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          प्रिंट आदेश (Print Notice)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. BACKUP & RESTORE / EXCEL CENTER MODAL -->
+  <div class="modal-overlay" id="backupRestoreModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          डेटा बैकअप, रिस्टोर एवं एक्सेल एक्सपोर्ट केंद्र
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <strong style="color: #0f274c; font-size: 0.95rem;">हरियाणा साइबर पुलिस - केंद्रीय डेटाबेस स्थिति</strong>
+              <div id="backupDbStats" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">
+                डेटा लोड हो रहा है...
+              </div>
+            </div>
+            <div style="font-size: 0.8rem; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+              सुरक्षा मोड: पूर्ण बैकअप
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px;">
+          <!-- CARD 1: EXPORT & BACKUP -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💾</div>
+              <div>
+                <strong style="color: #15803d; font-size: 1rem;">1. डेटा बैकअप डाउनलोड करें</strong>
+                <p style="font-size: 0.8rem; color: #64748b;">ऑफ़िस सर्वर का संपूर्ण डेटा (JSON) सुरक्षित रखें</p>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #475569; margin-bottom: 14px; line-height: 1.4;">
+              सभी 13 शाखाएं, जवानों के प्रोफाइल, स्वीकृत/लंबित अवकाश और नोटिस एक सुरक्षित JSON फाइल में डाउनलोड हो जाएंगे।
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="downloadFullJsonBackup()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                संपूर्ण डेटाबेस बैकअप डाउनलोड (.json)
+              </button>
+            </div>
+          </div>
+
+          <!-- CARD 2: EXCEL EXPORTS -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📊</div>
+              <div>
+                <strong style="color: #0369a1; font-size: 1rem;">2. एक्सेल स्प्रेडशीट एक्सपोर्ट</strong>
+                <p style="font-size: 0.8rem; color: #64748b;">MS Excel / LibreOffice फॉर्मेट (CSV)</p>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #475569; margin-bottom: 14px; line-height: 1.4;">
+              कार्यालय रिकॉर्ड, ऑडिट और प्रिंटिंग हेतु लीव रजिस्टर या स्टाफ सूची को एक्सेल स्प्रेडशीट में सेव करें।
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="exportLeavesToCSV()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                मास्टर लीव रजिस्टर डाउनलोड (.csv)
+              </button>
+              <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="exportStaffToCSV()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                स्टाफ डायरेक्टरी एक्सेल डाउनलोड (.csv)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESTORE SECTION -->
+        <div style="background: #fff7ed; border: 1px dashed #f97316; border-radius: 8px; padding: 18px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffedd5; color: #c2410c; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🔄</div>
+            <div>
+              <strong style="color: #9a3412; font-size: 0.95rem;">3. पूर्व बैकअप से डेटा रिस्टोर करें (Restore Database)</strong>
+              <div style="font-size: 0.78rem; color: #c2410c;">सावधानी: रिस्टोर करने पर वर्तमान डेटा उस बैकअप फाइल से बदल जाएगा।</div>
+            </div>
+          </div>
+          <p style="font-size: 0.85rem; color: #7c2d12; margin-bottom: 12px;">
+            कंप्यूटर बदलने अथवा पुराना रिकॉर्ड वापस लाने हेतु अपनी पूर्व में डाउनलोड की गई <strong>.json</strong> बैकअप फ़ाइल चुनें:
+          </p>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <input type="file" id="restoreBackupFileInput" accept=".json,application/json" class="form-control" style="background: #fff; max-width: 380px;">
+            <button class="btn btn-danger" onclick="handleRestoreBackupSubmit()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+              फ़ाइल से डेटा रिस्टोर करें
+            </button>
+          </div>
+          <div id="restorePreviewBox" style="display: none; margin-top: 12px; padding: 10px; background: #fff; border-radius: 6px; font-size: 0.84rem; border: 1px solid #fed7aa;">
+            <!-- Render preview summary of selected backup -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModals()">बंद करें</button>
+      </div>
     </div>
   </div>
 

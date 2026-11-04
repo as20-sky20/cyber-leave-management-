@@ -455,3 +455,49 @@ const DEFAULT_LEAVES = [
     curtailReason: ""
   }
 ];
+
+const DEFAULT_NOTICES = [
+  {
+    id: "NOT-2026-001",
+    title: "साप्ताहिक साइबर अपराध समीक्षा एवं 1930 पोर्टल समन्वय बैठक",
+    category: "MEETING",
+    categoryHindi: "महत्वपूर्ण बैठक",
+    priority: "URGENT",
+    targetBranch: "ALL",
+    targetBranchName: "समस्त 13 साइबर शाखाएं",
+    content: "समस्त शाखा प्रभारी एवं 1930 हेल्पडेस्क टीम कल प्रातः 10:30 बजे कॉन्फ्रेंस हॉल, पंचकूला में अद्यतन पेंडेंसी रिपोर्ट सहित समीक्षा बैठक हेतु उपस्थित होना सुनिश्चित करें।",
+    postedBy: "Mayank Gupta, IPS",
+    postedByRole: "sp_cyber",
+    postedAt: "2026-11-04 09:30 AM",
+    pinned: true
+  },
+  {
+    id: "NOT-2026-002",
+    title: "आगामी त्योहारों एवं वीआईपी सुरक्षा के दृष्टिगत अवकाश प्रतिबंध निर्देश",
+    category: "ORDER",
+    categoryHindi: "कार्यालय आदेश",
+    priority: "URGENT",
+    targetBranch: "ALL",
+    targetBranchName: "समस्त 13 साइबर शाखाएं",
+    content: "आगामी कानून-व्यवस्था एवं वीआईपी साइबर सुरक्षा प्रबंधों के दृष्टिगत आगामी सप्ताह में केवल आकस्मिक (अति-आवश्यक) परिस्थितियों में ही अवकाश स्वीकृत किए जाएंगे। अनावश्यक अवकाश आवेदन अग्रेषित न किए जाएं।",
+    postedBy: "Insp. Harinder Singh (Reader)",
+    postedByRole: "admin",
+    postedAt: "2026-11-03 04:15 PM",
+    pinned: false
+  },
+  {
+    id: "NOT-2026-003",
+    title: "NCRP पोर्टल एवं बैंक लीजन समन्वय - लंबित शिकायतों का तत्काल निस्तारण",
+    category: "DIRECTIVE",
+    categoryHindi: "तत्काल निर्देश",
+    priority: "NORMAL",
+    targetBranch: "ncrp_portal_nodal",
+    targetBranchName: "NCRP Portal Nodal & Bank Coordination",
+    content: "बैंक समन्वय शाखा एवं NCRP पोर्टल नोडल अधिकारी 48 घंटे से अधिक लंबित साइबर वित्तीय धोखाधड़ी शिकायतों पर संबंधित नोडल बैंकर्स से संपर्क कर तत्काल लियन/फ्रीज सुनिश्चित करें।",
+    postedBy: "Mayank Gupta, IPS",
+    postedByRole: "sp_cyber",
+    postedAt: "2026-11-02 11:20 AM",
+    pinned: false
+  }
+];
+
