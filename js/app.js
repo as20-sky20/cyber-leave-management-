@@ -319,6 +319,12 @@ function switchTab(tabId) {
     return;
   }
 
+  const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (tabId === "master_register" && !canViewRegister) {
+    showToast("मास्टर अवकाश रजिस्टर केवल पुलिस अधीक्षक (SP Cyber) एवं रीडर पटल हेतु उपलब्ध है।", "error");
+    return;
+  }
+
   AppState.activeTab = tabId;
   document.querySelectorAll(".nav-tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tabId);
@@ -383,6 +389,13 @@ function renderNavigationTabs() {
     sitrepTabBtn.style.display = canViewSitrep ? "flex" : "none";
   }
 
+  // Master Leave Register Tab: Visible ONLY to SP Cyber & Reader Desk (HIDDEN from regular members)
+  const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const registerTabBtn = document.getElementById("tabBtnRegister");
+  if (registerTabBtn) {
+    registerTabBtn.style.display = canViewRegister ? "flex" : "none";
+  }
+
   // Staff Directory visible only to Branch Incharge & SP Cyber
   const directoryTabBtn = document.getElementById("tabBtnDirectory");
   if (directoryTabBtn) {
@@ -397,8 +410,8 @@ function renderNavigationTabs() {
     });
   }
 
-  // If regular member is on incharge_desk, sp_desk, directory or daily_sitrep, fallback to dashboard
-  if (!isBranchIncharge && !isSP && (AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk" || AppState.activeTab === "directory" || AppState.activeTab === "daily_sitrep")) {
+  // If regular member is on incharge_desk, sp_desk, directory, daily_sitrep or master_register, fallback to dashboard
+  if (!isBranchIncharge && !isSP && (AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk" || AppState.activeTab === "directory" || AppState.activeTab === "daily_sitrep" || AppState.activeTab === "master_register")) {
     AppState.activeTab = "dashboard";
     document.querySelectorAll(".nav-tab-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.tab === "dashboard");
@@ -407,6 +420,14 @@ function renderNavigationTabs() {
 
   // If unauthorized user is on daily_sitrep, fallback to dashboard
   if (!canViewSitrep && AppState.activeTab === "daily_sitrep") {
+    AppState.activeTab = "dashboard";
+    document.querySelectorAll(".nav-tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.tab === "dashboard");
+    });
+  }
+
+  // If unauthorized user is on master_register, fallback to dashboard
+  if (!canViewRegister && AppState.activeTab === "master_register") {
     AppState.activeTab = "dashboard";
     document.querySelectorAll(".nav-tab-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.tab === "dashboard");
@@ -2201,6 +2222,23 @@ function renderBranchesView(container) {
 // VIEW 7: MASTER LEAVE REGISTER (EXCEL EXPORT)
 // ==========================================
 function renderMasterRegister(container) {
+  const user = AppState.currentUser;
+  const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+
+  if (!canViewRegister) {
+    container.innerHTML = `
+      <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">पहुंच प्रतिबंधित (Access Restricted)</h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
+          मास्टर अवकाश रजिस्टर देखने एवं एक्सेल डाउनलोड करने की अनुमति केवल <strong>पुलिस अधीक्षक (SP Cyber)</strong> एवं <strong>रीडर पटल (Reader Desk)</strong> को है।
+        </p>
+        <button class="btn btn-primary" onclick="switchTab('dashboard')">डैशबोर्ड पर वापस जाएं</button>
+      </div>
+    `;
+    return;
+  }
+
   let html = `
     <div class="page-header">
       <div class="page-title-group">
@@ -2302,6 +2340,13 @@ function filterRegisterTable() {
 
 // Export to CSV / Excel
 function exportLeavesToCSV() {
+  const user = AppState.currentUser;
+  const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canViewRegister) {
+    showToast("अनुमति नहीं है (Permission Denied)", "error");
+    return;
+  }
+
   const headers = ["Application ID", "Applicant Name", "Belt No", "Rank", "Branch", "Leave Type", "From Date", "To Date", "Total Days", "Reason", "Station Leave", "Station Address", "Handover To", "Emergency Contact", "Status", "Applied At", "Incharge Remarks", "SP Remarks", "Sanction No"];
   
   const rows = AppState.leaves.map(l => [
