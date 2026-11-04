@@ -1875,12 +1875,29 @@ function handleApplyLeaveSubmit(e) {
   const branchObj = AppState.branches.find(b => b.id === selectedBranchId);
   const branchName = branchObj ? branchObj.name : selectedBranchId;
 
-  const leaveType = document.getElementById("leaveTypeSelect").value;
-  const fromDate = document.getElementById("leaveFromDate").value;
-  const toDate = document.getElementById("leaveToDate").value;
-  const reason = document.getElementById("leaveReason").value;
-  const handoverTo = document.getElementById("handoverOfficer").value || "शाखा प्रभारी";
-  const emergencyContact = document.getElementById("emergencyMobile").value;
+  const leaveType = document.getElementById("leaveTypeSelect")?.value;
+  if (!leaveType) {
+    alert("कृपया अवकाश का प्रकार चुनें (Please select Leave Type).");
+    document.getElementById("leaveTypeSelect")?.focus();
+    return;
+  }
+
+  const fromDate = document.getElementById("leaveFromDate")?.value;
+  const toDate = document.getElementById("leaveToDate")?.value;
+  if (!fromDate || !toDate) {
+    alert("कृपया अवकाश की दोनों तिथियां (From Date & To Date) चुनें।");
+    return;
+  }
+
+  const reason = document.getElementById("leaveReason")?.value?.trim();
+  if (!reason) {
+    alert("कृपया अवकाश का स्पष्ट कारण अवश्य लिखें (Please enter Reason for Leave).");
+    document.getElementById("leaveReason")?.focus();
+    return;
+  }
+
+  const handoverTo = document.getElementById("handoverOfficer")?.value || "शाखा प्रभारी";
+  const emergencyContact = document.getElementById("emergencyMobile")?.value || user.mobile;
 
   // FEATURE 5: MANDATORY MEDICAL CERTIFICATE VALIDATION
   if ((leaveType === "ML" || leaveType === "CCL") && !AppState.currentAttachment) {

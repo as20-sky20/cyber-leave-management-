@@ -1267,18 +1267,60 @@ table.data-table tr:hover {
 @media (max-width: 768px) {
   .main-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 12px;
+    padding: 12px 14px;
+  }
+  .header-brand {
+    gap: 10px;
+  }
+  .police-badge-logo {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+  .brand-text h1 {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+  .brand-text p {
+    font-size: 0.76rem;
   }
   .header-actions {
     width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .role-switcher-card {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+  }
+  .role-dropdown-select {
+    width: 100%;
+    font-size: 0.88rem;
+    padding: 10px 12px;
+    box-sizing: border-box;
+  }
+  .nav-bar {
+    padding: 0 10px;
+    gap: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-tab-btn {
+    padding: 12px 14px;
+    font-size: 0.84rem;
+    white-space: nowrap;
   }
   .form-grid {
     grid-template-columns: 1fr;
   }
   .stats-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
   .sanction-signatures {
     flex-direction: column;
