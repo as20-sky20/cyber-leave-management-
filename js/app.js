@@ -2388,7 +2388,9 @@ function exportLeavesToCSV() {
 // ==========================================
 function renderPersonnelDirectory(container) {
   const user = AppState.currentUser;
-  const isAuthorized = user && (user.role === "branch_incharge" || user.role === "sp_cyber" || user.role === "admin");
+  const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const isBranchIncharge = user && (user.role === "branch_incharge");
+  const isAuthorized = isSP || isBranchIncharge;
 
   if (!isAuthorized) {
     container.innerHTML = `
@@ -2404,29 +2406,54 @@ function renderPersonnelDirectory(container) {
     return;
   }
 
+  const userBranch = AppState.branches.find(b => b.id === user.branchId);
+  const userBranchName = userBranch ? (userBranch.hindi ? `${userBranch.hindi} (${userBranch.name})` : userBranch.name) : "आपकी शाखा";
+
+  // If SP / Reader: Show full directory of all 13 branches.
+  // If Branch Incharge: Show ONLY members belonging to their own branch.
+  const displayedUsers = isSP 
+    ? AppState.users 
+    : AppState.users.filter(u => u.branchId === user.branchId);
+
   let html = `
     <div class="page-header">
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          साइबर पुलिस स्टाफ डायरेक्टरी (Cyber Force Directory)
+          ${isSP ? 'केंद्रीय स्टाफ डायरेक्टरी (State Cyber Crime - All Branches)' : `शाखा स्टाफ डायरेक्टरी | ${userBranchName}`}
         </h2>
-        <p>सभी 13 शाखाओं में पदस्थ पुलिस अधिकारियों व जवानों की सूची</p>
+        <p>
+          ${isSP 
+            ? 'समस्त 13 साइबर शाखाओं में पदस्थ संपूर्ण पुलिस बल (Full Police Force Directory)' 
+            : `केवल आपकी शाखा (<strong>${userBranchName}</strong>) में पदस्थ पुलिस अधिकारियों व जवानों की सूची`}
+        </p>
       </div>
       <div>
         <button class="btn btn-primary" onclick="openAddUserModal()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          नया पुलिस जवान जोड़ें (Add Member)
+          ${isSP ? 'नया पुलिस जवान जोड़ें (Add Member)' : `अपनी शाखा में जवान जोड़ें (Add Member)`}
         </button>
       </div>
     </div>
 
     <div class="card-table-wrap">
       <div class="table-toolbar">
-        <div class="table-title">कुल दर्ज नफरी: ${AppState.users.length} अधिकारी / जवान</div>
+        <div class="table-title">
+          ${isSP 
+            ? `कुल दर्ज नफरी: <strong>${displayedUsers.length} अधिकारी / जवान</strong> (समस्त 13 शाखाएं)` 
+            : `शाखा नफरी: <strong>${displayedUsers.length} अधिकारी / जवान</strong> [${userBranchName}]`}
+        </div>
+        ${isSP ? `
+          <div>
+            <select id="directoryBranchFilter" class="select-filter" onchange="filterDirectoryTable(this.value)">
+              <option value="">-- सभी 13 शाखाएं देखें --</option>
+              ${AppState.branches.map(b => `<option value="${b.id}">${b.name} (${b.hindi})</option>`).join("")}
+            </select>
+          </div>
+        ` : ''}
       </div>
       <div class="responsive-table">
-        <table class="data-table">
+        <table class="data-table" id="directoryTable">
           <thead>
             <tr>
               <th>आईडी / बेल्ट नं.</th>
@@ -2439,11 +2466,17 @@ function renderPersonnelDirectory(container) {
               <th>EL कोटा</th>
             </tr>
           </thead>
-          <tbody>
-            ${AppState.users.map(u => {
+          <tbody id="directoryTableBody">
+            ${displayedUsers.length === 0 ? `
+              <tr>
+                <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">
+                  इस शाखा में वर्तमान में कोई अन्य सदस्य दर्ज नहीं है।
+                </td>
+              </tr>
+            ` : displayedUsers.map(u => {
               const b = AppState.branches.find(br => br.id === u.branchId);
               return `
-                <tr>
+                <tr data-branch="${u.branchId}">
                   <td><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
                   <td><strong>${u.name}</strong></td>
                   <td>${u.rank}</td>
@@ -2462,6 +2495,19 @@ function renderPersonnelDirectory(container) {
   `;
 
   container.innerHTML = html;
+}
+
+function filterDirectoryTable(branchId) {
+  const tbody = document.getElementById("directoryTableBody");
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll("tr");
+  rows.forEach(r => {
+    if (!branchId || r.dataset.branch === branchId) {
+      r.style.display = "";
+    } else {
+      r.style.display = "none";
+    }
+  });
 }
 
 // ==========================================
@@ -3472,21 +3518,47 @@ function numberToWords(num) {
 
 // 5. Add Personnel Modal
 function openAddUserModal() {
+  const user = AppState.currentUser;
+  const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   const branchSelect = document.getElementById("newUserBranch");
+
   if (branchSelect) {
-    branchSelect.innerHTML = AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
+    if (isSP) {
+      branchSelect.innerHTML = AppState.branches.map(b => `<option value="${b.id}">${b.name} (${b.hindi})</option>`).join("");
+      branchSelect.disabled = false;
+    } else {
+      const myBranch = AppState.branches.find(b => b.id === (user ? user.branchId : ""));
+      branchSelect.innerHTML = `<option value="${user ? user.branchId : ''}" selected>${myBranch ? myBranch.name : 'आपकी शाखा'}</option>`;
+      branchSelect.disabled = true;
+    }
   }
+
+  const roleSelect = document.getElementById("newUserRole");
+  if (roleSelect) {
+    if (isSP) {
+      roleSelect.disabled = false;
+    } else {
+      roleSelect.value = "member";
+      roleSelect.disabled = true;
+    }
+  }
+
   document.getElementById("addUserModal").classList.add("active");
 }
 
 function handleAddUserSubmit(e) {
   e.preventDefault();
+  const user = AppState.currentUser;
+  const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+
   const name = document.getElementById("newUserName").value.trim();
   const beltNo = document.getElementById("newUserBelt").value.trim();
   const rank = document.getElementById("newUserRank").value;
-  const branchId = document.getElementById("newUserBranch").value;
+  const branchSelectEl = document.getElementById("newUserBranch");
+  const branchId = isSP ? branchSelectEl.value : (user ? user.branchId : branchSelectEl.value);
   const mobile = document.getElementById("newUserMobile").value.trim();
-  const role = document.getElementById("newUserRole").value;
+  const roleSelectEl = document.getElementById("newUserRole");
+  const role = isSP ? roleSelectEl.value : "member";
 
   const newId = `CYB-${AppState.users.length + 101}`;
 
