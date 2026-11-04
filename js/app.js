@@ -313,6 +313,12 @@ function switchTab(tabId) {
     return;
   }
 
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (tabId === "daily_sitrep" && !canViewSitrep) {
+    showToast("दैनिक रोज़नामचा (Sitrep) केवल पुलिस अधीक्षक (SP Cyber) एवं रीडर पटल हेतु उपलब्ध है।", "error");
+    return;
+  }
+
   AppState.activeTab = tabId;
   document.querySelectorAll(".nav-tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tabId);
@@ -370,6 +376,13 @@ function renderNavigationTabs() {
     spTabBtn.style.display = isSP ? "flex" : "none";
   }
 
+  // Daily Sitrep Tab: Visible ONLY to SP Cyber & Reader Desk (HIDDEN from regular members)
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  const sitrepTabBtn = document.getElementById("tabBtnSitrep");
+  if (sitrepTabBtn) {
+    sitrepTabBtn.style.display = canViewSitrep ? "flex" : "none";
+  }
+
   // Staff Directory visible only to Branch Incharge & SP Cyber
   const directoryTabBtn = document.getElementById("tabBtnDirectory");
   if (directoryTabBtn) {
@@ -384,8 +397,16 @@ function renderNavigationTabs() {
     });
   }
 
-  // If regular member is on incharge_desk, sp_desk or directory, fallback to dashboard
-  if (!isBranchIncharge && !isSP && (AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk" || AppState.activeTab === "directory")) {
+  // If regular member is on incharge_desk, sp_desk, directory or daily_sitrep, fallback to dashboard
+  if (!isBranchIncharge && !isSP && (AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk" || AppState.activeTab === "directory" || AppState.activeTab === "daily_sitrep")) {
+    AppState.activeTab = "dashboard";
+    document.querySelectorAll(".nav-tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.tab === "dashboard");
+    });
+  }
+
+  // If unauthorized user is on daily_sitrep, fallback to dashboard
+  if (!canViewSitrep && AppState.activeTab === "daily_sitrep") {
     AppState.activeTab = "dashboard";
     document.querySelectorAll(".nav-tab-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.tab === "dashboard");
@@ -659,6 +680,8 @@ function renderDashboard(container) {
   // ----------------------------------------------------
   // STANDARD DASHBOARD FOR MEMBERS & BRANCH INCHARGES
   // ----------------------------------------------------
+  const isReaderUser = user && (user.id === "INCH-ADMIN" || user.role === "admin");
+
   let html = `
     <div class="page-header">
       <div class="page-title-group">
@@ -669,10 +692,12 @@ function renderDashboard(container) {
         <p>शाखा: <strong>${branchName}</strong> | पद: <strong>${user.rank}</strong> | प्रणाली स्थिति: सामान्य एवं सक्रिय</p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          दैनिक रोज़नामचा (Daily Sitrep)
-        </button>
+        ${isReaderUser ? `
+          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            दैनिक रोज़नामचा (Daily Sitrep)
+          </button>
+        ` : ''}
         <button class="btn btn-gold" onclick="switchTab('apply_leave')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           छुट्टी के लिए नया आवेदन करें (Apply Leave)
@@ -2413,10 +2438,22 @@ function setSitrepQuickDate(offsetDays) {
 }
 
 function printSitrepReport() {
+  const user = AppState.currentUser;
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canViewSitrep) {
+    showToast("अनुमति नहीं है (Permission Denied)", "error");
+    return;
+  }
   window.print();
 }
 
 function exportSitrepCSV(targetDate) {
+  const user = AppState.currentUser;
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canViewSitrep) {
+    showToast("अनुमति नहीं है (Permission Denied)", "error");
+    return;
+  }
   const dateStr = targetDate || currentSitrepDate;
   const onLeaveList = AppState.leaves.filter(l => {
     if (l.status !== "APPROVED") return false;
@@ -2463,6 +2500,23 @@ function exportSitrepCSV(targetDate) {
 
 function renderDailySitrep(container) {
   if (!container) return;
+
+  const user = AppState.currentUser;
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+
+  if (!canViewSitrep) {
+    container.innerHTML = `
+      <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">पहुंच प्रतिबंधित (Access Restricted)</h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
+          दैनिक नफरी एवं अवकाश रोज़नामचा (Sitrep) देखने व प्रिंट करने की अनुमति केवल <strong>पुलिस अधीक्षक (SP Cyber)</strong> एवं <strong>रीडर पटल (Reader Desk)</strong> को है।
+        </p>
+        <button class="btn btn-primary" onclick="switchTab('dashboard')">डैशबोर्ड पर वापस जाएं</button>
+      </div>
+    `;
+    return;
+  }
 
   const targetDate = currentSitrepDate;
   const totalForce = AppState.users.length;
