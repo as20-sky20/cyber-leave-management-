@@ -22,6 +22,7 @@ let lanSyncPollingId = null;
 // Initialize Application
 function initApp() {
   loadFromLocalStorage();
+  initViewMode();
   populateUserSwitcher();
   setupEventListeners();
   renderApp();
@@ -462,6 +463,101 @@ function resetDemoData() {
   }
 }
 
+// ============================================================================
+// MOBILE APP CONTROLS & DEDICATED VIEW SYSTEM
+// ============================================================================
+function initViewMode() {
+  const savedView = localStorage.getItem("cyber_preferred_view") || "auto";
+  applyViewMode(savedView);
+
+  window.addEventListener("resize", () => {
+    const saved = localStorage.getItem("cyber_preferred_view") || "auto";
+    if (saved === "auto") {
+      updateToggleButtons(window.innerWidth <= 768);
+    }
+  });
+}
+
+function applyViewMode(mode) {
+  const body = document.body;
+  if (mode === "mobile") {
+    body.classList.add("force-mobile-view");
+    body.classList.remove("force-desktop-view");
+    updateToggleButtons(true);
+  } else if (mode === "desktop") {
+    body.classList.add("force-desktop-view");
+    body.classList.remove("force-mobile-view");
+    updateToggleButtons(false);
+  } else {
+    body.classList.remove("force-mobile-view");
+    body.classList.remove("force-desktop-view");
+    const isMobileWidth = window.innerWidth <= 768;
+    updateToggleButtons(isMobileWidth);
+  }
+}
+
+function toggleDesktopMobileMode() {
+  const body = document.body;
+  const isCurrentlyMobile = body.classList.contains("force-mobile-view") || 
+    (!body.classList.contains("force-desktop-view") && window.innerWidth <= 768);
+
+  if (isCurrentlyMobile) {
+    localStorage.setItem("cyber_preferred_view", "desktop");
+    applyViewMode("desktop");
+    showToast("Switched to Full Desktop View 💻", "info");
+  } else {
+    localStorage.setItem("cyber_preferred_view", "mobile");
+    applyViewMode("mobile");
+    showToast("Switched to Dedicated Mobile View 📱", "info");
+  }
+}
+
+function updateToggleButtons(isMobile) {
+  const drawerIcon = document.getElementById("viewModeToggleIcon");
+  const drawerText = document.getElementById("viewModeToggleText");
+  const desktopIcon = document.getElementById("desktopToggleIcon");
+  const desktopText = document.getElementById("desktopToggleText");
+
+  if (isMobile) {
+    if (drawerIcon) drawerIcon.textContent = "💻";
+    if (drawerText) drawerText.textContent = "Switch to Desktop View";
+    if (desktopIcon) desktopIcon.textContent = "💻";
+    if (desktopText) desktopText.textContent = "Desktop View";
+  } else {
+    if (drawerIcon) drawerIcon.textContent = "📱";
+    if (drawerText) drawerText.textContent = "Switch to Mobile View";
+    if (desktopIcon) desktopIcon.textContent = "📱";
+    if (desktopText) desktopText.textContent = "Mobile View";
+  }
+}
+
+function openMobileDrawer() {
+  const overlay = document.getElementById("mobileDrawerOverlay");
+  if (overlay) {
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+function closeMobileDrawer() {
+  const overlay = document.getElementById("mobileDrawerOverlay");
+  if (overlay) {
+    overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+}
+
+function handleMobileDeskClick() {
+  const user = AppState.currentUser;
+  if (user && user.role === "sp_cyber") {
+    switchTab("sp_desk");
+  } else if (user && (user.role === "branch_incharge" || user.role === "admin")) {
+    switchTab("incharge_desk");
+  } else {
+    switchTab("notices");
+  }
+}
+
 // Populate the Quick User & Role Switcher
 function populateUserSwitcher() {
   const select = document.getElementById("userSwitchSelect");
@@ -499,6 +595,15 @@ function populateUserSwitcher() {
 
   if (AppState.currentUser) {
     select.value = AppState.currentUser.id;
+  }
+
+  // Also sync mobile drawer switcher
+  const mobileSelect = document.getElementById("mobileUserSwitchSelect");
+  if (mobileSelect) {
+    mobileSelect.innerHTML = select.innerHTML;
+    if (AppState.currentUser) {
+      mobileSelect.value = AppState.currentUser.id;
+    }
   }
 }
 
@@ -551,6 +656,24 @@ function updateHeaderUserInfo() {
   const roleEl = document.getElementById("headerUserRole");
   if (nameEl) nameEl.textContent = `${user.name} (${user.beltNo})`;
   if (roleEl) roleEl.textContent = `${user.rank} | ${branchName} | ${getRoleDisplay(user.role)}`;
+
+  // Update mobile header & drawer info
+  const mobileName = document.getElementById("mobileHeaderUserName");
+  if (mobileName) {
+    if (user.role === "sp_cyber") mobileName.textContent = "SP Cyber";
+    else if (user.role === "branch_incharge") mobileName.textContent = "Incharge";
+    else mobileName.textContent = user.name.split(" ")[0];
+  }
+
+  const drawerName = document.getElementById("drawerUserName");
+  const drawerRole = document.getElementById("drawerUserRole");
+  if (drawerName) drawerName.textContent = `${user.name} (${user.beltNo})`;
+  if (drawerRole) drawerRole.textContent = `${user.rank} | ${branchName} | ${getRoleDisplay(user.role)}`;
+
+  const mobileSelect = document.getElementById("mobileUserSwitchSelect");
+  if (mobileSelect && mobileSelect.value !== user.id) {
+    mobileSelect.value = user.id;
+  }
 }
 
 // Navigation Tabs Handling
@@ -596,6 +719,19 @@ function switchTab(tabId) {
   document.querySelectorAll(".nav-tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tabId);
   });
+
+  // Sync mobile bottom nav buttons
+  document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
+    if (btn.id === "mobileNavMore") return;
+    if (btn.dataset.tab === tabId) {
+      btn.classList.add("active");
+    } else if ((tabId === "incharge_desk" || tabId === "sp_desk" || (tabId === "notices" && user && user.role === "member")) && btn.id === "mobileNavDesk") {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
   renderApp();
 }
 
@@ -647,6 +783,52 @@ function renderNavigationTabs() {
   const spTabBtn = document.getElementById("tabBtnSP");
   if (spTabBtn) {
     spTabBtn.style.display = isSP ? "flex" : "none";
+  }
+
+  // Update Mobile Bottom Nav items according to role
+  const mobileApplyBtn = document.getElementById("mobileNavApply");
+  const mobileMyLeavesBtn = document.getElementById("mobileNavMyLeaves");
+  if (mobileApplyBtn) mobileApplyBtn.style.display = isSPRole ? "none" : "flex";
+  if (mobileMyLeavesBtn) mobileMyLeavesBtn.style.display = isSPRole ? "none" : "flex";
+
+  const mobileDeskLabel = document.getElementById("mobileDeskLabel");
+  const mobileDeskBadge = document.getElementById("mobileDeskBadge");
+  const mobileNavDesk = document.getElementById("mobileNavDesk");
+  if (mobileDeskLabel && mobileDeskBadge) {
+    if (isSPRole) {
+      mobileDeskLabel.textContent = "SP Desk";
+      mobileDeskBadge.textContent = pendingSPCount;
+      mobileDeskBadge.style.display = pendingSPCount > 0 ? "inline-block" : "none";
+      if (mobileNavDesk) mobileNavDesk.setAttribute("data-tab", "sp_desk");
+    } else if (isBranchIncharge) {
+      mobileDeskLabel.textContent = "Incharge Desk";
+      mobileDeskBadge.textContent = pendingInchargeCount;
+      mobileDeskBadge.style.display = pendingInchargeCount > 0 ? "inline-block" : "none";
+      if (mobileNavDesk) mobileNavDesk.setAttribute("data-tab", "incharge_desk");
+    } else {
+      mobileDeskLabel.textContent = "Notices";
+      const count = (AppState.notices || []).length;
+      mobileDeskBadge.textContent = count;
+      mobileDeskBadge.style.display = count > 0 ? "inline-block" : "none";
+      if (mobileNavDesk) mobileNavDesk.setAttribute("data-tab", "notices");
+    }
+  }
+
+  // Update Drawer menu items visibility
+  const drawerRegisterBtn = document.getElementById("mobileDrawerRegisterBtn");
+  if (drawerRegisterBtn) drawerRegisterBtn.style.display = (user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN")) ? "flex" : "none";
+
+  const drawerSitrepBtn = document.getElementById("mobileDrawerSitrepBtn");
+  if (drawerSitrepBtn) drawerSitrepBtn.style.display = (user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN")) ? "flex" : "none";
+
+  const drawerBackupBtn = document.getElementById("mobileDrawerBackupBtn");
+  if (drawerBackupBtn) drawerBackupBtn.style.display = (user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN")) ? "flex" : "none";
+
+  const drawerNoticeCount = document.getElementById("mobileDrawerNoticeCount");
+  if (drawerNoticeCount) {
+    const count = (AppState.notices || []).length;
+    drawerNoticeCount.textContent = count;
+    drawerNoticeCount.style.display = count > 0 ? "inline-block" : "none";
   }
 
   // Daily Sitrep Tab: Visible ONLY to SP Cyber & Reader Desk (HIDDEN from regular members)
@@ -1203,7 +1385,7 @@ function renderDashboard(container) {
 function renderLeaveTableRow(leave, showApplicantInfo = false) {
   const statusBadge = getStatusBadge(leave.status);
   const applicantInfoHtml = showApplicantInfo ? `
-    <td>
+    <td data-label="Personnel Details">
       <strong>${leave.applicantName}</strong><br>
       <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
       <span class="branch-tag">${leave.branchName}</span>
@@ -1211,28 +1393,28 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
   ` : "";
 
   return `
-    <tr>
-      <td>
-        <strong>${leave.id}</strong><br>
+    <tr class="leave-card-row">
+      <td data-label="Application ID">
+        <div style="font-weight: 700; color: #0f274c;">${leave.id}</div>
         <small style="color: #64748b;">${leave.appliedAt}</small>
       </td>
       ${applicantInfoHtml}
-      <td>
+      <td data-label="Leave Type">
         <span style="font-weight: 700; color: #0f274c;">${leave.leaveType}</span><br>
         <small style="color: #64748b;">${leave.leaveTypeName.split("(")[0]}</small>
       </td>
-      <td>
+      <td data-label="Leave Period">
         <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong>
       </td>
-      <td>
-        <span style="font-weight: 700; font-size: 1rem;">${leave.totalDays}</span> Days
+      <td data-label="Total Days">
+        <span style="font-weight: 700; font-size: 1.05rem;">${leave.totalDays}</span> Days
         ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
           <br><span class="curtailed-badge" title="Original Application: ${leave.originalDays} Days (${formatDate(leave.fromDate)} - ${formatDate(leave.originalToDate)})">
             ✂️ Curtailed: ${leave.originalDays}➔${leave.totalDays} Days
           </span>
         ` : ''}
       </td>
-      <td style="max-width: 220px;">
+      <td data-label="Ground / Reason" style="max-width: 220px;">
         <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
           ${leave.reason}
         </div>
@@ -1244,20 +1426,20 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
           </div>
         ` : ''}
       </td>
-      <td>
+      <td data-label="Station Leave">
         ${leave.stationLeave ? '<span style="color: #15803d; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
       </td>
-      <td>${statusBadge}</td>
-      <td>
+      <td data-label="Status">${statusBadge}</td>
+      <td data-label="Actions" class="mobile-card-actions">
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">Details</button>
+          <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">Details</button>
           ${leave.attachment ? `
             <button class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" title="View Attachment" style="color: #2563eb; padding: 4px 7px;">
               📎
             </button>
           ` : ''}
           ${leave.status === "APPROVED" ? `
-            <button class="btn btn-primary btn-sm" onclick="openSanctionSlipModal('${leave.id}')">
+            <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openSanctionSlipModal('${leave.id}')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
               Order Slip
             </button>
@@ -2374,24 +2556,24 @@ function renderInchargeDesk(container) {
             ${branchPendingLeaves.length === 0 ? `
               <tr><td colspan="8" style="text-align: center; color: #166534; padding: 24px; background: #f0fdf4;">✓ No applications pending for recommendation. All matters disposed.</td></tr>
             ` : branchPendingLeaves.map(leave => `
-              <tr>
-                <td><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
-                <td>
+              <tr class="leave-card-row">
+                <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
+                <td data-label="Personnel Details">
                   <strong>${leave.applicantName}</strong><br>
                   <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
                   <span class="branch-tag">${leave.branchName}</span>
                 </td>
-                <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
-                <td>${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
-                <td style="max-width: 200px;">${leave.reason}</td>
-                <td>${leave.handoverTo || "-"}</td>
-                <td>
-                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
+                <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
+                <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
+                <td data-label="Ground / Reason" style="max-width: 200px;">${leave.reason}</td>
+                <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
+                <td data-label="Incharge Action" class="mobile-card-actions">
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
+                    <button class="btn btn-primary btn-sm mobile-action-btn" style="flex: 1;" onclick="openInchargeActionModal('${leave.id}')">
                       Review & Recommend
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
+                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
                       Details
                     </button>
                   </div>
@@ -2530,23 +2712,23 @@ function renderSPDesk(container) {
             ${recommendedLeaves.length === 0 ? `
               <tr><td colspan="9" style="text-align: center; color: #166534; padding: 26px;">✓ No leave applications currently pending for SP sanction.</td></tr>
             ` : recommendedLeaves.map(leave => `
-              <tr>
-                <td><strong>${leave.id}</strong></td>
-                <td>
+              <tr class="leave-card-row">
+                <td data-label="Application ID"><strong>${leave.id}</strong></td>
+                <td data-label="Personnel & Branch">
                   <strong>${leave.applicantName}</strong><br>
                   <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
                   <span class="branch-tag">${leave.branchName}</span>
                 </td>
-                <td><span style="font-weight: 700;">${leave.leaveType}</span></td>
-                <td>${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                <td><strong>${leave.totalDays}</strong> Days</td>
-                <td style="max-width: 180px;">${leave.reason}</td>
-                <td style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
+                <td data-label="Leave Type"><span style="font-weight: 700;">${leave.leaveType}</span></td>
+                <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                <td data-label="Days"><strong>${leave.totalDays}</strong> Days</td>
+                <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
+                <td data-label="Incharge Recommendation / Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
                   "${leave.inchargeRemarks || 'Recommended'}"
                 </td>
-                <td>${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
-                <td>
-                  <button class="btn btn-gold btn-sm" onclick="openSPActionModal('${leave.id}')">
+                <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
+                <td data-label="Action / Order" class="mobile-card-actions">
+                  <button class="btn btn-gold btn-sm mobile-action-btn" style="width: 100%;" onclick="openSPActionModal('${leave.id}')">
                     Sanction / Record Order
                   </button>
                 </td>
@@ -3475,15 +3657,15 @@ function renderPersonnelDirectory(container) {
             ` : displayedUsers.map(u => {
               const b = AppState.branches.find(br => br.id === u.branchId);
               return `
-                <tr data-branch="${u.branchId}">
-                  <td><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
-                  <td><strong>${u.name}</strong></td>
-                  <td>${u.rank}</td>
-                  <td><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
-                  <td><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
-                  <td><small>${u.mobile}<br>${u.email}</small></td>
-                  <td><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
-                  <td><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
+                <tr class="leave-card-row" data-branch="${u.branchId}">
+                  <td data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
+                  <td data-label="Officer Name"><strong>${u.name}</strong></td>
+                  <td data-label="Rank">${u.rank}</td>
+                  <td data-label="Cyber Branch"><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
+                  <td data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
+                  <td data-label="Contact Details"><small>${u.mobile}<br>${u.email}</small></td>
+                  <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
+                  <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
                 </tr>
               `;
             }).join("")}

@@ -1263,70 +1263,803 @@ table.data-table tr:hover {
   }
 }
 
-/* MOBILE RESPONSIVE */
+/* ==========================================================================
+   MOBILE APP COMPONENTS (Bottom Nav, Drawer, Profile Pill, View Switcher)
+   ========================================================================== */
+
+/* FIXED MOBILE BOTTOM NAVIGATION BAR */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #0f274c;
+  border-top: 2px solid var(--police-gold);
+  display: none;
+  align-items: stretch;
+  justify-content: space-around;
+  z-index: 1000;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.mobile-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 4px 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-btn:active {
+  transform: scale(0.94);
+}
+
+.mobile-nav-btn.active {
+  color: var(--police-gold);
+  font-weight: 700;
+}
+
+.mobile-nav-btn.active .mobile-nav-icon svg {
+  stroke: var(--police-gold);
+}
+
+.mobile-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  margin-bottom: 2px;
+}
+
+.mobile-nav-plus-icon {
+  background: var(--police-gold);
+  color: #0f274c !important;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(212, 160, 23, 0.45);
+  margin-top: -8px;
+}
+
+.mobile-nav-plus-icon svg {
+  stroke: #0f274c !important;
+}
+
+.mobile-nav-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
+.mobile-nav-badge {
+  position: absolute;
+  top: -3px;
+  right: -8px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+  border: 1.5px solid #0f274c;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* MOBILE OFFICER HEADER BUTTON */
+.mobile-header-user-btn {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-header-user-btn:active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.mobile-header-avatar {
+  font-size: 0.95rem;
+}
+
+/* DESKTOP VIEW TOGGLE BUTTON */
+.desktop-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
+/* MOBILE ACTION DRAWER / BOTTOM SHEET */
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: flex-end;
+  backdrop-filter: blur(2px);
+}
+
+.mobile-drawer-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-drawer-content {
+  background: #ffffff;
+  width: 100%;
+  border-radius: 22px 22px 0 0;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.mobile-drawer-overlay.active .mobile-drawer-content {
+  transform: translateY(0);
+}
+
+.mobile-drawer-handle {
+  width: 40px;
+  height: 5px;
+  background: #cbd5e1;
+  border-radius: 5px;
+  margin: 0 auto 12px;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.mobile-drawer-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  border: 2px solid #bae6fd;
+  flex-shrink: 0;
+}
+
+.mobile-drawer-user-info h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f274c;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.mobile-drawer-user-info p {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 2px 0 0;
+  line-height: 1.2;
+}
+
+.mobile-drawer-close {
+  background: #f1f5f9;
+  border: none;
+  font-size: 1.4rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mobile-drawer-section {
+  margin-bottom: 14px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.mobile-drawer-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 6px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.mobile-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.mobile-menu-item:active {
+  background: #e2e8f0;
+  transform: scale(0.98);
+}
+
+.mobile-menu-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.mobile-menu-text {
+  flex: 1;
+  line-height: 1.2;
+}
+
+.mobile-menu-pill {
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.mobile-drawer-footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+
+/* ==========================================================================
+   RESPONSIVE MOBILE VIEW (@media max-width: 768px & Force Mobile Class)
+   ========================================================================== */
 @media (max-width: 768px) {
-  .main-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 12px 14px;
+  body:not(.force-desktop-view) {
+    padding-bottom: 74px !important;
   }
-  .header-brand {
-    gap: 10px;
+
+  /* Hide top desktop navigation on mobile */
+  body:not(.force-desktop-view) .nav-bar {
+    display: none !important;
   }
-  .police-badge-logo {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+
+  /* Display mobile thumb bottom bar */
+  body:not(.force-desktop-view) .mobile-bottom-nav {
+    display: flex !important;
   }
-  .brand-text h1 {
-    font-size: 1.05rem;
-    line-height: 1.3;
+
+  /* Mobile compact header */
+  body:not(.force-desktop-view) .gov-top-ribbon {
+    padding: 4px 10px !important;
+    font-size: 0.68rem !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
-  .brand-text p {
-    font-size: 0.76rem;
+  body:not(.force-desktop-view) .gov-top-ribbon > div:last-child {
+    display: none !important;
   }
-  .header-actions {
-    width: 100%;
-    flex-direction: column;
-    gap: 10px;
+
+  body:not(.force-desktop-view) .main-header {
+    padding: 8px 12px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
   }
-  .role-switcher-card {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px 12px;
-    box-sizing: border-box;
+  body:not(.force-desktop-view) .header-brand {
+    gap: 8px !important;
+    align-items: center !important;
   }
-  .role-dropdown-select {
-    width: 100%;
-    font-size: 0.88rem;
-    padding: 10px 12px;
-    box-sizing: border-box;
+  body:not(.force-desktop-view) .police-badge-logo {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
   }
-  .nav-bar {
-    padding: 0 10px;
-    gap: 2px;
-    -webkit-overflow-scrolling: touch;
+  body:not(.force-desktop-view) .brand-text h1 {
+    font-size: 0.94rem !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
   }
-  .nav-tab-btn {
-    padding: 12px 14px;
-    font-size: 0.84rem;
-    white-space: nowrap;
+  body:not(.force-desktop-view) .brand-text h1 .brand-badge {
+    display: inline-block !important;
+    padding: 1px 5px !important;
+    font-size: 0.62rem !important;
   }
-  .form-grid {
-    grid-template-columns: 1fr;
+  body:not(.force-desktop-view) .brand-text p {
+    font-size: 0.68rem !important;
+    margin: 1px 0 0 !important;
   }
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+
+  /* Hide bulky desktop role switcher and buttons from header on mobile */
+  body:not(.force-desktop-view) .role-switcher-card {
+    display: none !important;
   }
-  .sanction-signatures {
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
+  body:not(.force-desktop-view) .desktop-view-toggle-btn {
+    display: none !important;
   }
+  body:not(.force-desktop-view) #headerBackupBtn {
+    display: none !important;
+  }
+  body:not(.force-desktop-view) .main-header > .header-actions > .btn-outline {
+    display: none !important;
+  }
+
+  /* Show sleek officer profile trigger in mobile header */
+  body:not(.force-desktop-view) .header-actions {
+    width: auto !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  body:not(.force-desktop-view) .lan-sync-pill {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+  }
+  body:not(.force-desktop-view) .mobile-header-user-btn {
+    display: flex !important;
+  }
+
+  /* Container & Layout */
+  body:not(.force-desktop-view) .app-container {
+    padding: 12px 10px !important;
+  }
+
+  body:not(.force-desktop-view) .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  body:not(.force-desktop-view) .page-title-group h2 {
+    font-size: 1.15rem !important;
+  }
+  body:not(.force-desktop-view) .page-title-group p {
+    font-size: 0.8rem !important;
+  }
+
+  body:not(.force-desktop-view) .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+  body:not(.force-desktop-view) .stat-card {
+    padding: 12px 10px !important;
+  }
+  body:not(.force-desktop-view) .stat-card .stat-val {
+    font-size: 1.4rem !important;
+  }
+  body:not(.force-desktop-view) .stat-card .stat-label {
+    font-size: 0.72rem !important;
+  }
+
+  body:not(.force-desktop-view) .branches-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  body:not(.force-desktop-view) .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* TOUCH FRIENDLY FORM CONTROLS (Prevents iOS zoom) */
+  body:not(.force-desktop-view) .form-control {
+    font-size: 16px !important;
+    padding: 10px 12px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+  }
+  body:not(.force-desktop-view) .btn {
+    min-height: 42px !important;
+    padding: 8px 14px !important;
+  }
+
+  /* MODALS MOBILE OPTIMIZATION */
+  body:not(.force-desktop-view) .modal-box {
+    width: 95% !important;
+    max-width: 95% !important;
+    max-height: 90vh !important;
+    margin: 15px auto !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  /* TABLE TOOLBAR & FILTERS */
+  body:not(.force-desktop-view) .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  body:not(.force-desktop-view) .table-filters {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  body:not(.force-desktop-view) .table-filters .form-control {
+    width: 100% !important;
+  }
+
+  /* =====================================================================
+     CARD-BASED MOBILE VIEW FOR DATA TABLES
+     (No horizontal scrolling required! Beautiful thumb-friendly cards)
+     ===================================================================== */
+  body:not(.force-desktop-view) .responsive-table {
+    overflow-x: visible !important;
+  }
+
+  body:not(.force-desktop-view) .data-table,
+  body:not(.force-desktop-view) .data-table thead,
+  body:not(.force-desktop-view) .data-table tbody,
+  body:not(.force-desktop-view) .data-table th,
+  body:not(.force-desktop-view) .data-table td,
+  body:not(.force-desktop-view) .data-table tr {
+    display: block !important;
+  }
+
+  /* Hide table header row */
+  body:not(.force-desktop-view) .data-table thead tr {
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Each table row becomes a clean, elevated mobile card */
+  body:not(.force-desktop-view) .data-table tbody tr {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05) !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+
+  body:not(.force-desktop-view) .data-table tbody td {
+    padding: 7px 0 !important;
+    border: none !important;
+    border-bottom: 1px dashed #f1f5f9 !important;
+    font-size: 0.88rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    text-align: right !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Field Title Label (Generated via data-label) */
+  body:not(.force-desktop-view) .data-table tbody td:before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #475569;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    text-align: left;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  body:not(.force-desktop-view) .data-table tbody td:not([data-label]):before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label=""]:before {
+    display: none !important;
+  }
+
+  /* Multi-line Fields displayed vertically with label on top */
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Ground / Reason"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel Details"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel & Branch"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Remarks"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Recommendation / Remarks"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"] {
+    display: block !important;
+    text-align: left !important;
+  }
+
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Ground / Reason"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel Details"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel & Branch"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Remarks"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Recommendation / Remarks"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"]:before {
+    display: block !important;
+    margin-bottom: 3px !important;
+  }
+
+  /* Card Action Buttons: Full Width and Touch Friendly */
+  body:not(.force-desktop-view) .data-table tbody td:last-child {
+    border-bottom: none !important;
+    padding-top: 10px !important;
+    display: block !important;
+    text-align: left !important;
+  }
+
+  body:not(.force-desktop-view) .data-table tbody td:last-child:before {
+    display: none !important;
+  }
+
+  body:not(.force-desktop-view) .mobile-card-actions {
+    width: 100% !important;
+  }
+
+  body:not(.force-desktop-view) .mobile-card-actions > div {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  body:not(.force-desktop-view) .mobile-action-btn,
+  body:not(.force-desktop-view) .mobile-card-actions .btn {
+    flex: 1 1 auto !important;
+    padding: 10px 12px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 42px !important;
+  }
+
+  /* Empty state rows */
+  body:not(.force-desktop-view) .data-table tbody td[colspan] {
+    display: block !important;
+    text-align: center !important;
+    padding: 24px 10px !important;
+  }
+  body:not(.force-desktop-view) .data-table tbody td[colspan]:before {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   FORCE DESKTOP VIEW OVERRIDE (For users choosing Desktop layout on mobile)
+   ========================================================================== */
+body.force-desktop-view {
+  min-width: 1080px !important;
+  overflow-x: auto !important;
+  padding-bottom: 0 !important;
+}
+body.force-desktop-view .nav-bar {
+  display: flex !important;
+}
+body.force-desktop-view .mobile-bottom-nav {
+  display: none !important;
+}
+body.force-desktop-view .mobile-header-user-btn {
+  display: none !important;
+}
+body.force-desktop-view .role-switcher-card {
+  display: flex !important;
+}
+body.force-desktop-view .desktop-view-toggle-btn {
+  display: inline-flex !important;
+}
+body.force-desktop-view .responsive-table {
+  overflow-x: auto !important;
+}
+body.force-desktop-view .data-table,
+body.force-desktop-view .data-table thead,
+body.force-desktop-view .data-table tbody,
+body.force-desktop-view .data-table th,
+body.force-desktop-view .data-table td,
+body.force-desktop-view .data-table tr {
+  display: table !important;
+}
+body.force-desktop-view .data-table thead tr {
+  position: static !important;
+  opacity: 1 !important;
+  display: table-row !important;
+}
+body.force-desktop-view .data-table tbody tr {
+  display: table-row !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+body.force-desktop-view .data-table tbody td {
+  display: table-cell !important;
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  text-align: left !important;
+}
+body.force-desktop-view .data-table tbody td:before {
+  display: none !important;
+}
+
+/* ==========================================================================
+   FORCE MOBILE VIEW OVERRIDE (For testing mobile smartphone layout on desktop)
+   ========================================================================== */
+body.force-mobile-view {
+  max-width: 460px !important;
+  margin: 0 auto !important;
+  box-shadow: 0 0 35px rgba(0, 0, 0, 0.25) !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  padding-bottom: 74px !important;
+}
+body.force-mobile-view .nav-bar {
+  display: none !important;
+}
+body.force-mobile-view .mobile-bottom-nav {
+  display: flex !important;
+  max-width: 460px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+body.force-mobile-view .mobile-drawer-content {
+  max-width: 460px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(100%) !important;
+}
+body.force-mobile-view .mobile-drawer-overlay.active .mobile-drawer-content {
+  transform: translateX(-50%) translateY(0) !important;
+}
+body.force-mobile-view .mobile-header-user-btn {
+  display: flex !important;
+}
+body.force-mobile-view .role-switcher-card {
+  display: none !important;
+}
+body.force-mobile-view .desktop-view-toggle-btn {
+  display: none !important;
+}
+body.force-mobile-view #headerBackupBtn {
+  display: none !important;
+}
+body.force-mobile-view .main-header > .header-actions > .btn-outline {
+  display: none !important;
+}
+body.force-mobile-view .responsive-table {
+  overflow-x: visible !important;
+}
+body.force-mobile-view .data-table,
+body.force-mobile-view .data-table thead,
+body.force-mobile-view .data-table tbody,
+body.force-mobile-view .data-table th,
+body.force-mobile-view .data-table td,
+body.force-mobile-view .data-table tr {
+  display: block !important;
+}
+body.force-mobile-view .data-table thead tr {
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.force-mobile-view .data-table tbody tr {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05) !important;
+}
+body.force-mobile-view .data-table tbody td {
+  padding: 7px 0 !important;
+  border: none !important;
+  border-bottom: 1px dashed #f1f5f9 !important;
+  font-size: 0.88rem !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  text-align: right !important;
+}
+body.force-mobile-view .data-table tbody td:before {
+  content: attr(data-label);
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: left;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+body.force-mobile-view .data-table tbody td[data-label="Ground / Reason"],
+body.force-mobile-view .data-table tbody td[data-label="Personnel Details"],
+body.force-mobile-view .data-table tbody td[data-label="Personnel & Branch"],
+body.force-mobile-view .data-table tbody td[data-label="Incharge Remarks"],
+body.force-mobile-view .data-table tbody td[data-label="Incharge Recommendation / Remarks"] {
+  display: block !important;
+  text-align: left !important;
+}
+body.force-mobile-view .data-table tbody td:last-child {
+  border-bottom: none !important;
+  padding-top: 10px !important;
+  display: block !important;
+}
+body.force-mobile-view .data-table tbody td:last-child:before {
+  display: none !important;
+}
+body.force-mobile-view .mobile-card-actions {
+  width: 100% !important;
+}
+body.force-mobile-view .mobile-card-actions > div {
+  width: 100% !important;
+  display: flex !important;
+  gap: 8px !important;
+}
+body.force-mobile-view .mobile-action-btn,
+body.force-mobile-view .mobile-card-actions .btn {
+  flex: 1 1 auto !important;
+  padding: 10px 12px !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 42px !important;
 }
 
 /* ADVANCED LEAVE APPLICATION STYLES */

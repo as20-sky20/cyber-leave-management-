@@ -29,17 +29,17 @@ Write-Host "       HARYANA POLICE - STATE CYBER CRIME, PANCHKULA" -ForegroundCol
 Write-Host "     Online Leave Management System - Office LAN Server" -ForegroundColor White
 Write-Host "======================================================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "इस कंप्यूटर पर (Localhost):" -ForegroundColor White
+Write-Host "On This Computer (Localhost):" -ForegroundColor White
 Write-Host "  -> http://localhost:$port/" -ForegroundColor Green
 Write-Host "  -> http://127.0.0.1:$port/" -ForegroundColor Green
 if ($lanIP) {
     Write-Host ""
-    Write-Host "साइबर ऑफिस के अन्य कंप्यूटरों हेतु (Office LAN Sharing):" -ForegroundColor Yellow
+    Write-Host "For other computers on Office LAN:" -ForegroundColor Yellow
     Write-Host "  -> http://${lanIP}:${port}/" -ForegroundColor Cyan
-    Write-Host "  (कार्यालय के किसी भी कंप्यूटर पर यह लिंक खोलकर सभी जवान व अधिकारी जुड़ सकते हैं)" -ForegroundColor Gray
+    Write-Host "  (Open this link in any browser on the office network to collaborate)" -ForegroundColor Gray
 }
 Write-Host ""
-Write-Host "डेटाबेस: $folder\database.json (ऑफिस शेयर्ड डेटाबेस सक्रिय)" -ForegroundColor Magenta
+Write-Host "Database File: $folder\database.json (Office shared database active)" -ForegroundColor Magenta
 Write-Host "Press Ctrl + C in this window to stop the server." -ForegroundColor Gray
 Write-Host ""
 
