@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>हरियाणा साइबर पुलिस - अवकाश प्रबंधन एवं स्वीकृति पोर्टल | Panchkula</title>
-  <link rel="stylesheet" href="css/style.css?v=20261105.1">
+  <title>Haryana Cyber Police - Leave Management & Sanction Portal | Panchkula</title>
+  <link rel="stylesheet" href="css/style.css?v=20261105.2">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -15,10 +15,10 @@
       <div class="gov-flag-strip">
         <span></span><span></span><span></span>
       </div>
-      <span>हरियाणा सरकार | GOVERNMENT OF HARYANA | पुलिस विभाग (POLICE DEPARTMENT)</span>
+      <span>GOVERNMENT OF HARYANA | POLICE DEPARTMENT | STATE CYBER CRIME</span>
     </div>
     <div>
-      <span style="color: var(--police-gold); font-weight: 600;">🚨 राष्ट्रीय साइबर हेल्पलाइन: 1930 | आपातकाल: 112</span>
+      <span style="color: var(--police-gold); font-weight: 600;">🚨 National Cyber Helpline: 1930 | Emergency: 112</span>
     </div>
   </div>
 
@@ -36,16 +36,16 @@
           <span class="haryana-text">HARYANA POLICE</span> | STATE CYBER CRIME
           <span class="brand-badge">Panchkula HQ</span>
         </h1>
-        <p>ऑनलाइन अवकाश प्रबंधन एवं स्वीकृति प्रणाली (Cyber Police Leave Management & Sanction Portal)</p>
+        <p>Online Leave Management & Sanction Portal</p>
       </div>
     </div>
 
     <!-- QUICK ROLE / USER SWITCHER -->
     <div class="header-actions">
       <!-- LIVE CLOUD / LAN SYNC PILL -->
-      <div id="lanSyncIndicator" class="lan-sync-pill" onclick="syncWithOfficeDatabase()" style="cursor: pointer;" title="क्लिक करके अभी डेटा सिंक करें (Click to Sync Now)">
+      <div id="lanSyncIndicator" class="lan-sync-pill" onclick="syncWithOfficeDatabase()" style="cursor: pointer;" title="Click to synchronize data across devices">
         <span class="sync-dot"></span>
-        <span id="syncStatusText">लाइव क्लाउड सिंक</span>
+        <span id="syncStatusText">Live Sync Online</span>
       </div>
 
       <div class="role-switcher-card">
@@ -54,20 +54,20 @@
           <span class="user-role-badge" id="headerUserRole">SP Cyber Crime, Panchkula</span>
         </div>
         <div>
-          <select id="userSwitchSelect" class="role-dropdown-select" title="लॉगिन / रोल बदलें">
+          <select id="userSwitchSelect" class="role-dropdown-select" title="Switch User / Role">
             <!-- Populated dynamically by app.js -->
           </select>
         </div>
       </div>
 
-      <button class="btn btn-outline btn-sm" id="headerBackupBtn" onclick="openBackupModal()" title="डेटा बैकअप एवं सुरक्षा केंद्र" style="color: #fff; border-color: rgba(255,255,255,0.3); display: none;">
+      <button class="btn btn-outline btn-sm" id="headerBackupBtn" onclick="openBackupModal()" title="Data Backup & Security Center" style="color: #fff; border-color: rgba(255,255,255,0.3); display: none;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        डेटा बैकअप
+        Data Backup
       </button>
 
-      <button class="btn btn-outline btn-sm" onclick="resetDemoData()" title="डेटा रीसेट करें" style="color: #fff; border-color: rgba(255,255,255,0.3);">
+      <button class="btn btn-outline btn-sm" onclick="resetDemoData()" title="Reset to Default Demo State" style="color: #fff; border-color: rgba(255,255,255,0.3);">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-        डेटा रीसेट
+        Reset Data
       </button>
     </div>
   </header>
@@ -76,45 +76,45 @@
   <nav class="nav-bar">
     <button class="nav-tab-btn active" data-tab="dashboard">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-      डैशबोर्ड (Dashboard)
+      Dashboard
     </button>
 
     <button class="nav-tab-btn" data-tab="notices" id="tabBtnNotices">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-      नोटिस एवं आदेश (Notice Board)
+      Notice Board & Orders
       <span class="tab-badge" id="noticesBadge" style="display: none;">0</span>
     </button>
 
     <button class="nav-tab-btn" data-tab="my_leaves" id="tabBtnMyLeaves">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-      मेरी छुट्टियां (My Leaves)
+      My Applications
     </button>
 
     <button class="nav-tab-btn" data-tab="incharge_desk" id="tabBtnIncharge">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-      शाखा प्रभारी डेस्क (Incharge Desk)
+      Branch Incharge Desk
       <span class="tab-badge" id="inchargeBadge" style="display: none;">0</span>
     </button>
 
     <button class="nav-tab-btn" data-tab="sp_desk" id="tabBtnSP">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-      एसपी साइबर स्वीकृति पटल (SP Cyber Approval)
+      SP Cyber Sanction Desk
       <span class="tab-badge" id="spBadge" style="display: none;">0</span>
     </button>
 
     <button class="nav-tab-btn" data-tab="daily_sitrep" id="tabBtnSitrep" style="display: none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      दैनिक रोज़नामचा (Daily Sitrep)
+      Daily SITREP & Attendance
     </button>
 
     <button class="nav-tab-btn" data-tab="master_register" id="tabBtnRegister" style="display: none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-      मास्टर अवकाश रजिस्टर (Leave Register)
+      Master Leave Register
     </button>
 
     <button class="nav-tab-btn" data-tab="directory" id="tabBtnDirectory">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-      स्टाफ डायरेक्टरी (Personnel)
+      Personnel Directory
     </button>
   </nav>
 
@@ -133,7 +133,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          अवकाश आवेदन विवरण एवं ट्रैकिंग स्थिति
+          Leave Application Details & Tracking Status
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -141,7 +141,7 @@
         <!-- Rendered by JS -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModals()">बंद करें (Close)</button>
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
       </div>
     </div>
   </div>
@@ -152,7 +152,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-          शाखा प्रभारी समीक्षा एवं अनुशंसा (Branch Incharge Desk)
+          Branch Incharge Review & Recommendation
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -162,11 +162,11 @@
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="submitInchargeDecision('REJECT')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          अस्वीकार करें (Reject)
+          Reject Application
         </button>
         <button class="btn btn-success" onclick="submitInchargeDecision('RECOMMEND')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          अनुशंसा सहित SP साइबर को अग्रेषित करें (Recommend)
+          Recommend to SP Cyber
         </button>
       </div>
     </div>
@@ -178,7 +178,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          पुलिस अधीक्षक (साइबर) - अंतिम स्वीकृति निर्णय
+          Superintendent of Police (Cyber) - Sanction Order
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -188,11 +188,11 @@
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="submitSPDecision('REJECT')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          निरस्त करें (Reject)
+          Reject Leave
         </button>
         <button class="btn btn-success" onclick="submitSPDecision('APPROVE')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          अवकाश स्वीकृत करें व आदेश जारी करें (Sanction)
+          Sanction Leave & Issue Order
         </button>
       </div>
     </div>
@@ -204,7 +204,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          कार्यालय आदेश / Official Leave Sanction Order
+          Official Leave Sanction Order
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -212,10 +212,10 @@
         <!-- Official Sanction Slip rendered by JS -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModals()">बंद करें</button>
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
         <button class="btn btn-primary" onclick="window.print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          আदेश प्रिंट करें (Print Order Slip)
+          Print Sanction Slip
         </button>
       </div>
     </div>
@@ -227,7 +227,7 @@
       <div class="modal-header">
         <h3 id="attachmentModalTitle">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-          संलग्न दस्तावेज (Attached Document)
+          Attached Document Preview
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -235,10 +235,10 @@
         <!-- Injected by JS -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModals()">बंद करें</button>
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
         <a id="attachmentDownloadBtn" class="btn btn-primary" download="document">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          डाउनलोड करें (Download)
+          Download File
         </a>
       </div>
     </div>
@@ -250,7 +250,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          अवकाश आवेदन पूर्वावलोकन (Leave Application Memo Preview)
+          Leave Application Memo Preview
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -258,10 +258,10 @@
         <!-- Injected by JS -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModals()">संशोधन करें (Edit Application)</button>
+        <button type="button" class="btn btn-outline" onclick="closeModals()">Edit Application</button>
         <button type="button" class="btn btn-primary" onclick="confirmAndSubmitLeave()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          पुष्टि करें एवं अग्रेषित करें (Confirm & Submit)
+          Confirm & Submit Application
         </button>
       </div>
     </div>
@@ -273,7 +273,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          नया पुलिस अधिकारी / जवान नामांकित करें
+          Enroll New Police Personnel / Staff
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -281,53 +281,53 @@
         <div class="modal-body">
           <div class="form-grid">
             <div class="form-group form-full">
-              <label for="newUserName">अधिकारी/जवान का पूरा नाम <span class="required">*</span></label>
-              <input type="text" id="newUserName" class="form-control" required placeholder="उदा: CT Rohit Saini">
+              <label for="newUserName">Full Name <span class="required">*</span></label>
+              <input type="text" id="newUserName" class="form-control" required placeholder="e.g. CT Rohit Saini">
             </div>
 
             <div class="form-group">
-              <label for="newUserBelt">बेल्ट नंबर / PNO <span class="required">*</span></label>
-              <input type="text" id="newUserBelt" class="form-control" required placeholder="उदा: 1540/PKL">
+              <label for="newUserBelt">Belt No. / PNO <span class="required">*</span></label>
+              <input type="text" id="newUserBelt" class="form-control" required placeholder="e.g. 1540/PKL">
             </div>
 
             <div class="form-group">
-              <label for="newUserRank">पद (Rank) <span class="required">*</span></label>
+              <label for="newUserRank">Rank <span class="required">*</span></label>
               <select id="newUserRank" class="form-control" required>
-                <option value="Constable (CT)">कांस्टेबल (Constable)</option>
-                <option value="Head Constable (HC)">हेड कांस्टेबल (Head Constable)</option>
-                <option value="Assistant Sub-Inspector (ASI)">सहायक उप-निरीक्षक (ASI)</option>
-                <option value="Sub-Inspector (SI)">उप-निरीक्षक (Sub-Inspector)</option>
-                <option value="Inspector">निरीक्षक (Inspector)</option>
-                <option value="DSP (Deputy Superintendent of Police)">डीएसपी (DSP)</option>
-                <option value="Cyber Forensic Analyst">साइबर फॉरेंसिक एनालिस्ट</option>
+                <option value="Constable (CT)">Constable (CT)</option>
+                <option value="Head Constable (HC)">Head Constable (HC)</option>
+                <option value="Assistant Sub-Inspector (ASI)">Assistant Sub-Inspector (ASI)</option>
+                <option value="Sub-Inspector (SI)">Sub-Inspector (SI)</option>
+                <option value="Inspector">Inspector</option>
+                <option value="DSP (Deputy Superintendent of Police)">DSP (Deputy Superintendent of Police)</option>
+                <option value="Cyber Forensic Analyst">Cyber Forensic Analyst</option>
               </select>
             </div>
 
             <div class="form-group form-full">
-              <label for="newUserBranch">पदस्थ शाखा (Branch) <span class="required">*</span></label>
+              <label for="newUserBranch">Assigned Cyber Branch <span class="required">*</span></label>
               <select id="newUserBranch" class="form-control" required>
                 <!-- Populated by JS with all 13 branches -->
               </select>
             </div>
 
             <div class="form-group">
-              <label for="newUserRole">प्रणाली भूमिका (Role) <span class="required">*</span></label>
+              <label for="newUserRole">Portal Role <span class="required">*</span></label>
               <select id="newUserRole" class="form-control" required>
-                <option value="member">पुलिस सदस्य / जवान (Staff Member)</option>
-                <option value="branch_incharge">शाखा प्रभारी (Branch Incharge)</option>
-                <option value="sp_cyber">एसपी साइबर (Approver)</option>
+                <option value="member">Staff Member / Personnel</option>
+                <option value="branch_incharge">Branch Incharge</option>
+                <option value="sp_cyber">SP Cyber (Sanctioning Authority)</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="newUserMobile">मोबाइल नंबर <span class="required">*</span></label>
+              <label for="newUserMobile">Mobile Number <span class="required">*</span></label>
               <input type="tel" id="newUserMobile" class="form-control" required placeholder="+91 98120 XXXXX">
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeModals()">रद्द करें</button>
-          <button type="submit" class="btn btn-primary">जवान जोड़ें (Add Member)</button>
+          <button type="button" class="btn btn-outline" onclick="closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Personnel</button>
         </div>
       </form>
     </div>
@@ -339,7 +339,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          नया साइबर नोटिस / कार्यालय आदेश जारी करें
+          Issue Official Order / Cyber Notice
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -347,54 +347,54 @@
         <div class="modal-body">
           <div class="form-grid">
             <div class="form-group form-full">
-              <label for="noticeTitle">नोटिस / आदेश का शीर्षक (Title) <span class="required">*</span></label>
-              <input type="text" id="noticeTitle" class="form-control" required placeholder="उदा: साप्ताहिक समीक्षा बैठक अथवा आगामी त्योहारों हेतु विशेष ड्यूटी निर्देश">
+              <label for="noticeTitle">Order / Notice Subject (Title) <span class="required">*</span></label>
+              <input type="text" id="noticeTitle" class="form-control" required placeholder="e.g. Weekly Review Meeting or Festive Cyber Bandobast Duties">
             </div>
 
             <div class="form-group">
-              <label for="noticeCategory">श्रेणी (Category) <span class="required">*</span></label>
+              <label for="noticeCategory">Category <span class="required">*</span></label>
               <select id="noticeCategory" class="form-control" required>
-                <option value="ORDER">कार्यालय आदेश (Official Order)</option>
-                <option value="MEETING">महत्वपूर्ण बैठक (Review Meeting)</option>
-                <option value="DIRECTIVE">तत्काल निर्देश (Urgent Directive)</option>
-                <option value="GENERAL">सामान्य सूचना (General Notice)</option>
+                <option value="ORDER">Official Order</option>
+                <option value="MEETING">Review Meeting</option>
+                <option value="DIRECTIVE">Urgent Directive</option>
+                <option value="GENERAL">General Notice</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="noticePriority">प्राथमिकता (Priority) <span class="required">*</span></label>
+              <label for="noticePriority">Priority <span class="required">*</span></label>
               <select id="noticePriority" class="form-control" required>
-                <option value="NORMAL">सामान्य (Normal)</option>
-                <option value="URGENT">अति-महत्वपूर्ण / तत्काल (Urgent / High Priority)</option>
+                <option value="NORMAL">Normal</option>
+                <option value="URGENT">Urgent / High Priority</option>
               </select>
             </div>
 
             <div class="form-group form-full">
-              <label for="noticeTargetBranch">लक्षित शाखा (Target Audience / Branch) <span class="required">*</span></label>
+              <label for="noticeTargetBranch">Target Branch / Audience <span class="required">*</span></label>
               <select id="noticeTargetBranch" class="form-control" required>
-                <option value="ALL">समस्त 13 साइबर शाखाएं (All Cyber Branches)</option>
+                <option value="ALL">All 13 Cyber Branches</option>
                 <!-- Populated with branch options dynamically -->
               </select>
             </div>
 
             <div class="form-group form-full">
-              <label for="noticeContent">आदेश / निर्देश का विस्तृत विवरण (Details & Instructions) <span class="required">*</span></label>
-              <textarea id="noticeContent" class="form-control" rows="5" required placeholder="आदेश, दिशा-निर्देश, समय, स्थान अथवा विशेष निर्देशों का पूर्ण विवरण यहां अंकित करें..."></textarea>
+              <label for="noticeContent">Details & Instructions <span class="required">*</span></label>
+              <textarea id="noticeContent" class="form-control" rows="5" required placeholder="Enter complete directives, instructions, reporting time, venue or guidelines..."></textarea>
             </div>
 
             <div class="form-group form-full">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #0f274c;">
                 <input type="checkbox" id="noticePinTop" style="width: 18px; height: 18px;">
-                डैशबोर्ड के शीर्ष पर पिन करें (Pin to Top on Dashboard)
+                Pin to Top of Dashboard
               </label>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeModals()">रद्द करें</button>
+          <button type="button" class="btn btn-outline" onclick="closeModals()">Cancel</button>
           <button type="submit" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            नोटिस जारी करें (Publish Notice)
+            Publish Notice
           </button>
         </div>
       </form>
@@ -407,7 +407,7 @@
       <div class="modal-header">
         <h3 id="viewNoticeModalHeader">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          कार्यालय नोटिस / आदेश विवरण
+          Office Order / Notice Details
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -415,10 +415,10 @@
         <!-- Injected dynamically by JS -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModals()">बंद करें (Close)</button>
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
         <button class="btn btn-primary" onclick="window.print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          प्रिंट आदेश (Print Notice)
+          Print Notice
         </button>
       </div>
     </div>
@@ -430,7 +430,7 @@
       <div class="modal-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          डेटा बैकअप, रिस्टोर एवं एक्सेल एक्सपोर्ट केंद्र
+          Data Backup, Restore & Excel Export Center
         </h3>
         <button class="close-btn" onclick="closeModals()">&times;</button>
       </div>
@@ -438,13 +438,13 @@
         <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
-              <strong style="color: #0f274c; font-size: 0.95rem;">हरियाणा साइबर पुलिस - केंद्रीय डेटाबेस स्थिति</strong>
+              <strong style="color: #0f274c; font-size: 0.95rem;">Haryana Cyber Police - Central Database Status</strong>
               <div id="backupDbStats" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">
-                डेटा लोड हो रहा है...
+                Loading data...
               </div>
             </div>
             <div style="font-size: 0.8rem; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; font-weight: 600;">
-              सुरक्षा मोड: पूर्ण बैकअप
+              Mode: Full Security Backup
             </div>
           </div>
         </div>
@@ -455,17 +455,17 @@
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
               <div style="width: 36px; height: 36px; border-radius: 8px; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💾</div>
               <div>
-                <strong style="color: #15803d; font-size: 1rem;">1. डेटा बैकअप डाउनलोड करें</strong>
-                <p style="font-size: 0.8rem; color: #64748b;">ऑफ़िस सर्वर का संपूर्ण डेटा (JSON) सुरक्षित रखें</p>
+                <strong style="color: #15803d; font-size: 1rem;">1. Download Full Backup</strong>
+                <p style="font-size: 0.8rem; color: #64748b;">Save complete office database (JSON)</p>
               </div>
             </div>
             <p style="font-size: 0.85rem; color: #475569; margin-bottom: 14px; line-height: 1.4;">
-              सभी 13 शाखाएं, जवानों के प्रोफाइल, स्वीकृत/लंबित अवकाश और नोटिस एक सुरक्षित JSON फाइल में डाउनलोड हो जाएंगे।
+              All 13 cyber branches, staff profiles, sanctioned/pending leave records and orders saved in a secure JSON file.
             </p>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="downloadFullJsonBackup()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                संपूर्ण डेटाबेस बैकअप डाउनलोड (.json)
+                Download Database Backup (.json)
               </button>
             </div>
           </div>
@@ -475,21 +475,21 @@
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
               <div style="width: 36px; height: 36px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📊</div>
               <div>
-                <strong style="color: #0369a1; font-size: 1rem;">2. एक्सेल स्प्रेडशीट एक्सपोर्ट</strong>
-                <p style="font-size: 0.8rem; color: #64748b;">MS Excel / LibreOffice फॉर्मेट (CSV)</p>
+                <strong style="color: #0369a1; font-size: 1rem;">2. Excel Spreadsheet Export</strong>
+                <p style="font-size: 0.8rem; color: #64748b;">MS Excel / LibreOffice CSV format</p>
               </div>
             </div>
             <p style="font-size: 0.85rem; color: #475569; margin-bottom: 14px; line-height: 1.4;">
-              कार्यालय रिकॉर्ड, ऑडिट और प्रिंटिंग हेतु लीव रजिस्टर या स्टाफ सूची को एक्सेल स्प्रेडशीट में सेव करें।
+              Export official leave registers or staff roster directly to CSV spreadsheets for audits and records.
             </p>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="exportLeavesToCSV()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                मास्टर लीव रजिस्टर डाउनलोड (.csv)
+                Export Master Leave Register (.csv)
               </button>
               <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="exportStaffToCSV()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                स्टाफ डायरेक्टरी एक्सेल डाउनलोड (.csv)
+                Export Staff Directory (.csv)
               </button>
             </div>
           </div>
@@ -500,18 +500,18 @@
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
             <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffedd5; color: #c2410c; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🔄</div>
             <div>
-              <strong style="color: #9a3412; font-size: 0.95rem;">3. पूर्व बैकअप से डेटा रिस्टोर करें (Restore Database)</strong>
-              <div style="font-size: 0.78rem; color: #c2410c;">सावधानी: रिस्टोर करने पर वर्तमान डेटा उस बैकअप फाइल से बदल जाएगा।</div>
+              <strong style="color: #9a3412; font-size: 0.95rem;">3. Restore Database from Backup</strong>
+              <div style="font-size: 0.78rem; color: #c2410c;">Note: Restoring will update current records with the backup file data.</div>
             </div>
           </div>
           <p style="font-size: 0.85rem; color: #7c2d12; margin-bottom: 12px;">
-            कंप्यूटर बदलने अथवा पुराना रिकॉर्ड वापस लाने हेतु अपनी पूर्व में डाउनलोड की गई <strong>.json</strong> बैकअप फ़ाइल चुनें:
+            Select your previously downloaded <strong>.json</strong> backup file to restore records:
           </p>
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
             <input type="file" id="restoreBackupFileInput" accept=".json,application/json" class="form-control" style="background: #fff; max-width: 380px;">
             <button class="btn btn-danger" onclick="handleRestoreBackupSubmit()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
-              फ़ाइल से डेटा रिस्टोर करें
+              Restore from File
             </button>
           </div>
           <div id="restorePreviewBox" style="display: none; margin-top: 12px; padding: 10px; background: #fff; border-radius: 6px; font-size: 0.84rem; border: 1px solid #fed7aa;">
@@ -520,7 +520,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModals()">बंद करें</button>
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
       </div>
     </div>
   </div>
@@ -532,17 +532,17 @@
   <footer class="app-footer">
     <div class="footer-inner">
       <div>
-        <strong>हरियाणा पुलिस - राज्य साइबर अपराध शाखा, सेक्टर 20, पंचकूला</strong><br>
-        <span>आधिकारिक आंतरिक पोर्टल (Internal Police Leave Management System)</span>
+        <strong>HARYANA POLICE - STATE CYBER CRIME BRANCH, SECTOR-20, PANCHKULA</strong><br>
+        <span>Official Internal Police Leave Management System</span>
       </div>
       <div>
-        <span>राष्ट्रीय साइबर अपराध रिपोर्टिंग पोर्टल: cybercrime.gov.in | हेल्पलाइन: 1930</span>
+        <span>National Cyber Crime Reporting Portal: cybercrime.gov.in | Helpline: 1930</span>
       </div>
     </div>
   </footer>
 
   <!-- SCRIPTS -->
-  <script src="js/data.js?v=20261105.1"></script>
-  <script src="js/app.js?v=20261105.1"></script>
+  <script src="js/data.js?v=20261105.2"></script>
+  <script src="js/app.js?v=20261105.2"></script>
 </body>
 </html>

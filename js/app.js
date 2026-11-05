@@ -39,10 +39,10 @@ function updateSyncIndicator(isConnected, statusText) {
 
   if (isConnected) {
     indicator.classList.remove("offline");
-    if (textEl) textEl.textContent = statusText || "ऑफिस LAN सिंक ✓";
+    if (textEl) textEl.textContent = statusText || "Office LAN Sync ✓";
   } else {
     indicator.classList.add("offline");
-    if (textEl) textEl.textContent = statusText || "लोकल मोड (ऑफ़लाइन)";
+    if (textEl) textEl.textContent = statusText || "Local Mode (Offline)";
   }
 }
 
@@ -147,7 +147,7 @@ async function syncWithOfficeDatabase() {
         if (!jsonStr.includes("????")) {
           mergeIncomingData(data);
           isLanServerConnected = true;
-          updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+          updateSyncIndicator(true, "Office LAN Sync ✓");
           saveToLocalStorageOnly();
           populateUserSwitcher();
           renderNavigationTabs();
@@ -187,7 +187,7 @@ function connectLiveSSE() {
     liveSseSource = new EventSource(LIVE_SYNC_SUB_URL);
     liveSseSource.onopen = () => {
       isCloudConnected = true;
-      updateSyncIndicator(true, "लाइव सिंक सक्रिय (Online) ✓");
+      updateSyncIndicator(true, "Live Cloud Sync Active ✓");
     };
     liveSseSource.onmessage = (event) => {
       try {
@@ -204,7 +204,7 @@ function connectLiveSSE() {
       }
     };
     liveSseSource.onerror = () => {
-      updateSyncIndicator(false, "सिंक पुनः कनेक्ट हो रहा है...");
+      updateSyncIndicator(false, "Reconnecting Sync...");
     };
   } catch (e) {
     console.warn("Live SSE connect error", e);
@@ -232,7 +232,7 @@ async function pollLiveSyncHistory() {
         } catch (e) {}
       });
       isCloudConnected = true;
-      updateSyncIndicator(true, "लाइव सिंक सक्रिय (Online) ✓");
+      updateSyncIndicator(true, "Live Cloud Sync Active ✓");
     }
   } catch (e) {
     console.warn("Live sync history poll error", e);
@@ -252,7 +252,7 @@ async function broadcastLiveAction(actionPayload) {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
       body: bodyText
     });
-    updateSyncIndicator(true, "लाइव सिंक सक्रिय (Online) ✓");
+    updateSyncIndicator(true, "Live Cloud Sync Active ✓");
   } catch (err) {
     console.warn("Could not broadcast live action", err);
   }
@@ -275,7 +275,7 @@ function handleLiveSyncAction(payload) {
     if (existingIndex === -1) {
       AppState.leaves.unshift(payload.leave);
       hasChanged = true;
-      showToast(`🔔 नया अवकाश आवेदन: ${payload.leave.applicantName} (${payload.leave.totalDays} दिन)`, "info");
+      showToast(`🔔 New Leave Application: ${payload.leave.applicantName} (${payload.leave.totalDays} Days)`, "info");
     }
   }
 
@@ -302,9 +302,9 @@ function handleLiveSyncAction(payload) {
       }
 
       hasChanged = true;
-      const statusLabel = payload.status === "RECOMMENDED" ? "शाखा प्रभारी द्वारा अनुशंसित" : 
-                          (payload.status === "APPROVED" ? "एसपी साइबर द्वारा स्वीकृत ✓" : "अस्वीकृत ✗");
-      showToast(`📢 आवेदन ${leave.id} की स्थिति अद्यतन: ${statusLabel}`, "info");
+      const statusLabel = payload.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
+                          (payload.status === "APPROVED" ? "Sanctioned by SP Cyber ✓" : "Rejected ✗");
+      showToast(`📢 Application ${leave.id} Status Updated: ${statusLabel}`, "info");
     }
   }
 
@@ -314,7 +314,7 @@ function handleLiveSyncAction(payload) {
     if (!AppState.notices.some(n => n.id === payload.notice.id)) {
       AppState.notices.unshift(payload.notice);
       hasChanged = true;
-      showToast(`📌 नया कार्यालय आदेश/नोटिस: ${payload.notice.title}`, "info");
+      showToast(`📌 New Office Order / Notice: ${payload.notice.title}`, "info");
     }
   }
 
@@ -369,7 +369,7 @@ async function pushDataToOfficeServer() {
     });
     if (res.ok) {
       isLanServerConnected = true;
-      updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+      updateSyncIndicator(true, "Office LAN Sync ✓");
     }
   } catch (e) {
     isLanServerConnected = false;
@@ -444,7 +444,7 @@ function mergeIncomingData(data) {
 
 // Reset Demo Data
 function resetDemoData() {
-  if (confirm("क्या आप सभी डेटा को डिफ़ॉल्ट डेमो डेटा पर रीसेट करना चाहते हैं?\n(Are you sure you want to reset all data to default demo state?)")) {
+  if (confirm("Are you sure you want to reset all data to default demo state?")) {
     localStorage.removeItem("cyber_police_branches");
     localStorage.removeItem("cyber_police_users");
     localStorage.removeItem("cyber_police_leaves");
@@ -458,7 +458,7 @@ function resetDemoData() {
     saveData();
     populateUserSwitcher();
     renderApp();
-    showToast("डेटा सफलतापूर्वक रीसेट कर दिया गया (Data reset to defaults)", "success");
+    showToast("Data successfully reset to defaults.", "success");
   }
 }
 
@@ -471,11 +471,11 @@ function populateUserSwitcher() {
 
   // Group by role
   const spGroup = document.createElement("optgroup");
-  spGroup.label = "--- एसपी साइबर (SP Cyber - Approving Authority) ---";
+  spGroup.label = "--- SP Cyber (Sanctioning Authority) ---";
   const inchargeGroup = document.createElement("optgroup");
-  inchargeGroup.label = "--- शाखा प्रभारी (Branch Incharges) ---";
+  inchargeGroup.label = "--- Branch Incharges ---";
   const memberGroup = document.createElement("optgroup");
-  memberGroup.label = "--- पुलिस सदस्य / स्टाफ (Staff / Members) ---";
+  memberGroup.label = "--- Police Personnel / Staff ---";
 
   AppState.users.forEach(user => {
     const opt = document.createElement("option");
@@ -528,15 +528,15 @@ function handleUserSwitch(userId) {
   renderNavigationTabs();
   renderApp();
 
-  showToast(`लॉगिन बदला गया: ${user.name} (${getRoleDisplay(user.role)})`, "info");
+  showToast(`Logged in as: ${user.name} (${getRoleDisplay(user.role)})`, "info");
 }
 
 function getRoleDisplay(role) {
   switch (role) {
-    case "sp_cyber": return "एसपी साइबर (Approving Authority)";
-    case "branch_incharge": return "शाखा प्रभारी (Branch Incharge)";
-    case "admin": return "एडमिन (Establishment/Reader)";
-    default: return "पुलिस कर्मी (Staff Member)";
+    case "sp_cyber": return "SP Cyber (Sanctioning Authority)";
+    case "branch_incharge": return "Branch Incharge";
+    case "admin": return "Reader / Cyber Admin";
+    default: return "Police Personnel (Staff)";
   }
 }
 
@@ -560,35 +560,35 @@ function switchTab(tabId) {
   const isBranchIncharge = user && (user.role === "branch_incharge" || user.role === "admin");
 
   if (isSPRole && (tabId === "apply_leave" || tabId === "my_leaves")) {
-    showToast("पुलिस अधीक्षक (SP महोदय) अंतिम स्वीकृति प्राधिकारी हैं।", "info");
+    showToast("Superintendent of Police (SP Cyber) is the Final Sanctioning Authority.", "info");
     return;
   }
 
   if (isSPRole && tabId === "incharge_desk") {
-    showToast("शाखा प्रभारी डेस्क केवल शाखा प्रभारियों हेतु है। कृपया 'एसपी साइबर स्वीकृति पटल' का उपयोग करें।", "info");
+    showToast("Branch Incharge Desk is restricted to Branch Incharges. Please use 'SP Cyber Sanction Desk'.", "info");
     return;
   }
 
   if (tabId === "incharge_desk" && !isBranchIncharge) {
-    showToast("शाखा प्रभारी डेस्क केवल संबंधित शाखा प्रभारियों हेतु उपलब्ध है।", "error");
+    showToast("Branch Incharge Desk is restricted to Branch Incharges.", "error");
     return;
   }
 
   const isAuthorized = user && (user.role === "branch_incharge" || user.role === "sp_cyber" || user.role === "admin");
   if (tabId === "directory" && !isAuthorized) {
-    showToast("स्टाफ डायरेक्टरी केवल शाखा प्रभारी व एसपी महोदय हेतु उपलब्ध है।", "error");
+    showToast("Personnel Directory is restricted to Branch Incharges and SP Cyber.", "error");
     return;
   }
 
   const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   if (tabId === "daily_sitrep" && !canViewSitrep) {
-    showToast("दैनिक रोज़नामचा (Sitrep) केवल पुलिस अधीक्षक (SP Cyber) एवं रीडर पटल हेतु उपलब्ध है।", "error");
+    showToast("Daily SITREP is restricted to SP Cyber and Cyber Admin Reader.", "error");
     return;
   }
 
   const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   if (tabId === "master_register" && !canViewRegister) {
-    showToast("मास्टर अवकाश रजिस्टर केवल पुलिस अधीक्षक (SP Cyber) एवं रीडर पटल हेतु उपलब्ध है।", "error");
+    showToast("Master Leave Register is restricted to SP Cyber and Cyber Admin Reader.", "error");
     return;
   }
 
@@ -797,22 +797,22 @@ function renderDashboard(container) {
         <div class="page-title-group">
           <h2>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            कमांड डैशबोर्ड | ${user.name} (SP Cyber Crime, Panchkula)
+            Executive Command Dashboard | ${user.name} (SP Cyber Crime, Panchkula)
           </h2>
-          <p>सर्वोच्च स्वीकृति प्राधिकारी | <strong>समस्त 13 साइबर शाखाएं</strong> | स्थिति: सामान्य एवं सक्रिय</p>
+          <p>Apex Sanctioning Authority | <strong>All 13 Cyber Wings / Branches</strong> | Status: Active & Operational</p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="डेटा बैकअप एवं सुरक्षा केंद्र">
+          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="Data Backup & Security Vault">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            डेटा बैकअप
+            Data Backup
           </button>
-          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
+          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="Daily Force Strength & Leave SITREP Report">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            दैनिक रोज़नामचा (Daily Sitrep)
+            Daily SITREP (Attendance)
           </button>
           <button class="btn btn-gold" onclick="switchTab('sp_desk')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            एसपी स्वीकृति पटल खोलें (SP Approval Desk)
+            Open SP Sanction Desk
           </button>
         </div>
       </div>
@@ -824,77 +824,77 @@ function renderDashboard(container) {
       <div class="stats-grid">
         <div class="stat-card gold">
           <div class="stat-header">
-            <span class="stat-title">अंतिम स्वीकृति लंबित (Pending SP Approval)</span>
+            <span class="stat-title">Pending SP Sanction</span>
             <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
           </div>
           <div class="stat-number">${spPendingLeaves.length}</div>
-          <div class="stat-subtext">शाखा प्रभारियों द्वारा अनुशंसित</div>
+          <div class="stat-subtext">Recommended by Branch Incharges</div>
         </div>
 
         <div class="stat-card blue">
           <div class="stat-header">
-            <span class="stat-title">शाखा प्रभारी स्तर पर (With Incharges)</span>
+            <span class="stat-title">Pending with Incharges</span>
             <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
           </div>
           <div class="stat-number">${inchargePendingCount}</div>
-          <div class="stat-subtext">प्रारंभिक समीक्षाधीन आवेदन</div>
+          <div class="stat-subtext">Under Initial Branch Review</div>
         </div>
 
         <div class="stat-card green">
           <div class="stat-header">
-            <span class="stat-title">स्वीकृत आदेश (Total Sanctioned)</span>
+            <span class="stat-title">Total Sanctioned Leaves</span>
             <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
           </div>
           <div class="stat-number">${unitApprovedCount}</div>
-          <div class="stat-subtext">सत्र 2026 में जारी आदेश</div>
+          <div class="stat-subtext">Official Orders Issued in 2026</div>
         </div>
 
         <div class="stat-card purple">
           <div class="stat-header">
-            <span class="stat-title">साइबर नफरी स्थिति (Unit Force)</span>
+            <span class="stat-title">Cyber Force Strength</span>
             <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
           </div>
           <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-          <div class="stat-subtext">${currentlyOnLeave} जवान आज अवकाश पर (${onDutyCount} ऑन-ड्यूटी)</div>
+          <div class="stat-subtext">${currentlyOnLeave} Personnel on Leave (${onDutyCount} On-Duty)</div>
         </div>
       </div>
 
       <!-- 13 BRANCHES SUMMARY FOR SP -->
       <div class="leave-quota-card">
         <div class="leave-quota-title">
-          <span>हरियाणा साइबर पुलिस - 13 शाखाओं की वर्तमान स्थिति (13 Branches Strength & Leave Overview)</span>
-          <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">पंचकूला मुख्यालय</span>
+          <span>Haryana Cyber Police - 13 Wings Strength & Leave Overview</span>
+          <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Panchkula Headquarters</span>
         </div>
         <div class="leave-pills-row">
           <div class="leave-pill-item">
             <div class="type-code">13</div>
-            <div class="type-name">कुल शाखाएं</div>
+            <div class="type-name">Total Branches</div>
             <div class="days-count">100%</div>
-            <div class="days-label">सक्रिय शाखाएं</div>
+            <div class="days-label">Active Wings</div>
           </div>
           <div class="leave-pill-item">
             <div class="type-code">FORCE</div>
-            <div class="type-name">कुल नफरी</div>
+            <div class="type-name">Total Strength</div>
             <div class="days-count">${totalForce}</div>
-            <div class="days-label">पंजीकृत जवान</div>
+            <div class="days-label">Enrolled Personnel</div>
           </div>
           <div class="leave-pill-item">
             <div class="type-code">DUTY</div>
-            <div class="type-name">ड्यूटी पर तैनात</div>
+            <div class="type-name">On Duty</div>
             <div class="days-count" style="color: #15803d;">${onDutyCount}</div>
-            <div class="days-label">उपस्थित नफरी</div>
+            <div class="days-label">Present on Duty</div>
           </div>
           <div class="leave-pill-item">
             <div class="type-code">LEAVE</div>
-            <div class="type-name">आज अवकाश पर</div>
+            <div class="type-name">On Leave Today</div>
             <div class="days-count" style="color: #b45309;">${currentlyOnLeave}</div>
-            <div class="days-label">स्वीकृत अवकाश</div>
+            <div class="days-label">Sanctioned Leaves</div>
           </div>
           <div class="leave-pill-item">
             <div class="type-code">SP-DESK</div>
-            <div class="type-name">स्वीकृति लंबित</div>
+            <div class="type-name">Pending Sanction</div>
             <div class="days-count" style="color: #dc2626;">${spPendingLeaves.length}</div>
-            <div class="days-label">तत्काल निर्णय हेतु</div>
+            <div class="days-label">Action Required</div>
           </div>
         </div>
       </div>
@@ -904,32 +904,32 @@ function renderDashboard(container) {
         <div class="table-toolbar">
           <div class="table-title">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            अनुमोदन हेतु लंबित अवकाश आवेदन (Applications Awaiting SP Sanction)
+            Applications Awaiting SP Sanction
           </div>
           <div>
-            <button class="btn btn-outline btn-sm" onclick="switchTab('sp_desk')">एसपी पटल खोलें (Open SP Desk)</button>
+            <button class="btn btn-outline btn-sm" onclick="switchTab('sp_desk')">Open SP Sanction Desk</button>
           </div>
         </div>
         <div class="responsive-table">
           <table class="data-table">
             <thead>
               <tr>
-                <th>आवेदन क्रमांक</th>
-                <th>आवेदक पुलिस कर्मी</th>
-                <th>प्रकार (Type)</th>
-                <th>अवधि (Period)</th>
-                <th>दिन (Days)</th>
-                <th>दस्तावेज</th>
-                <th>प्रभारी अनुशंसा (Recommendation)</th>
-                <th>कार्रवाई (Action)</th>
+                <th>Application ID</th>
+                <th>Police Personnel</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Attachment</th>
+                <th>Incharge Recommendation</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               ${spPendingLeaves.length === 0 ? `
                 <tr>
                   <td colspan="8" style="text-align: center; color: #166534; padding: 28px; background: #f0fdf4;">
-                    <strong>✓ वर्तमान में एसपी महोदय के स्तर पर कोई अवकाश आवेदन लंबित नहीं है।</strong><br>
-                    <small style="color: #64748b;">शाखा प्रभारियों द्वारा जैसे ही किसी आवेदन की अनुशंसा की जाएगी, वह यहां स्वतः प्रदर्शित होगा।</small>
+                    <strong>✓ No leave applications are currently pending for SP Sanction.</strong><br>
+                    <small style="color: #64748b;">Applications recommended by Branch Incharges will appear here automatically in real time.</small>
                   </td>
                 </tr>
               ` : spPendingLeaves.map(leave => `
@@ -948,33 +948,33 @@ function renderDashboard(container) {
                     <small style="color: #64748b;">${leave.leaveTypeName}</small>
                   </td>
                   <td>
-                    ${formatDate(leave.fromDate)} से<br>${formatDate(leave.toDate)}
-                    ${leave.stationLeave ? `<br><small style="color: #b45309; font-weight: 600;">★ स्टेशन लीव</small>` : ''}
+                    ${formatDate(leave.fromDate)} to<br>${formatDate(leave.toDate)}
+                    ${leave.stationLeave ? `<br><small style="color: #b45309; font-weight: 600;">★ Station Leave</small>` : ''}
                   </td>
                   <td>
-                    <span style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">${leave.totalDays} दिन</span>
+                    <span style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">${leave.totalDays} Days</span>
                     ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
-                      <br><small style="color: #b45309; font-weight: 600;">(मूल: ${leave.originalDays} दिन)</small>
+                      <br><small style="color: #b45309; font-weight: 600;">(Original: ${leave.originalDays} Days)</small>
                     ` : ''}
                   </td>
                   <td>
                     ${leave.attachment ? `
                       <button class="attachment-chip" onclick="viewAttachment('${leave.id}')" title="${leave.attachment.name}">
-                        📎 संलग्नक
+                        📎 Attachment
                       </button>
                     ` : `<span style="color: #94a3b8; font-size: 0.8rem;">-</span>`}
                   </td>
                   <td>
-                    <em style="color: #0369a1; font-size: 0.85rem;">"${leave.inchargeRemarks || 'अग्रेषित'}"</em><br>
-                    <small style="color: #64748b;">संस्तुतकर्ता: ${leave.inchargeName || 'प्रभारी'}</small>
+                    <em style="color: #0369a1; font-size: 0.85rem;">"${leave.inchargeRemarks || 'Forwarded'}"</em><br>
+                    <small style="color: #64748b;">Recommended by: ${leave.inchargeName || 'Branch Incharge'}</small>
                   </td>
                   <td>
                     <div style="display: flex; gap: 6px;">
                       <button class="btn btn-gold btn-sm" onclick="openSPActionModal('${leave.id}')">
-                        समीक्षा / स्वीकृति
+                        Review & Sanction
                       </button>
                       <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
-                        विवरण
+                        Details
                       </button>
                     </div>
                   </td>
@@ -1009,30 +1009,30 @@ function renderDashboard(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          डैशबोर्ड | Welcome, ${user.name} (${user.beltNo})
+          Dashboard | Welcome, ${user.name} (${user.beltNo})
         </h2>
-        <p>शाखा: <strong>${branchName}</strong> | पद: <strong>${user.rank}</strong> | प्रणाली स्थिति: सामान्य एवं सक्रिय</p>
+        <p>Branch: <strong>${branchName}</strong> | Rank: <strong>${user.rank}</strong> | System Status: Active & Operational</p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         ${isBranchInchargeUser ? `
           <button class="btn btn-primary" onclick="switchTab('incharge_desk')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-            शाखा प्रभारी पटल (${branchPendingLeaves.length} लंबित)
+            Branch Incharge Desk (${branchPendingLeaves.length} Pending)
           </button>
         ` : ''}
         ${isReaderUser ? `
-          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="डेटा बैकअप एवं सुरक्षा केंद्र">
+          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="Data Backup & Security Vault">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            डेटा बैकअप
+            Data Backup
           </button>
-          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="दैनिक नफरी व अवकाश रोज़नामचा रिपोर्ट">
+          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="Daily Force Strength & Leave SITREP Report">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            दैनिक रोज़नामचा (Daily Sitrep)
+            Daily SITREP (Attendance)
           </button>
         ` : ''}
         <button class="btn btn-gold" onclick="switchTab('apply_leave')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          छुट्टी के लिए नया आवेदन करें (Apply Leave)
+          Submit Leave Application
         </button>
       </div>
     </div>
@@ -1046,12 +1046,12 @@ function renderDashboard(container) {
         <div class="table-toolbar" style="background: #eff6ff; border-bottom: 1px solid #bfdbfe; padding: 12px 16px;">
           <div class="table-title" style="color: #1e3a8a; font-weight: 700; font-size: 0.96rem;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            🚨 आपकी शाखा के जवानों के अवकाश आवेदन समीक्षा हेतु लंबित हैं (Pending Branch Applications)
-            <span class="tab-badge" style="background: #dc2626; color: #fff; margin-left: 8px;">${branchPendingLeaves.length} लंबित</span>
+            🚨 Applications Pending for Branch Recommendation
+            <span class="tab-badge" style="background: #dc2626; color: #fff; margin-left: 8px;">${branchPendingLeaves.length} Pending</span>
           </div>
           <div>
             <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
-              शाखा प्रभारी पटल खोलें (Open Incharge Desk)
+              Open Branch Incharge Desk
             </button>
           </div>
         </div>
@@ -1059,13 +1059,13 @@ function renderDashboard(container) {
           <table class="data-table">
             <thead>
               <tr>
-                <th>आवेदन आईडी</th>
-                <th>कर्मचारी विवरण</th>
-                <th>अवकाश प्रकार</th>
-                <th>अवधि (Period)</th>
-                <th>दिन (Days)</th>
-                <th>कारण (Reason)</th>
-                <th>कार्रवाई (Action)</th>
+                <th>Application ID</th>
+                <th>Personnel Details</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -1078,16 +1078,16 @@ function renderDashboard(container) {
                     <span class="branch-tag">${leave.branchName}</span>
                   </td>
                   <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName.split("(")[0]}</small></td>
-                  <td>${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)}</td>
-                  <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> दिन</td>
+                  <td>${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                  <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
                   <td style="max-width: 200px;">${leave.reason}</td>
                   <td>
                     <div style="display: flex; gap: 6px;">
                       <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
-                        समीक्षा व अनुशंसा (Review)
+                        Review & Recommend
                       </button>
                       <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
-                        विवरण
+                        Details
                       </button>
                     </div>
                   </td>
@@ -1103,48 +1103,48 @@ function renderDashboard(container) {
     <div class="stats-grid">
       <div class="stat-card blue">
         <div class="stat-header">
-          <span class="stat-title">आकस्मिक अवकाश (CL Balance)</span>
+          <span class="stat-title">Casual Leave (CL Balance)</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
         </div>
-        <div class="stat-number">${user.leaveBalances?.CL ?? 0} <span style="font-size: 1rem; font-weight: normal; color: #64748b;">दिन</span></div>
-        <div class="stat-subtext">कुल 20 दिन वार्षिक कोटा</div>
+        <div class="stat-number">${user.leaveBalances?.CL ?? 0} <span style="font-size: 1rem; font-weight: normal; color: #64748b;">Days</span></div>
+        <div class="stat-subtext">Annual Quota: 20 Days</div>
       </div>
 
       <div class="stat-card green">
         <div class="stat-header">
-          <span class="stat-title">अर्जित अवकाश (EL Balance)</span>
+          <span class="stat-title">Earned Leave (EL Balance)</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
         </div>
-        <div class="stat-number">${user.leaveBalances?.EL ?? 0} <span style="font-size: 1rem; font-weight: normal; color: #64748b;">दिन</span></div>
-        <div class="stat-subtext">संचित प्रिविलेज अवकाश</div>
+        <div class="stat-number">${user.leaveBalances?.EL ?? 0} <span style="font-size: 1rem; font-weight: normal; color: #64748b;">Days</span></div>
+        <div class="stat-subtext">Accumulated Privilege Leave</div>
       </div>
 
       <div class="stat-card gold">
         <div class="stat-header">
-          <span class="stat-title">${isBranchInchargeUser ? 'शाखा लंबित आवेदन' : 'प्रक्रियाधीन आवेदन'}</span>
+          <span class="stat-title">${isBranchInchargeUser ? 'Branch Pending Applications' : 'In-Process Applications'}</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
         <div class="stat-number" style="color: ${(isBranchInchargeUser ? branchPendingLeaves.length : pendingLeaves.length) > 0 ? '#dc2626' : '#15803d'};">
           ${isBranchInchargeUser ? branchPendingLeaves.length : pendingLeaves.length}
         </div>
-        <div class="stat-subtext">${isBranchInchargeUser ? 'शाखा में अनुशंसा हेतु लंबित' : 'स्वीकृति हेतु विचाराधीन'}</div>
+        <div class="stat-subtext">${isBranchInchargeUser ? 'Pending Branch Recommendation' : 'Under Consideration'}</div>
       </div>
 
       <div class="stat-card purple">
         <div class="stat-header">
-          <span class="stat-title">साइबर नफरी (Force On-Duty)</span>
+          <span class="stat-title">Force On-Duty</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
         </div>
         <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-        <div class="stat-subtext">${currentlyOnLeave} जवान आज अवकाश पर</div>
+        <div class="stat-subtext">${currentlyOnLeave} Personnel on Leave Today</div>
       </div>
     </div>
 
     <!-- LEAVE BALANCES OVERVIEW -->
     <div class="leave-quota-card">
       <div class="leave-quota-title">
-        <span>आपके अवकाश कोटे की विस्तृत स्थिति (Leave Quota Summary for ${user.name})</span>
-        <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">कैलेंडर वर्ष 2026</span>
+        <span>Leave Quota Summary for ${user.name}</span>
+        <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Calendar Year 2026</span>
       </div>
       <div class="leave-pills-row">
         ${LEAVE_TYPES.map(lt => {
@@ -1152,9 +1152,9 @@ function renderDashboard(container) {
           return `
             <div class="leave-pill-item">
               <div class="type-code">${lt.code}</div>
-              <div class="type-name">${lt.hindi}</div>
+              <div class="type-name">${lt.name}</div>
               <div class="days-count">${bal}</div>
-              <div class="days-label">शेष दिन / Balance</div>
+              <div class="days-label">Balance Days</div>
             </div>
           `;
         }).join("")}
@@ -1166,29 +1166,29 @@ function renderDashboard(container) {
       <div class="table-toolbar">
         <div class="table-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          आपके हालिया अवकाश आवेदन (Recent Applications)
+          Recent Leave Applications
         </div>
         <div>
-          <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">सभी देखें (View All)</button>
+          <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">View All Applications</button>
         </div>
       </div>
       <div class="responsive-table">
         <table class="data-table">
           <thead>
             <tr>
-              <th>आवेदन क्रमांक</th>
-              <th>प्रकार (Type)</th>
-              <th>अवधि (Period)</th>
-              <th>दिन (Days)</th>
-              <th>कारण (Reason)</th>
-              <th>स्टेशन लीव</th>
-              <th>स्थिति (Status)</th>
-              <th>कार्रवाई (Action)</th>
+              <th>Application ID</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Reason</th>
+              <th>Station Leave</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             ${userLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 28px;">अभी तक कोई अवकाश आवेदन दर्ज नहीं किया गया है।</td></tr>
+              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 28px;">No leave applications recorded yet.</td></tr>
             ` : userLeaves.slice(0, 5).map(leave => renderLeaveTableRow(leave)).join("")}
           </tbody>
         </table>
@@ -1222,13 +1222,13 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
         <small style="color: #64748b;">${leave.leaveTypeName.split("(")[0]}</small>
       </td>
       <td>
-        <strong>${formatDate(leave.fromDate)}</strong> से <strong>${formatDate(leave.toDate)}</strong>
+        <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong>
       </td>
       <td>
-        <span style="font-weight: 700; font-size: 1rem;">${leave.totalDays}</span> दिन
+        <span style="font-weight: 700; font-size: 1rem;">${leave.totalDays}</span> Days
         ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
-          <br><span class="curtailed-badge" title="मूल आवेदन: ${leave.originalDays} दिन (${formatDate(leave.fromDate)} - ${formatDate(leave.originalToDate)})">
-            ✂️ घटाया: ${leave.originalDays}➔${leave.totalDays}
+          <br><span class="curtailed-badge" title="Original Application: ${leave.originalDays} Days (${formatDate(leave.fromDate)} - ${formatDate(leave.originalToDate)})">
+            ✂️ Curtailed: ${leave.originalDays}➔${leave.totalDays} Days
           </span>
         ` : ''}
       </td>
@@ -1245,21 +1245,21 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
         ` : ''}
       </td>
       <td>
-        ${leave.stationLeave ? '<span style="color: #15803d; font-weight: 600;">✓ अनुमति सहित</span>' : '<span style="color: #64748b;">-</span>'}
+        ${leave.stationLeave ? '<span style="color: #15803d; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
       </td>
       <td>${statusBadge}</td>
       <td>
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">विवरण</button>
+          <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">Details</button>
           ${leave.attachment ? `
-            <button class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" title="दस्तावेज देखें" style="color: #2563eb; padding: 4px 7px;">
+            <button class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" title="View Attachment" style="color: #2563eb; padding: 4px 7px;">
               📎
             </button>
           ` : ''}
           ${leave.status === "APPROVED" ? `
             <button class="btn btn-primary btn-sm" onclick="openSanctionSlipModal('${leave.id}')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-              आदेश
+              Order Slip
             </button>
           ` : ""}
         </div>
@@ -1271,13 +1271,13 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
 function getStatusBadge(status) {
   switch (status) {
     case "PENDING_INCHARGE":
-      return `<span class="status-badge pending_incharge"><span class="dot yellow"></span>शाखा प्रभारी स्तर पर</span>`;
+      return `<span class="status-badge pending_incharge"><span class="dot yellow"></span>Pending with Incharge</span>`;
     case "RECOMMENDED":
-      return `<span class="status-badge recommended"><span class="dot blue"></span>अनुशंसित (SP विचाराधीन)</span>`;
+      return `<span class="status-badge recommended"><span class="dot blue"></span>Recommended to SP</span>`;
     case "APPROVED":
-      return `<span class="status-badge approved"><span class="dot green"></span>स्वीकृत (Sanctioned)</span>`;
+      return `<span class="status-badge approved"><span class="dot green"></span>Sanctioned / Approved</span>`;
     case "REJECTED":
-      return `<span class="status-badge rejected"><span class="dot red"></span>अस्वीकृत (Rejected)</span>`;
+      return `<span class="status-badge rejected"><span class="dot red"></span>Rejected</span>`;
     default:
       return `<span class="status-badge">${status}</span>`;
   }
@@ -1312,20 +1312,20 @@ function renderApplyLeave(container) {
   const lastLeaveHtml = lastLeave ? `
     <div class="last-leave-banner">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-        <span style="font-weight: 700; color: #0f274c;">📋 गत अवकाश रिकॉर्ड (Previous Leave History):</span>
+        <span style="font-weight: 700; color: #0f274c;">📋 Previous Leave History:</span>
         <span class="status-badge ${lastLeave.status.toLowerCase()}">${getStatusBadge(lastLeave.status)}</span>
       </div>
       <div style="font-size: 0.84rem; color: #334155;">
-        अंतिम बार <strong>${lastLeave.leaveTypeName || lastLeave.leaveType}</strong>: 
-        <strong>${formatDate(lastLeave.fromDate)}</strong> से <strong>${formatDate(lastLeave.toDate)}</strong> 
-        (कुल <strong>${lastLeave.totalDays} दिन</strong>) | कारण: <em>"${lastLeave.reason}"</em>
-        ${lastLeave.sanctionNo ? ` | आदेश क्रमांक: <strong>${lastLeave.sanctionNo}</strong>` : ''}
+        Last Taken <strong>${lastLeave.leaveTypeName || lastLeave.leaveType}</strong>: 
+        <strong>${formatDate(lastLeave.fromDate)}</strong> to <strong>${formatDate(lastLeave.toDate)}</strong> 
+        (Total: <strong>${lastLeave.totalDays} Days</strong>) | Reason: <em>"${lastLeave.reason}"</em>
+        ${lastLeave.sanctionNo ? ` | Sanction Order No: <strong>${lastLeave.sanctionNo}</strong>` : ''}
       </div>
     </div>
   ` : `
     <div class="last-leave-banner">
-      <span style="font-weight: 700; color: #0f274c;">📋 गत अवकाश रिकॉर्ड:</span>
-      सत्र 2026 में यह आपका <strong>प्रथम अवकाश आवेदन</strong> है।
+      <span style="font-weight: 700; color: #0f274c;">📋 Previous Leave Record:</span>
+      This is your <strong>First Leave Application</strong> for session 2026.
     </div>
   `;
 
@@ -1334,12 +1334,12 @@ function renderApplyLeave(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          अवकाश आवेदन पत्र (Cyber Police Leave Application)
+          Leave Application Form (Cyber Crime Panchkula)
         </h2>
-        <p>कार्यालय पुलिस अधीक्षक, राज्य साइबर अपराध, पंचकूला (हरियाणा)</p>
+        <p>Office of the Superintendent of Police, State Cyber Crime, Panchkula (Haryana)</p>
       </div>
       <div>
-        <button class="btn btn-outline" onclick="switchTab('my_leaves')">आवेदन इतिहास देखें</button>
+        <button class="btn btn-outline" onclick="switchTab('my_leaves')">View Leave History</button>
       </div>
     </div>
 
@@ -1352,13 +1352,13 @@ function renderApplyLeave(container) {
         
         <!-- APPLICANT INFO (READONLY) -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 22px;">
-          <h4 style="font-size: 0.9rem; color: #0f274c; margin-bottom: 10px; font-weight: 700;">आवेदक पुलिस कर्मचारी का विवरण (Applicant Police Personnel Details)</h4>
+          <h4 style="font-size: 0.9rem; color: #0f274c; margin-bottom: 10px; font-weight: 700;">Applicant Police Personnel Details</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.85rem;">
-            <div>नाम / Name: <strong>${user.name}</strong></div>
-            <div>बेल्ट नं. / Belt No: <strong>${user.beltNo}</strong></div>
-            <div>पद / Rank: <strong>${user.rank}</strong></div>
-            <div>मोबाइल / Mobile: <strong>${user.mobile}</strong></div>
-            <div>ईमेल / Email: <strong>${user.email}</strong></div>
+            <div>Name: <strong>${user.name}</strong></div>
+            <div>Belt No: <strong>${user.beltNo}</strong></div>
+            <div>Rank: <strong>${user.rank}</strong></div>
+            <div>Mobile: <strong>${user.mobile}</strong></div>
+            <div>Email: <strong>${user.email}</strong></div>
           </div>
         </div>
 
@@ -1366,48 +1366,48 @@ function renderApplyLeave(container) {
           <!-- BRANCH SELECTION DROPDOWN -->
           <div class="form-group form-full">
             <label for="leaveBranchSelect" style="font-weight: 700; color: #0f274c; font-size: 0.9rem;">
-              अपनी साइबर शाखा चुनें (Select Your Cyber Branch) <span class="required">*</span>
+              Select Your Cyber Branch <span class="required">*</span>
             </label>
             <select id="leaveBranchSelect" class="form-control" required onchange="handleLeaveBranchChange(this.value)" style="border: 2px solid var(--police-blue); font-weight: 600; font-size: 0.92rem; padding: 10px;">
-              <option value="">-- अपनी साइबर शाखा चुनें (Select Cyber Branch) --</option>
+              <option value="">-- Select Cyber Branch --</option>
               ${AppState.branches.map(b => `
                 <option value="${b.id}" ${b.id === user.branchId ? 'selected' : ''}>
-                  ${b.name} (${b.hindi})
+                  ${b.name}
                 </option>
               `).join("")}
             </select>
             <small style="color: #64748b; font-size: 0.78rem; margin-top: 2px;">
-              * यह अवकाश आवेदन आपके द्वारा चयनित शाखा के संबंधित शाखा प्रभारी को अनुशंसा हेतु भेजा जाएगा।
+              * This leave application will be routed to the respective Branch Incharge for initial recommendation.
             </small>
           </div>
 
           <!-- LEAVE TYPE -->
           <div class="form-group form-full">
-            <label for="leaveTypeSelect">अवकाश का प्रकार (Leave Type) <span class="required">*</span></label>
+            <label for="leaveTypeSelect">Leave Type <span class="required">*</span></label>
             <select id="leaveTypeSelect" class="form-control" required onchange="handleLeaveTypeChange()">
-              <option value="">-- अवकाश प्रकार चुनें (Select Leave Type) --</option>
+              <option value="">-- Select Leave Type --</option>
               ${LEAVE_TYPES.map(lt => {
                 const bal = user.leaveBalances ? (user.leaveBalances[lt.code] ?? 0) : 0;
-                return `<option value="${lt.code}">${lt.code} - ${lt.name} (${lt.hindi}) [उपलब्ध कोटा: ${bal} दिन]</option>`;
+                return `<option value="${lt.code}">${lt.code} - ${lt.name} [Available Balance: ${bal} Days]</option>`;
               }).join("")}
             </select>
             <small id="leaveTypeDesc" style="color: #64748b; font-size: 0.78rem;"></small>
 
             <!-- FEATURE 5: MANDATORY MEDICAL NOTICE ALERT -->
             <div id="medicalNoticeAlert" style="display: none; margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
-              🏥 <strong>अनिवार्य चिकित्सा प्रमाण पत्र:</strong> मेडिकल अवकाश (ML) अथवा सीसीएल (CCL) हेतु अधिकृत शासकीय / मान्यता प्राप्त डॉक्टर का पर्चा अथवा मेडिकल प्रमाण पत्र संलग्न करना अनिवार्य है।
+              🏥 <strong>Mandatory Medical Certificate:</strong> Medical Leave (ML) or Child Care Leave (CCL) requires an official medical prescription / fitness certificate.
             </div>
           </div>
 
           <!-- FROM DATE -->
           <div class="form-group">
-            <label for="leaveFromDate">कब से (From Date) <span class="required">*</span></label>
+            <label for="leaveFromDate">From Date <span class="required">*</span></label>
             <input type="date" id="leaveFromDate" class="form-control" required onchange="calculateLeaveDays()">
           </div>
 
           <!-- TO DATE -->
           <div class="form-group">
-            <label for="leaveToDate">कब तक (To Date) <span class="required">*</span></label>
+            <label for="leaveToDate">To Date <span class="required">*</span></label>
             <input type="date" id="leaveToDate" class="form-control" required onchange="calculateLeaveDays()">
           </div>
 
@@ -1417,20 +1417,20 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
                   <input type="checkbox" id="halfDayCheck" onchange="handleHalfDayToggle(this)">
-                  🕒 क्या केवल आधा दिन (Half Day) का आकस्मिक अवकाश चाहिए? (0.5 Day CL)
+                  🕒 Apply for Half Day Casual Leave? (0.5 Day CL)
                 </label>
-                <span style="font-size: 0.8rem; background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600;">0.5 दिन कोटा</span>
+                <span style="font-size: 0.8rem; background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600;">0.5 Day Quota</span>
               </div>
               <div id="halfDayShiftBox" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                <label style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">ड्यूटी पाली चुनें (Select Shift):</label>
+                <label style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Select Duty Shift:</label>
                 <div style="display: flex; gap: 20px; font-size: 0.88rem;">
                   <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="radio" name="halfDayShift" value="Morning Shift (प्रथम पाली - सुबह 09:00 से दोपहर 02:00)" checked onchange="calculateLeaveDays()">
-                    प्रथम पाली / Morning Shift (09:00 AM से 02:00 PM)
+                    <input type="radio" name="halfDayShift" value="Morning Shift (09:00 AM to 02:00 PM)" checked onchange="calculateLeaveDays()">
+                    Morning Shift (09:00 AM to 02:00 PM)
                   </label>
                   <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="radio" name="halfDayShift" value="Evening Shift (द्वितीय पाली - दोपहर 02:00 से रात्रि 08:00)" onchange="calculateLeaveDays()">
-                    द्वितीय पाली / Evening Shift (02:00 PM से 08:00 PM)
+                    <input type="radio" name="halfDayShift" value="Evening Shift (02:00 PM to 08:00 PM)" onchange="calculateLeaveDays()">
+                    Evening Shift (02:00 PM to 08:00 PM)
                   </label>
                 </div>
               </div>
@@ -1443,27 +1443,27 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
                   <input type="checkbox" id="prefixSuffixCheck" onchange="togglePrefixSuffix(this)">
-                  📅 क्या अवकाश के साथ पूर्ववर्ती / उत्तरवर्ती छुट्टियां जोड़नी हैं? (Prefix & Suffix Holidays)
+                  📅 Add Prefix & Suffix Holidays? (Prefix & Suffix)
                 </label>
-                <span style="font-size: 0.78rem; color: #64748b;">(C-OFF, रविवार या राजपत्रित अवकाश)</span>
+                <span style="font-size: 0.78rem; color: #64748b;">(C-OFF, Sunday, or Gazetted Holidays)</span>
               </div>
               <div id="prefixSuffixFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                   <div>
                     <label for="prefixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
-                      पूर्ववर्ती छुट्टियां / Prefix Days (शुरुआत से पहले पड़ने वाले C-OFF/रविवार)
+                      Prefix Days (Holidays preceding leave start)
                     </label>
-                    <input type="number" id="prefixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="दिन संख्या">
+                    <input type="number" id="prefixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="Days">
                   </div>
                   <div>
                     <label for="suffixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
-                      उत्तरवर्ती छुट्टियां / Suffix Days (समाप्ति के बाद पड़ने वाले C-OFF/रविवार)
+                      Suffix Days (Holidays succeeding leave end)
                     </label>
-                    <input type="number" id="suffixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="दिन संख्या">
+                    <input type="number" id="suffixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="Days">
                   </div>
                 </div>
                 <small style="color: #64748b; font-size: 0.76rem; margin-top: 6px; display: block;">
-                  * पुलिस मैनुअल नियम: प्रीफिक्स एवं सफिक्स दिनों को अवकाश कोटे से नहीं काटा जाता, परंतु गैर-हाजिरी अवधि में दर्ज किया जाता है।
+                  * Police Manual Rules: Prefix and suffix holidays are not deducted from leave quota but recorded in absence itinerary.
                 </small>
               </div>
             </div>
@@ -1472,7 +1472,7 @@ function renderApplyLeave(container) {
           <!-- COMPUTED DAYS NOTICE -->
           <div class="form-group form-full">
             <div id="leaveDaysNotice" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px; padding: 10px 14px; font-size: 0.88rem; font-weight: 600;">
-              कृपया तिथियां चुनें (Total Days: 0)
+              Please select dates (Total Days: 0)
             </div>
           </div>
 
@@ -1483,8 +1483,8 @@ function renderApplyLeave(container) {
 
           <!-- REASON -->
           <div class="form-group form-full">
-            <label for="leaveReason">अवकाश का स्पष्ट कारण / उद्देश्य (Reason for Leave) <span class="required">*</span></label>
-            <textarea id="leaveReason" class="form-control" rows="3" required placeholder="अवकाश का विस्तृत कारण लिखें (जैसे: पारिवारिक कार्य, चिकित्सा, विवाह आदि)"></textarea>
+            <label for="leaveReason">Specific Reason for Leave <span class="required">*</span></label>
+            <textarea id="leaveReason" class="form-control" rows="3" required placeholder="Enter detailed reason for leave (e.g. family obligation, medical emergency, domestic affairs)"></textarea>
           </div>
 
           <!-- FEATURE 3: COURT EVIDENCE & CASE HANDOVER -->
@@ -1493,22 +1493,22 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #854d0e; margin: 0;">
                   <input type="checkbox" id="courtEvidenceCheck" onchange="toggleCourtCaseFields(this)">
-                  ⚖️ क्या इस अवकाश अवधि में कोई न्यायालयीन गवाही / पेशी (Court Evidence / Summons) नियत है?
+                  ⚖️ Is any Court Evidence / Summons scheduled during this leave period?
                 </label>
               </div>
               <div id="courtCaseFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #fef08a;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                   <div>
                     <label for="courtCaseDetails" style="font-size: 0.82rem; font-weight: 600; color: #713f12;">
-                      न्यायालय / केस विवरण (Court Name, Case / FIR No., पेशी तिथि)
+                      Court & Case Details (Court Name, FIR No., Hearing Date)
                     </label>
-                    <input type="text" id="courtCaseDetails" class="form-control" placeholder="उदा: CBI कोर्ट पंचकूला / FIR 42/2025, पेशी 12-Nov">
+                    <input type="text" id="courtCaseDetails" class="form-control" placeholder="e.g. Special CBI Court Panchkula / FIR 42/2025, Hearing 12-Nov">
                   </div>
                   <div>
                     <label for="courtOfficerHandover" style="font-size: 0.82rem; font-weight: 600; color: #713f12;">
-                      केस डायरी व पैरवी किस सहकर्मी को सौंपी गई (Officer Assigned for Court Appearance)
+                      Case Diary & Brief Handed Over To (Officer Assigned)
                     </label>
-                    <input type="text" id="courtOfficerHandover" class="form-control" placeholder="उदा: ASI Rajesh (312/PKL) को केस फाइल सुपुर्द की गई">
+                    <input type="text" id="courtOfficerHandover" class="form-control" placeholder="e.g. Handed over to ASI Rajesh (312/PKL)">
                   </div>
                 </div>
               </div>
@@ -1517,18 +1517,18 @@ function renderApplyLeave(container) {
 
           <!-- HANDOVER TO -->
           <div class="form-group">
-            <label for="handoverOfficer">ड्यूटी / प्रभार किसे सौंपा गया (Charge Handover To)</label>
+            <label for="handoverOfficer">Charge Handover To (Relieving Officer)</label>
             <select id="handoverOfficer" class="form-control">
-              <option value="">-- सहकर्मी चुनें (Select Officer) --</option>
+              <option value="">-- Select Relieving Officer --</option>
               ${sameBranchMembers.map(m => `<option value="${m.name} (${m.beltNo})">${m.name} - ${m.rank} (${m.beltNo})</option>`).join("")}
-              <option value="शाखा प्रभारी (Branch Incharge)">शाखा प्रभारी (Branch Incharge)</option>
-              <option value="अन्य (Other)">अन्य व्यवस्था (Other)</option>
+              <option value="Branch Incharge">Branch Incharge</option>
+              <option value="Other Arrangement">Other Arrangement</option>
             </select>
           </div>
 
           <!-- EMERGENCY MOBILE -->
           <div class="form-group">
-            <label for="emergencyMobile">अवकाश के दौरान आपातकालीन मोबाइल नंबर (Emergency Contact) <span class="required">*</span></label>
+            <label for="emergencyMobile">Emergency Contact Mobile Number <span class="required">*</span></label>
             <input type="tel" id="emergencyMobile" class="form-control" value="${user.mobile}" required>
           </div>
 
@@ -1537,7 +1537,7 @@ function renderApplyLeave(container) {
             <div class="checkbox-row">
               <input type="checkbox" id="stationLeaveCheck" onchange="toggleStationLeaveInputs()">
               <label for="stationLeaveCheck">
-                क्या अवकाश के दौरान स्टेशन / हेडक्वार्टर छोड़ने की अनुमति चाहिए? (Permission to Leave Station / HQ)
+                Permission to Leave Station / Headquarters (Station Leave)
               </label>
             </div>
           </div>
@@ -1547,49 +1547,49 @@ function renderApplyLeave(container) {
             <div class="station-leave-card">
               <h4 style="font-size: 0.88rem; color: #92400e; margin-bottom: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                मुख्यालय छोड़ने का विस्तृत यात्रा विवरण (Station Leave / Out-of-HQ Details)
+                Out-of-Headquarters Travel & Destination Details
               </h4>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div>
                   <label for="stationDestination" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    गंतव्य शहर व राज्य (Destination City & State)
+                    Destination City & State
                   </label>
-                  <input type="text" id="stationDestination" class="form-control" placeholder="उदा: जयपुर, राजस्थान">
+                  <input type="text" id="stationDestination" class="form-control" placeholder="e.g. New Delhi / Rohtak, Haryana">
                 </div>
                 <div>
                   <label for="stationLocalPS" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    संबंधित स्थानीय थाना (Nearest Local Police Station)
+                    Nearest Local Police Station
                   </label>
-                  <input type="text" id="stationLocalPS" class="form-control" placeholder="उदा: थाना मालवीय नगर, जयपुर">
+                  <input type="text" id="stationLocalPS" class="form-control" placeholder="e.g. PS Sampla / PS Model Town">
                 </div>
                 <div>
                   <label for="stationTravelMode" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    यात्रा का साधन (Mode of Travel)
+                    Mode of Travel
                   </label>
                   <select id="stationTravelMode" class="form-control">
-                    <option value="ट्रेन (Indian Railways)">ट्रेन (Train / Indian Railways)</option>
-                    <option value="बस (State / Private Bus)">बस (State Roadways / Bus)</option>
-                    <option value="निजी कार (Private Car)">निजी चार पहिया वाहन (Private Car)</option>
-                    <option value="दो पहिया (Motorcycle / Bike)">दो पहिया (Two Wheeler)</option>
-                    <option value="हवाई यात्रा (Flight)">हवाई यात्रा (Flight)</option>
-                    <option value="अन्य (Other)">अन्य व्यवस्था (Other)</option>
+                    <option value="Train (Indian Railways)">Train (Indian Railways)</option>
+                    <option value="Bus (State Roadways / Private)">Bus (State Roadways / Private)</option>
+                    <option value="Private Car (Four-Wheeler)">Private Car (Four-Wheeler)</option>
+                    <option value="Two-Wheeler (Motorcycle / Bike)">Two-Wheeler (Motorcycle / Bike)</option>
+                    <option value="Flight / Air Travel">Flight / Air Travel</option>
+                    <option value="Other Arrangement">Other Arrangement</option>
                   </select>
                 </div>
                 <div>
                   <label for="stationFamilyContact" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    आपातकालीन संपर्क परिजन (Family Member & Relation)
+                    Family Contact Person & Relationship
                   </label>
-                  <input type="text" id="stationFamilyContact" class="form-control" placeholder="उदा: पिता - श्री रामकिशन (98120XXXXX)">
+                  <input type="text" id="stationFamilyContact" class="form-control" placeholder="e.g. Father - Sh. Ram Kishan (98120XXXXX)">
                 </div>
                 <div style="grid-column: 1 / -1;">
                   <label for="stationLeaveAddress" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    स्टेशन से बाहर ठहरने का पूर्ण पता (Complete Address During Leave)
+                    Complete Address During Out-of-Station Leave
                   </label>
-                  <textarea id="stationLeaveAddress" class="form-control" rows="2" placeholder="मकान नं, गली/मोहल्ला, गांव/शहर, पिन कोड"></textarea>
+                  <textarea id="stationLeaveAddress" class="form-control" rows="2" placeholder="House No., Sector/Street, Village/City, PIN Code"></textarea>
                 </div>
               </div>
               <small style="color: #b45309; font-size: 0.74rem; margin-top: 6px; display: block;">
-                * पुलिस नियमों के अनुसार स्टेशन लीव की अंतिम अनुमति पुलिस अधीक्षक (SP Cyber) महोदय के आदेश द्वारा ही मान्य होगी।
+                * As per Police Regulations, Station Leave is subject to sanction by the Superintendent of Police (SP Cyber).
               </small>
             </div>
           </div>
@@ -1597,14 +1597,14 @@ function renderApplyLeave(container) {
           <!-- REAL FILE ATTACHMENT UPLOAD -->
           <div class="form-group form-full">
             <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">
-              दस्तावेज / प्रमाणपत्र संलग्नक (Attachment: Medical Slip / Marriage Card / Application Letter)
+              Document Attachment (Medical Certificate / Invitation / Supporting Letter)
             </label>
             <div class="attachment-upload-zone" onclick="document.getElementById('leaveAttachmentInput').click()">
               <input type="file" id="leaveAttachmentInput" accept=".pdf,image/*,.doc,.docx" onchange="handleAttachmentSelect(event)">
               <div id="attachmentPrompt">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--police-blue); margin-bottom: 6px;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                <p style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">फ़ाइल संलग्न करने के लिए यहां क्लिक करें या ड्रैग करें</p>
-                <p style="font-size: 0.75rem; color: #64748b;">(समर्थित: PDF, JPG, PNG, DOC - अधिकतम 5MB)</p>
+                <p style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Click to browse or drag & drop file here</p>
+                <p style="font-size: 0.75rem; color: #64748b;">(Supported formats: PDF, JPG, PNG, DOC - Max 5MB)</p>
               </div>
               <div id="attachmentPreviewBox" style="display: none;" class="attachment-preview-card" onclick="event.stopPropagation()">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -1614,7 +1614,7 @@ function renderApplyLeave(container) {
                     <div id="attachmentFileSize" style="font-size: 0.72rem; color: #64748b;"></div>
                   </div>
                 </div>
-                <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)">हटाएं (Remove)</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)">Remove</button>
               </div>
             </div>
           </div>
@@ -1622,17 +1622,17 @@ function renderApplyLeave(container) {
 
         <!-- FORM ACTION BUTTONS WITH PREVIEW OPTION -->
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap;">
-          <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">रद्द करें</button>
+          <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">Cancel</button>
           
           <!-- FEATURE 8: PREVIEW BUTTON -->
           <button type="button" class="btn btn-outline" onclick="openApplicationPreviewModal()" style="border-color: #0f274c; color: #0f274c; font-weight: 600;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            आवेदन का पूर्वावलोकन (Preview Application)
+            Preview Application Memorandum
           </button>
 
           <button type="submit" class="btn btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            आवेदन अग्रेषित करें (Submit Leave Application)
+            Submit Leave Application
           </button>
         </div>
       </form>
@@ -1647,7 +1647,7 @@ function handleAttachmentSelect(event) {
   if (!file) return;
 
   if (file.size > 5 * 1024 * 1024) {
-    alert("फ़ाइल का आकार 5MB से कम होना चाहिए।");
+    alert("File size must be under 5MB.");
     event.target.value = "";
     return;
   }
@@ -1668,9 +1668,9 @@ function handleAttachmentSelect(event) {
     const nameEl = document.getElementById("attachmentFileName");
     if (nameEl) nameEl.textContent = file.name;
     const sizeEl = document.getElementById("attachmentFileSize");
-    if (sizeEl) sizeEl.textContent = `${(file.size / 1024).toFixed(1)} KB (${file.type || "दस्तावेज"})`;
+    if (sizeEl) sizeEl.textContent = `${(file.size / 1024).toFixed(1)} KB (${file.type || "Document"})`;
 
-    showToast(`दस्तावेज "${file.name}" सफलतापूर्वक संलग्न किया गया।`, "info");
+    showToast(`Document "${file.name}" attached successfully.`, "info");
   };
   reader.readAsDataURL(file);
 }
@@ -1691,10 +1691,10 @@ function handleLeaveBranchChange(branchId) {
   if (handoverSelect) {
     const branchMembers = AppState.users.filter(u => u.branchId === branchId && u.id !== AppState.currentUser.id);
     handoverSelect.innerHTML = `
-      <option value="">-- सहकर्मी चुनें (Select Officer) --</option>
+      <option value="">-- Select Relieving Officer --</option>
       ${branchMembers.map(m => `<option value="${m.name} (${m.beltNo})">${m.name} - ${m.rank} (${m.beltNo})</option>`).join("")}
-      <option value="शाखा प्रभारी (Branch Incharge)">शाखा प्रभारी (Branch Incharge)</option>
-      <option value="अन्य व्यवस्था (Other)">अन्य व्यवस्था (Other)</option>
+      <option value="Branch Incharge">Branch Incharge</option>
+      <option value="Other Arrangement">Other Arrangement</option>
     `;
   }
 
@@ -1706,7 +1706,7 @@ function handleLeaveTypeChange() {
   const descEl = document.getElementById("leaveTypeDesc");
   if (descEl) {
     const lt = LEAVE_TYPES.find(l => l.code === code);
-    descEl.textContent = lt ? `${lt.hindi}: ${lt.desc}` : "";
+    descEl.textContent = lt ? `${lt.name}: ${lt.desc}` : "";
   }
 
   // FEATURE 5: Mandatory medical alert for ML and CCL
@@ -1754,7 +1754,7 @@ function calculateLeaveDays() {
   if (!noticeEl) return;
 
   if (!fromVal || !toVal) {
-    noticeEl.textContent = "कृपया तिथियां चुनें (Total Days: 0)";
+    noticeEl.textContent = "Please select dates (Total Days: 0)";
     noticeEl.style.background = "#eff6ff";
     noticeEl.style.color = "#1e40af";
     if (halfDaySec) halfDaySec.style.display = "none";
@@ -1766,7 +1766,7 @@ function calculateLeaveDays() {
   const toDate = new Date(toVal);
 
   if (toDate < fromDate) {
-    noticeEl.textContent = "त्रुटि: समाप्ति तिथि (To Date) प्रारंभिक तिथि से पहले नहीं हो सकती।";
+    noticeEl.textContent = "Error: To Date cannot be earlier than From Date.";
     noticeEl.style.background = "#fee2e2";
     noticeEl.style.color = "#991b1b";
     if (halfDaySec) halfDaySec.style.display = "none";
@@ -1801,27 +1801,27 @@ function calculateLeaveDays() {
   const user = AppState.currentUser;
   const balance = user.leaveBalances ? (user.leaveBalances[leaveCode] ?? 0) : 0;
 
-  let detailsText = `कुल अवकाश कोटा कटौती: <strong>${diffDays} दिन</strong> (${formatDate(fromVal)} से ${formatDate(toVal)})`;
+  let detailsText = `Total Leave Quota Deduction: <strong>${diffDays} Days</strong> (${formatDate(fromVal)} to ${formatDate(toVal)})`;
   if (prefix > 0 || suffix > 0) {
-    detailsText += ` | कुल अनुपस्थिति: <strong>${totalAbsence} दिन</strong> (${prefix} पूर्ववर्ती + ${diffDays} अवकाश + ${suffix} उत्तरवर्ती)`;
+    detailsText += ` | Total Absence Period: <strong>${totalAbsence} Days</strong> (${prefix} Prefix + ${diffDays} Leave + ${suffix} Suffix)`;
   }
   if (isHalfDay) {
     const shiftVal = document.querySelector('input[name="halfDayShift"]:checked')?.value || "Morning Shift";
-    detailsText += ` [आधा दिन: ${shiftVal}]`;
+    detailsText += ` [Half Day: ${shiftVal}]`;
   }
 
   // CL max 10 days policy advice
   let policyWarning = "";
   if (leaveCode === "CL" && diffDays > 10) {
-    policyWarning = `<br><span style="color: #b45309; font-weight: normal; font-size: 0.8rem;">⚠ पुलिस सेवा नियम: आकस्मिक अवकाश (CL) सामान्यतः एक बार में 10 दिन से अधिक स्वीकृत नहीं किया जाता। अधिक अवधि हेतु EL का उपयोग करें।</span>`;
+    policyWarning = `<br><span style="color: #b45309; font-weight: normal; font-size: 0.8rem;">⚠ Police Service Rules: Casual Leave (CL) is generally capped at 10 consecutive days. For longer periods, apply for Earned Leave (EL).</span>`;
   }
 
   if (diffDays > balance) {
-    noticeEl.innerHTML = `${detailsText} | <strong>चेतावनी:</strong> आपके पास इस अवकाश का शेष कोटा केवल <strong>${balance} दिन</strong> है!${policyWarning}`;
+    noticeEl.innerHTML = `${detailsText} | <strong>Warning:</strong> Available leave balance is only <strong>${balance} Days</strong>!${policyWarning}`;
     noticeEl.style.background = "#fffbeb";
     noticeEl.style.color = "#b45309";
   } else {
-    noticeEl.innerHTML = `${detailsText} | कोटा पर्याप्त है (${balance} शेष)${policyWarning}`;
+    noticeEl.innerHTML = `${detailsText} | Sufficient quota available (${balance} Days remaining)${policyWarning}`;
     noticeEl.style.background = "#dcfce7";
     noticeEl.style.color = "#166534";
   }
@@ -1858,22 +1858,22 @@ function checkBranchOverlap(branchId, fromVal, toVal) {
       <div style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 1.1rem;">✓</span>
         <div>
-          <strong>शाखा नफरी उपलब्धता (Branch Strength Check):</strong>
-          चयनित अवधि में आपकी शाखा का कोई अन्य जवान अवकाश पर नहीं है। शाखा में सभी ${totalBranchStaff} जवान ऑन-ड्यूटी उपलब्ध रहेंगे।
+          <strong>Branch Duty Strength Status:</strong>
+          No other personnel from your branch are on leave during this period. Full strength of ${totalBranchStaff} personnel is available on duty.
         </div>
       </div>
     `;
   } else {
     overlapBox.className = "branch-overlap-box warning";
-    const names = overlappingLeaves.map(l => `<strong>${l.applicantName}</strong> (${l.rank} - ${formatDate(l.fromDate)} से ${formatDate(l.toDate)})`).join(", ");
+    const names = overlappingLeaves.map(l => `<strong>${l.applicantName}</strong> (${l.rank} - ${formatDate(l.fromDate)} to ${formatDate(l.toDate)})`).join(", ");
     const remainingOnDuty = Math.max(0, totalBranchStaff - overlappingLeaves.length - 1);
     overlapBox.innerHTML = `
       <div style="display: flex; align-items: flex-start; gap: 8px;">
         <span style="font-size: 1.2rem;">👥</span>
         <div>
-          <strong>शाखा अवकाश समवर्ती अलर्ट (Concurrent Branch Leave Alert):</strong><br>
-          इस अवधि के दौरान आपकी शाखा के <strong>${overlappingLeaves.length} जवान</strong> पहले से अवकाश पर / प्रक्रियाधीन हैं: ${names}.<br>
-          अनुमानित शेष ऑन-ड्यूटी नफरी: <strong>${remainingOnDuty} जवान</strong> (कुल ${totalBranchStaff} में से)।
+          <strong>Branch Concurrent Leave Alert:</strong><br>
+          During this period, <strong>${overlappingLeaves.length} personnel</strong> from your branch are already on leave / pending: ${names}.<br>
+          Estimated remaining on-duty strength: <strong>${remainingOnDuty} personnel</strong> (out of ${totalBranchStaff}).
         </div>
       </div>
     `;
@@ -1884,43 +1884,43 @@ function checkBranchOverlap(branchId, fromVal, toVal) {
 function openApplicationPreviewModal() {
   const selectedBranchId = document.getElementById("leaveBranchSelect")?.value;
   if (!selectedBranchId) {
-    alert("कृपया पहले अपनी साइबर शाखा चुनें।");
+    alert("Please select your Cyber Branch first.");
     document.getElementById("leaveBranchSelect")?.focus();
     return;
   }
   const branchObj = AppState.branches.find(b => b.id === selectedBranchId);
-  const branchName = branchObj ? `${branchObj.name} (${branchObj.hindi})` : selectedBranchId;
+  const branchName = branchObj ? branchObj.name : selectedBranchId;
 
   const leaveType = document.getElementById("leaveTypeSelect")?.value;
   if (!leaveType) {
-    alert("कृपया अवकाश का प्रकार चुनें।");
+    alert("Please select Leave Type.");
     document.getElementById("leaveTypeSelect")?.focus();
     return;
   }
   const ltObj = LEAVE_TYPES.find(l => l.code === leaveType);
-  const leaveTypeName = ltObj ? `${ltObj.name} (${ltObj.hindi})` : leaveType;
+  const leaveTypeName = ltObj ? ltObj.name : leaveType;
 
   const fromDate = document.getElementById("leaveFromDate")?.value;
   const toDate = document.getElementById("leaveToDate")?.value;
   if (!fromDate || !toDate) {
-    alert("कृपया अवकाश की प्रारंभिक एवं समाप्ति तिथि चुनें।");
+    alert("Please select From Date and To Date.");
     return;
   }
   if (new Date(toDate) < new Date(fromDate)) {
-    alert("त्रुटि: समाप्ति तिथि प्रारंभिक तिथि से पहले नहीं हो सकती।");
+    alert("Error: To Date cannot be earlier than From Date.");
     return;
   }
 
   const reason = document.getElementById("leaveReason")?.value.trim();
   if (!reason) {
-    alert("कृपया अवकाश का स्पष्ट कारण लिखें।");
+    alert("Please enter specific reason for leave.");
     document.getElementById("leaveReason")?.focus();
     return;
   }
 
   // FEATURE 5: Mandatory check for ML/CCL in preview as well
   if ((leaveType === "ML" || leaveType === "CCL") && !AppState.currentAttachment) {
-    alert("अनिवार्य दस्तावेज आवश्यक: मेडिकल अवकाश (ML) अथवा सीसीएल हेतु डॉक्टर का पर्चा / प्रमाण पत्र संलग्न करना अनिवार्य है।");
+    alert("Mandatory document required: Medical Leave (ML) or Child Care Leave (CCL) requires an official medical prescription / certificate.");
     document.getElementById("leaveAttachmentInput")?.focus();
     return;
   }
@@ -1939,18 +1939,18 @@ function openApplicationPreviewModal() {
   const totalAbsence = diffDays + prefix + suffix;
 
   const courtDuty = document.getElementById("courtEvidenceCheck")?.checked;
-  const courtCaseDetails = courtDuty ? (document.getElementById("courtCaseDetails")?.value || "विवरण नियत") : "कोई पेशी नहीं";
-  const courtOfficerHandover = courtDuty ? (document.getElementById("courtOfficerHandover")?.value || "अन्य सहकर्मी") : "-";
+  const courtCaseDetails = courtDuty ? (document.getElementById("courtCaseDetails")?.value || "Scheduled") : "No court hearing";
+  const courtOfficerHandover = courtDuty ? (document.getElementById("courtOfficerHandover")?.value || "Assigned Officer") : "-";
 
-  const handoverTo = document.getElementById("handoverOfficer")?.value || "शाखा प्रभारी";
+  const handoverTo = document.getElementById("handoverOfficer")?.value || "Branch Incharge";
   const emergencyContact = document.getElementById("emergencyMobile")?.value || user.mobile;
 
   const stationLeave = document.getElementById("stationLeaveCheck")?.checked;
-  const stationDestination = stationLeave ? (document.getElementById("stationDestination")?.value || "उल्लिखित नहीं") : "-";
+  const stationDestination = stationLeave ? (document.getElementById("stationDestination")?.value || "Not specified") : "-";
   const stationLocalPS = stationLeave ? (document.getElementById("stationLocalPS")?.value || "-") : "-";
   const stationTravelMode = stationLeave ? (document.getElementById("stationTravelMode")?.value || "-") : "-";
   const stationFamilyContact = stationLeave ? (document.getElementById("stationFamilyContact")?.value || "-") : "-";
-  const stationLeaveAddress = stationLeave ? (document.getElementById("stationLeaveAddress")?.value || "मुख्यालय से बाहर") : "-";
+  const stationLeaveAddress = stationLeave ? (document.getElementById("stationLeaveAddress")?.value || "Out of HQ") : "-";
 
   const previewBody = document.getElementById("applicationPreviewBody");
   if (!previewBody) return;
@@ -1961,103 +1961,103 @@ function openApplicationPreviewModal() {
   previewBody.innerHTML = `
     <div class="application-preview-sheet">
       <div class="preview-memo-header">
-        <h4 style="font-size: 0.95rem; margin: 0; color: #0f274c; text-transform: uppercase; letter-spacing: 0.5px;">कार्यालय पुलिस अधीक्षक, राज्य साइबर अपराध, पंचकूला (हरियाणा)</h4>
-        <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">OFFICE OF THE SUPERINTENDENT OF POLICE, STATE CYBER CRIME, PANCHKULA</div>
+        <h4 style="font-size: 0.95rem; margin: 0; color: #0f274c; text-transform: uppercase; letter-spacing: 0.5px;">OFFICE OF THE SUPERINTENDENT OF POLICE, STATE CYBER CRIME, PANCHKULA (HARYANA)</h4>
+        <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">GOVERNMENT OF HARYANA | POLICE DEPARTMENT</div>
         <div style="margin-top: 8px; font-size: 0.85rem; font-weight: 700; color: #b45309; text-decoration: underline;">
-          अवकाश प्रार्थना पत्र / POLICE LEAVE APPLICATION MEMORANDUM
+          POLICE LEAVE APPLICATION MEMORANDUM
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 10px; color: #475569;">
-          <span>दिनांक: <strong>${dateFormatted}</strong></span>
-          <span>प्रारूप: <strong>HP-CYB/FORM-L1</strong></span>
+          <span>Date: <strong>${dateFormatted}</strong></span>
+          <span>Form: <strong>HP-CYB/FORM-L1</strong></span>
         </div>
       </div>
 
       <div style="font-size: 0.85rem; margin-bottom: 12px; line-height: 1.5;">
-        <strong>सेवा में,</strong><br>
-        श्रीमान पुलिस अधीक्षक महोदय,<br>
-        राज्य साइबर अपराध, पंचकूला (हरियाणा)।<br>
-        <span style="color: #64748b;">(मार्फत: शाखा प्रभारी - <strong>${branchName}</strong>)</span>
+        <strong>To,</strong><br>
+        The Superintendent of Police,<br>
+        State Cyber Crime, Panchkula (Haryana).<br>
+        <span style="color: #64748b;">(Through: Branch Incharge - <strong>${branchName}</strong>)</span>
       </div>
 
       <div style="background: #f1f5f9; padding: 6px 12px; border-radius: 4px; font-size: 0.86rem; font-weight: 700; color: #0f274c; margin-bottom: 14px;">
-        विषय: <strong>${leaveTypeName}</strong> (${diffDays} दिन) की अनुमति / स्वीकृति बाबत।
+        Subject: Application for Sanction of <strong>${leaveTypeName}</strong> (${diffDays} Days).
       </div>
 
       <table class="preview-table">
         <tbody>
           <tr>
-            <th>आवेदक पुलिस कर्मचारी</th>
-            <td><strong>${user.name}</strong> (${user.beltNo}) | पद: <strong>${user.rank}</strong></td>
+            <th>Applicant Personnel</th>
+            <td><strong>${user.name}</strong> (${user.beltNo}) | Rank: <strong>${user.rank}</strong></td>
           </tr>
           <tr>
-            <th>पदस्थ शाखा</th>
+            <th>Posted Wing</th>
             <td><strong>${branchName}</strong></td>
           </tr>
           <tr>
-            <th>अवकाश का प्रकार</th>
+            <th>Leave Type</th>
             <td><strong>${leaveTypeName}</strong></td>
           </tr>
           <tr>
-            <th>अवकाश अवधि</th>
+            <th>Leave Period</th>
             <td>
-              <strong>${formatDate(fromDate)}</strong> से <strong>${formatDate(toDate)}</strong> 
-              (कुल कार्यदिवस कटौती: <strong>${diffDays} दिन</strong>)
-              ${isHalfDay ? `<br><span style="color: #b45309; font-weight: 600;">[आधा दिन अवकाश: ${halfDayShift}]</span>` : ''}
+              <strong>${formatDate(fromDate)}</strong> to <strong>${formatDate(toDate)}</strong> 
+              (Quota Deduction: <strong>${diffDays} Days</strong>)
+              ${isHalfDay ? `<br><span style="color: #b45309; font-weight: 600;">[Half Day: ${halfDayShift}]</span>` : ''}
             </td>
           </tr>
           ${prefixCheck && (prefix > 0 || suffix > 0) ? `
             <tr>
-              <th>प्रीफिक्स / सफिक्स छुट्टियां</th>
+              <th>Prefix & Suffix Holidays</th>
               <td>
-                पूर्ववर्ती (Prefix): <strong>${prefix} दिन</strong> | उत्तरवर्ती (Suffix): <strong>${suffix} दिन</strong><br>
-                <small style="color: #64748b;">(कुल गैर-हाजिरी अवधि: <strong>${totalAbsence} दिन</strong>)</small>
+                Prefix: <strong>${prefix} Days</strong> | Suffix: <strong>${suffix} Days</strong><br>
+                <small style="color: #64748b;">(Total Absence Period: <strong>${totalAbsence} Days</strong>)</small>
               </td>
             </tr>
           ` : ''}
           <tr>
-            <th>अवकाश का स्पष्ट कारण</th>
+            <th>Specific Reason for Leave</th>
             <td><em>"${reason}"</em></td>
           </tr>
           <tr>
-            <th>न्यायालयीन पेशी स्थिति</th>
+            <th>Court Evidence / Summons Status</th>
             <td>
               ${courtDuty ? `
-                <span style="color: #dc2626; font-weight: 700;">⚠ हाँ, पेशी नियत है:</span> ${courtCaseDetails}<br>
-                केस डायरी व पैरवी सुपुर्द: <strong>${courtOfficerHandover}</strong>
+                <span style="color: #dc2626; font-weight: 700;">⚠ Yes, Hearing Scheduled:</span> ${courtCaseDetails}<br>
+                Case Diary Handed Over To: <strong>${courtOfficerHandover}</strong>
               ` : `
-                <span style="color: #16a34a; font-weight: 600;">✓ अवकाश अवधि में कोई न्यायालयीन पेशी / गवाही नियत नहीं है।</span>
+                <span style="color: #16a34a; font-weight: 600;">✓ No court evidence or summons scheduled during this period.</span>
               `}
             </td>
           </tr>
           <tr>
-            <th>कार्यभार / प्रभार सुपुर्दगी</th>
-            <td><strong>${handoverTo}</strong> को कार्यभार सौंपा गया है।</td>
+            <th>Charge Handover / Reliever</th>
+            <td>Relieving charge handed over to <strong>${handoverTo}</strong>.</td>
           </tr>
           <tr>
-            <th>आपातकालीन संपर्क</th>
+            <th>Emergency Contact</th>
             <td><strong>${emergencyContact}</strong></td>
           </tr>
           <tr>
-            <th>स्टेशन लीव (मुख्यालय छोड़ने का विवरण)</th>
+            <th>Station Leave (Out-of-HQ Details)</th>
             <td>
               ${stationLeave ? `
-                <span style="color: #b45309; font-weight: 700;">★ स्टेशन लीव अनुमति प्रार्थित है:</span><br>
-                • गंतव्य: <strong>${stationDestination}</strong> (स्थानीय थाना: <strong>${stationLocalPS}</strong>)<br>
-                • यात्रा माध्यम: <strong>${stationTravelMode}</strong><br>
-                • संपर्क परिजन: <strong>${stationFamilyContact}</strong><br>
-                • बाहर रहने का पता: ${stationLeaveAddress}
+                <span style="color: #b45309; font-weight: 700;">★ Station Leave Permission Requested:</span><br>
+                • Destination: <strong>${stationDestination}</strong> (Nearest Local PS: <strong>${stationLocalPS}</strong>)<br>
+                • Mode of Travel: <strong>${stationTravelMode}</strong><br>
+                • Family Contact: <strong>${stationFamilyContact}</strong><br>
+                • Address during leave: ${stationLeaveAddress}
               ` : `
-                <span style="color: #16a34a;">स्टेशन छोड़ने की आवश्यकता नहीं है (मुख्यालय पर उपस्थित रहेंगे)।</span>
+                <span style="color: #16a34a;">Station leave not required (Stationed at Headquarters).</span>
               `}
             </td>
           </tr>
           <tr>
-            <th>संलग्नक दस्तावेज</th>
+            <th>Attachment</th>
             <td>
               ${AppState.currentAttachment ? `
                 <span style="color: #1e40af; font-weight: 600;">📎 ${AppState.currentAttachment.name}</span> (${AppState.currentAttachment.size})
               ` : `
-                <span style="color: #64748b;">कोई दस्तावेज संलग्न नहीं किया गया।</span>
+                <span style="color: #64748b;">No document attached.</span>
               `}
             </td>
           </tr>
@@ -2066,12 +2066,12 @@ function openApplicationPreviewModal() {
 
       <div style="margin-top: 18px; padding-top: 12px; border-top: 1px dashed #cbd5e1; font-size: 0.8rem; color: #475569; display: flex; justify-content: space-between; align-items: flex-end;">
         <div>
-          * घोषणा: मेरे द्वारा दी गई उपरोक्त जानकारी पूर्णतः सत्य एवं नियमानुसार है।
+          * Declaration: The above information provided is true, correct, and in accordance with Haryana Police Rules.
         </div>
         <div style="text-align: right;">
           <div style="font-weight: 700; color: #0f274c;">${user.name}</div>
           <div>${user.rank} (${user.beltNo})</div>
-          <div>हस्ताक्षर आवेदक (Digital Stamp)</div>
+          <div>Applicant Digital Signature & Timestamp</div>
         </div>
       </div>
     </div>
@@ -2099,7 +2099,7 @@ function handleApplyLeaveSubmit(e) {
 
   const selectedBranchId = document.getElementById("leaveBranchSelect")?.value;
   if (!selectedBranchId) {
-    alert("कृपया अपनी साइबर शाखा चुनें (Please select Cyber Branch).");
+    alert("Please select your Cyber Branch.");
     return;
   }
   const branchObj = AppState.branches.find(b => b.id === selectedBranchId);
@@ -2107,7 +2107,7 @@ function handleApplyLeaveSubmit(e) {
 
   const leaveType = document.getElementById("leaveTypeSelect")?.value;
   if (!leaveType) {
-    alert("कृपया अवकाश का प्रकार चुनें (Please select Leave Type).");
+    alert("Please select Leave Type.");
     document.getElementById("leaveTypeSelect")?.focus();
     return;
   }
@@ -2115,30 +2115,30 @@ function handleApplyLeaveSubmit(e) {
   const fromDate = document.getElementById("leaveFromDate")?.value;
   const toDate = document.getElementById("leaveToDate")?.value;
   if (!fromDate || !toDate) {
-    alert("कृपया अवकाश की दोनों तिथियां (From Date & To Date) चुनें।");
+    alert("Please select both From Date and To Date.");
     return;
   }
 
   const reason = document.getElementById("leaveReason")?.value?.trim();
   if (!reason) {
-    alert("कृपया अवकाश का स्पष्ट कारण अवश्य लिखें (Please enter Reason for Leave).");
+    alert("Please enter the specific reason for leave.");
     document.getElementById("leaveReason")?.focus();
     return;
   }
 
-  const handoverTo = document.getElementById("handoverOfficer")?.value || "शाखा प्रभारी";
+  const handoverTo = document.getElementById("handoverOfficer")?.value || "Branch Incharge";
   const emergencyContact = document.getElementById("emergencyMobile")?.value || user.mobile;
 
   // FEATURE 5: MANDATORY MEDICAL CERTIFICATE VALIDATION
   if ((leaveType === "ML" || leaveType === "CCL") && !AppState.currentAttachment) {
-    showToast("मेडिकल अवकाश (ML) हेतु अधिकृत चिकित्सक का प्रमाण पत्र / पर्चा संलग्न करना अनिवार्य है!", "error");
-    alert("अनिवार्य दस्तावेज आवश्यक: मेडिकल अवकाश (ML) अथवा सीसीएल हेतु डॉक्टर का पर्चा / मेडिकल प्रमाण पत्र संलग्न करें।");
+    showToast("Medical certificate attachment is mandatory for Medical Leave (ML) / CCL!", "error");
+    alert("Mandatory document required: Please attach medical prescription / certificate.");
     document.getElementById("leaveAttachmentInput")?.focus();
     return;
   }
 
   if (new Date(toDate) < new Date(fromDate)) {
-    alert("त्रुटि: समाप्ति तिथि प्रारंभिक तिथि के बाद होनी चाहिए।");
+    alert("Error: To Date must be on or after From Date.");
     return;
   }
 
@@ -2168,7 +2168,7 @@ function handleApplyLeaveSubmit(e) {
   const stationLeaveAddress = stationLeave ? (document.getElementById("stationLeaveAddress")?.value || "") : "";
 
   const ltObj = LEAVE_TYPES.find(l => l.code === leaveType);
-  const leaveTypeName = ltObj ? `${ltObj.name} (${ltObj.hindi})` : leaveType;
+  const leaveTypeName = ltObj ? ltObj.name : leaveType;
 
   const now = new Date();
   const appliedAt = now.toISOString().replace("T", " ").substring(0, 16);
@@ -2233,7 +2233,7 @@ function handleApplyLeaveSubmit(e) {
   saveData();
   broadcastLiveAction({ action: "NEW_LEAVE", leave: newLeave });
 
-  showToast(`अवकाश आवेदन ${newId} (${totalDays} दिन) सफलतापूर्वक दर्ज किया गया। शाखा प्रभारी को अग्रेषित।`, "success");
+  showToast(`Leave Application ${newId} (${totalDays} Days) submitted successfully and forwarded to Branch Incharge.`, "success");
   switchTab("my_leaves");
 }
 
@@ -2249,12 +2249,12 @@ function renderMyLeaves(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          मेरे अवकाश आवेदन (My Leave History)
+          My Leave Applications
         </h2>
-        <p>आपके द्वारा दर्ज सभी अवकाश आवेदनों की वर्तमान स्थिति एवं स्वीकृति पत्र</p>
+        <p>Current status, recommendation trail, and official sanction slips of all your submitted leave applications</p>
       </div>
       <div>
-        <button class="btn btn-gold" onclick="switchTab('apply_leave')">नया आवेदन करें</button>
+        <button class="btn btn-gold" onclick="switchTab('apply_leave')">+ Apply New Leave</button>
       </div>
     </div>
 
@@ -2263,19 +2263,19 @@ function renderMyLeaves(container) {
         <table class="data-table">
           <thead>
             <tr>
-              <th>आवेदन आईडी</th>
-              <th>प्रकार (Type)</th>
-              <th>अवधि (Period)</th>
-              <th>दिन (Days)</th>
-              <th>कारण (Reason)</th>
-              <th>स्टेशन लीव</th>
-              <th>स्थिति (Status)</th>
-              <th>कार्रवाई (Action)</th>
+              <th>Application ID</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Ground / Reason</th>
+              <th>Station Leave</th>
+              <th>Current Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             ${userLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 30px;">कोई अवकाश आवेदन नहीं मिला।</td></tr>
+              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 30px;">No leave applications found.</td></tr>
             ` : userLeaves.map(leave => renderLeaveTableRow(leave)).join("")}
           </tbody>
         </table>
@@ -2299,13 +2299,13 @@ function renderInchargeDesk(container) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
-        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">पहुंच केवल शाखा प्रभारियों हेतु (Incharge Desk Access Restricted)</h3>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted to Branch Incharges</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-          यह पटल केवल <strong>शाखा प्रभारियों (Branch Incharges)</strong> के लिए है।
-          ${isSPRole ? '<br><span style="color: #1e3a8a; font-weight: 600;">एसपी महोदय अंतिम स्वीकृति हेतु "एसपी साइबर स्वीकृति पटल" का उपयोग करें।</span>' : ''}
+          This verification desk is restricted to authorized <strong>Branch Incharges</strong>.
+          ${isSPRole ? '<br><span style="color: #1e3a8a; font-weight: 600;">Superintendent of Police may use the SP Sanction Desk for final approval orders.</span>' : ''}
         </p>
         <button class="btn btn-primary" onclick="switchTab('${isSPRole ? 'sp_desk' : 'dashboard'}')">
-          ${isSPRole ? 'एसपी स्वीकृति पटल खोलें (Open SP Desk)' : 'डैशबोर्ड पर जाएं'}
+          ${isSPRole ? 'Open SP Sanction Desk' : 'Go to Dashboard'}
         </button>
       </div>
     `;
@@ -2313,7 +2313,7 @@ function renderInchargeDesk(container) {
   }
 
   const branch = AppState.branches.find(b => b.id === user.branchId);
-  const branchName = branch ? `${branch.name} (${branch.hindi})` : "Cyber Branch";
+  const branchName = branch ? branch.name : "Cyber Branch";
 
   // Filter pending leaves for this branch (or all branches for Admin / Reader / SP)
   const branchPendingLeaves = AppState.leaves.filter(l => {
@@ -2331,28 +2331,28 @@ function renderInchargeDesk(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-          शाखा प्रभारी डेस्क (Branch Incharge Verification Desk)
+          Branch Incharge Verification & Recommendation Desk
         </h2>
-        <p>शाखा: <strong>${isSP ? "समस्त 13 साइबर शाखाएं (SP / रीडर विशेषाधिकार)" : branchName}</strong> | प्रभारी: <strong>${user.name} (${user.rank})</strong></p>
+        <p>Branch: <strong>${isSP ? "All 13 Cyber Branches (Supervisory Admin / Reader Privileges)" : branchName}</strong> | Incharge: <strong>${user.name} (${user.rank})</strong></p>
       </div>
       <div>
         <button class="btn btn-outline btn-sm" onclick="renderApp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          रिफ्रेश (Refresh)
+          Refresh
         </button>
       </div>
     </div>
 
     <!-- NOTICE ON WORKFLOW -->
     <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 18px; border-radius: 6px; margin-bottom: 20px; font-size: 0.85rem; color: #1e3a8a;">
-      <strong>कार्यप्रणाली निर्देश:</strong> शाखा प्रभारी अपने अधीन कार्यरत जवानों के अवकाश आवेदन की समीक्षा करेंगे। यदि शाखा में कार्य व्यवस्था ठीक है तो <strong>"अनुशंसा सहित SP साइबर को अग्रेषित"</strong> करें अन्यथा कारण सहित अस्वीकार करें।
+      <strong>Standard Operating Procedure:</strong> Branch Incharge shall examine leave applications of staff under their command. Verify duty roster, court duties, and work arrangement, then forward with <strong>Recommendation to SP Cyber</strong> or reject with recorded grounds.
     </div>
 
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          अनुशंसा हेतु लंबित आवेदन (Pending for Branch Recommendation)
+          Applications Awaiting Branch Verification & Recommendation
           <span class="tab-badge" style="margin-left: 8px;">${branchPendingLeaves.length}</span>
         </div>
       </div>
@@ -2360,19 +2360,19 @@ function renderInchargeDesk(container) {
         <table class="data-table">
           <thead>
             <tr>
-              <th>आवेदन आईडी</th>
-              <th>कर्मचारी विवरण</th>
-              <th>अवकाश प्रकार</th>
-              <th>अवधि (Period)</th>
-              <th>दिन (Days)</th>
-              <th>कारण (Reason)</th>
-              <th>हैंडओवर किसे</th>
-              <th>कार्रवाई (Incharge Action)</th>
+              <th>Application ID</th>
+              <th>Personnel Details</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Ground / Reason</th>
+              <th>Relieving Handover</th>
+              <th>Incharge Action</th>
             </tr>
           </thead>
           <tbody>
             ${branchPendingLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 24px; background: #f0fdf4;">✓ वर्तमान में कोई आवेदन अनुशंसा हेतु लंबित नहीं है। सभी निपटाए जा चुके हैं।</td></tr>
+              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 24px; background: #f0fdf4;">✓ No applications pending for recommendation. All matters disposed.</td></tr>
             ` : branchPendingLeaves.map(leave => `
               <tr>
                 <td><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
@@ -2381,18 +2381,18 @@ function renderInchargeDesk(container) {
                   <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
                   <span class="branch-tag">${leave.branchName}</span>
                 </td>
-                <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName.split("(")[0]}</small></td>
-                <td>${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)}</td>
-                <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> दिन</td>
+                <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
+                <td>${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
                 <td style="max-width: 200px;">${leave.reason}</td>
                 <td>${leave.handoverTo || "-"}</td>
                 <td>
                   <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
-                      समीक्षा व अनुशंसा (Review)
+                      Review & Recommend
                     </button>
                     <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
-                      विवरण
+                      Details
                     </button>
                   </div>
                 </td>
@@ -2406,35 +2406,35 @@ function renderInchargeDesk(container) {
     <!-- PREVIOUSLY PROCESSED LEAVES -->
     <div class="card-table-wrap" style="margin-top: 24px;">
       <div class="table-toolbar">
-        <div class="table-title">इस शाखा के पूर्व में अनुशंसित / निपटाए गए आवेदन (Branch Processed Leaves)</div>
+        <div class="table-title">Branch Disposed / Processed Leave Register</div>
       </div>
       <div class="responsive-table">
         <table class="data-table">
           <thead>
             <tr>
-              <th>आईडी</th>
-              <th>कर्मचारी</th>
-              <th>प्रकार</th>
-              <th>अवधि</th>
-              <th>दिन</th>
-              <th>प्रभारी रिमार्क (Incharge Remarks)</th>
-              <th>अंतिम स्थिति</th>
-              <th>विवरण</th>
+              <th>Leave ID</th>
+              <th>Personnel</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Incharge Remarks</th>
+              <th>Current Status</th>
+              <th>Details</th>
             </tr>
           </thead>
           <tbody>
             ${branchProcessedLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">कोई पूर्व रिकॉर्ड नहीं।</td></tr>
+              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No previous records found.</td></tr>
             ` : branchProcessedLeaves.slice(0, 8).map(leave => `
               <tr>
                 <td>${leave.id}</td>
                 <td><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
                 <td>${leave.leaveType}</td>
                 <td>${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}</td>
-                <td>${leave.totalDays} दिन</td>
+                <td>${leave.totalDays} Days</td>
                 <td><small>${leave.inchargeRemarks || "-"}</small></td>
                 <td>${getStatusBadge(leave.status)}</td>
-                <td><button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">विवरण</button></td>
+                <td><button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">Details</button></td>
               </tr>
             `).join("")}
           </tbody>
@@ -2459,9 +2459,9 @@ function renderSPDesk(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          पुलिस अधीक्षक (साइबर) अंतिम स्वीकृति पटल (SP Cyber Approval Desk)
+          Superintendent of Police (Cyber) Sanction Desk
         </h2>
-        <p>सर्वोच्च स्वीकृति अधिकारी: <strong>Mayank Gupta, IPS (SP Cyber Crime, Panchkula)</strong></p>
+        <p>Sanctioning Authority: <strong>Mayank Gupta, IPS (SP Cyber Crime, Panchkula)</strong></p>
       </div>
     </div>
 
@@ -2469,38 +2469,38 @@ function renderSPDesk(container) {
     <div class="stats-grid">
       <div class="stat-card gold">
         <div class="stat-header">
-          <span class="stat-title">अंतिम स्वीकृति हेतु लंबित</span>
+          <span class="stat-title">Pending SP Sanction</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
         <div class="stat-number">${recommendedLeaves.length}</div>
-        <div class="stat-subtext">शाखा प्रभारियों द्वारा अनुशंसित</div>
+        <div class="stat-subtext">Recommended by Branch Incharges</div>
       </div>
 
       <div class="stat-card green">
         <div class="stat-header">
-          <span class="stat-title">स्वीकृत अवकाश (Approved)</span>
+          <span class="stat-title">Sanctioned Leaves</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         </div>
         <div class="stat-number">${approvedLeaves.length}</div>
-        <div class="stat-subtext">आदेश जारी किए जा चुके हैं</div>
+        <div class="stat-subtext">Official Orders Dispatched</div>
       </div>
 
       <div class="stat-card blue">
         <div class="stat-header">
-          <span class="stat-title">कुल साइबर शाखाएं</span>
+          <span class="stat-title">Cyber Wings / Branches</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
         </div>
         <div class="stat-number">13</div>
-        <div class="stat-subtext">पंचकूला मुख्यालय एवं विंग्स</div>
+        <div class="stat-subtext">Panchkula HQ & Specialized Units</div>
       </div>
 
       <div class="stat-card purple">
         <div class="stat-header">
-          <span class="stat-title">हेल्पलाइन 1930 नफरी</span>
+          <span class="stat-title">Helpline 1930 Staffing</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
         </div>
         <div class="stat-number">100%</div>
-        <div class="stat-subtext">24x7 कॉल रिस्पॉन्स एक्टिव</div>
+        <div class="stat-subtext">24x7 Operations Online</div>
       </div>
     </div>
 
@@ -2508,27 +2508,27 @@ function renderSPDesk(container) {
       <div class="table-toolbar">
         <div class="table-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          शाखा प्रभारियों द्वारा अनुशंसित अवकाश (Recommended Leaves Awaiting SP Sanction)
+          Leaves Recommended by Branch Incharges Awaiting SP Sanction
         </div>
       </div>
       <div class="responsive-table">
         <table class="data-table">
           <thead>
             <tr>
-              <th>आईडी</th>
-              <th>कर्मचारी एवं शाखा</th>
-              <th>प्रकार</th>
-              <th>अवधि</th>
-              <th>दिन</th>
-              <th>कारण (Reason)</th>
-              <th>शाखा प्रभारी अनुशंसा (Incharge Remarks)</th>
-              <th>स्टेशन लीव</th>
-              <th>कार्रवाई (SP Action)</th>
+              <th>Application ID</th>
+              <th>Personnel & Branch</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Ground / Reason</th>
+              <th>Incharge Recommendation / Remarks</th>
+              <th>Station Leave</th>
+              <th>Action / Order</th>
             </tr>
           </thead>
           <tbody>
             ${recommendedLeaves.length === 0 ? `
-              <tr><td colspan="9" style="text-align: center; color: #166534; padding: 26px;">✓ वर्तमान में एसपी महोदय की स्वीकृति हेतु कोई भी आवेदन लंबित नहीं है।</td></tr>
+              <tr><td colspan="9" style="text-align: center; color: #166534; padding: 26px;">✓ No leave applications currently pending for SP sanction.</td></tr>
             ` : recommendedLeaves.map(leave => `
               <tr>
                 <td><strong>${leave.id}</strong></td>
@@ -2538,16 +2538,16 @@ function renderSPDesk(container) {
                   <span class="branch-tag">${leave.branchName}</span>
                 </td>
                 <td><span style="font-weight: 700;">${leave.leaveType}</span></td>
-                <td>${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)}</td>
-                <td><strong>${leave.totalDays}</strong> दिन</td>
+                <td>${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                <td><strong>${leave.totalDays}</strong> Days</td>
                 <td style="max-width: 180px;">${leave.reason}</td>
                 <td style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
-                  "${leave.inchargeRemarks || 'अनुशंसित'}"
+                  "${leave.inchargeRemarks || 'Recommended'}"
                 </td>
-                <td>${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">हाँ (Yes)</span>' : 'नहीं'}</td>
+                <td>${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
                 <td>
                   <button class="btn btn-gold btn-sm" onclick="openSPActionModal('${leave.id}')">
-                    स्वीकृति / निर्णय लें
+                    Sanction / Record Order
                   </button>
                 </td>
               </tr>
@@ -2570,9 +2570,9 @@ function renderBranchesView(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-          साइबर क्राइम शाखाएं एवं नफरी स्थिति (13 Cyber Branches of Panchkula)
+          Cyber Crime Branches & Strength Deployment (13 Cyber Units)
         </h2>
-        <p>हरियाणा साइबर पुलिस की सभी 13 शाखाओं का विवरण, प्रभारी अधिकारी एवं वर्तमान नफरी तैनाती</p>
+        <p>Overview of all 13 specialized Cyber Police branches, Incharge officers, and operational personnel deployment</p>
       </div>
     </div>
 
@@ -2597,13 +2597,13 @@ function renderBranchesView(container) {
                 </div>
                 <div class="branch-info">
                   <h4>${branch.name}</h4>
-                  <div class="hindi-name">${branch.hindi}</div>
+                  <div class="branch-code" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">CODE: ${branch.id.toUpperCase()}</div>
                 </div>
               </div>
 
               <div class="branch-incharge-line">
-                प्रभारी: <strong>${incharge ? `${incharge.name} (${incharge.rank})` : "नियुक्ति प्रक्रियाधीन"}</strong><br>
-                <small style="color: #64748b;">मो: ${incharge ? incharge.mobile : "-"}</small>
+                Incharge: <strong>${incharge ? `${incharge.name} (${incharge.rank})` : "Under Posting"}</strong><br>
+                <small style="color: #64748b;">Mobile: ${incharge ? incharge.mobile : "-"}</small>
               </div>
             </div>
 
@@ -2611,15 +2611,15 @@ function renderBranchesView(container) {
               <div class="branch-stats-pills">
                 <div class="branch-stat-item">
                   <div class="val">${branchMembers.length}</div>
-                  <div class="lbl">कुल स्टाफ</div>
+                  <div class="lbl">Total Strength</div>
                 </div>
                 <div class="branch-stat-item">
                   <div class="val" style="color: #16a34a;">${onDutyCount}</div>
-                  <div class="lbl">ड्यूटी पर</div>
+                  <div class="lbl">On Duty</div>
                 </div>
                 <div class="branch-stat-item">
                   <div class="val" style="color: #dc2626;">${onLeaveCount}</div>
-                  <div class="lbl">अवकाश पर</div>
+                  <div class="lbl">On Leave</div>
                 </div>
               </div>
             </div>
@@ -2643,11 +2643,11 @@ function renderMasterRegister(container) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
-        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">पहुंच प्रतिबंधित (Access Restricted)</h3>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-          मास्टर अवकाश रजिस्टर देखने एवं एक्सेल डाउनलोड करने की अनुमति केवल <strong>पुलिस अधीक्षक (SP Cyber)</strong> एवं <strong>रीडर पटल (Reader Desk)</strong> को है।
+          Master Leave Register and CSV export are strictly restricted to <strong>Superintendent of Police (SP Cyber)</strong> and the <strong>Supervisory Reader Desk</strong>.
         </p>
-        <button class="btn btn-primary" onclick="switchTab('dashboard')">डैशबोर्ड पर वापस जाएं</button>
+        <button class="btn btn-primary" onclick="switchTab('dashboard')">Return to Dashboard</button>
       </div>
     `;
     return;
@@ -2658,22 +2658,22 @@ function renderMasterRegister(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-          मास्टर अवकाश रजिस्टर (Master Leave Register)
+          Master Leave Register
         </h2>
-        <p>समस्त साइबर शाखाओं का समेकित अवकाश रिकॉर्ड, फ़िल्टर एवं एक्सेल एक्सपोर्ट</p>
+        <p>Consolidated leave records of all 13 cyber units with advanced filters and CSV/Excel export</p>
       </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn btn-outline" onclick="exportLeavesToCSV()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          एक्सेल एक्सपोर्ट (Export to Excel)
+          Export to Excel (CSV)
         </button>
         <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          डेटा बैकअप केंद्र (Backup & Restore)
+          Backup & Restore Center
         </button>
         <button class="btn btn-primary" onclick="window.print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          रजिस्टर प्रिंट करें
+          Print Register
         </button>
       </div>
     </div>
@@ -2681,23 +2681,23 @@ function renderMasterRegister(container) {
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-filters" style="width: 100%;">
-          <input type="text" id="registerSearchInput" class="search-input" placeholder="नाम, बेल्ट नं. या आईडी से खोजें..." oninput="filterRegisterTable()" style="min-width: 240px;">
+          <input type="text" id="registerSearchInput" class="search-input" placeholder="Search by Name, Belt No., or Leave ID..." oninput="filterRegisterTable()" style="min-width: 240px;">
           
           <select id="registerBranchFilter" class="select-filter" onchange="filterRegisterTable()">
-            <option value="">-- सभी 13 शाखाएं --</option>
+            <option value="">-- All 13 Branches --</option>
             ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
           </select>
 
           <select id="registerStatusFilter" class="select-filter" onchange="filterRegisterTable()">
-            <option value="">-- सभी स्थितियां (Status) --</option>
-            <option value="PENDING_INCHARGE">प्रभारी स्तर पर लंबित</option>
-            <option value="RECOMMENDED">अनुशंसित (SP लंबित)</option>
-            <option value="APPROVED">स्वीकृत (Approved)</option>
-            <option value="REJECTED">अस्वीकृत (Rejected)</option>
+            <option value="">-- All Statuses --</option>
+            <option value="PENDING_INCHARGE">Pending with Incharge</option>
+            <option value="RECOMMENDED">Recommended to SP</option>
+            <option value="APPROVED">Sanctioned / Approved</option>
+            <option value="REJECTED">Rejected</option>
           </select>
 
           <select id="registerTypeFilter" class="select-filter" onchange="filterRegisterTable()">
-            <option value="">-- सभी अवकाश प्रकार --</option>
+            <option value="">-- All Leave Types --</option>
             ${LEAVE_TYPES.map(lt => `<option value="${lt.code}">${lt.code} - ${lt.name}</option>`).join("")}
           </select>
         </div>
@@ -2707,15 +2707,15 @@ function renderMasterRegister(container) {
         <table class="data-table" id="masterTable">
           <thead>
             <tr>
-              <th>आईडी व तारीख</th>
-              <th>कर्मचारी विवरण</th>
-              <th>प्रकार</th>
-              <th>अवधि (Period)</th>
-              <th>दिन</th>
-              <th>कारण</th>
-              <th>स्टेशन लीव</th>
-              <th>स्थिति (Status)</th>
-              <th>आदेश / विवरण</th>
+              <th>ID & Applied Date</th>
+              <th>Personnel Details</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Ground / Reason</th>
+              <th>Station Leave</th>
+              <th>Current Status</th>
+              <th>Action / Order</th>
             </tr>
           </thead>
           <tbody id="masterTableBody">
@@ -2749,7 +2749,7 @@ function filterRegisterTable() {
   const tbody = document.getElementById("masterTableBody");
   if (tbody) {
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">फ़िल्टर के अनुसार कोई रिकॉर्ड नहीं मिला।</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">No records match the selected filter criteria.</td></tr>`;
     } else {
       tbody.innerHTML = filtered.map(l => renderLeaveTableRow(l, true)).join("");
     }
@@ -2761,32 +2761,32 @@ function exportLeavesToCSV() {
   const user = AppState.currentUser;
   const canViewRegister = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   if (!canViewRegister) {
-    showToast("अनुमति नहीं है (Permission Denied)", "error");
+    showToast("Permission Denied", "error");
     return;
   }
 
   const headers = [
-    "क्र. सं.",
-    "आवेदन क्रमांक (ID)",
-    "स्वीकृति आदेश सं. (Sanction No)",
-    "आवेदक का नाम",
-    "बेल्ट नंबर / PNO",
-    "पद (Rank)",
-    "शाखा (Branch)",
-    "अवकाश प्रकार (Leave Type)",
-    "कब से (From Date)",
-    "कब तक (To Date)",
-    "कुल स्वीकृत दिन (Days)",
-    "मूल आवेदित दिन",
-    "अवकाश का कारण (Reason)",
-    "स्टेशन लीव (Station Permission)",
-    "स्टेशन पर पता / गंतव्य",
-    "कार्यभार सुपुर्द (Handover To)",
-    "आपातकालीन संपर्क नंबर",
-    "वर्तमान स्थिति (Status)",
-    "आवेदन दिनांक (Applied At)",
-    "शाखा प्रभारी संस्तुति (Incharge Remarks)",
-    "एसपी साइबर अंतिम आदेश (SP Sanction Remarks)"
+    "S.No.",
+    "Application ID",
+    "Sanction Order No",
+    "Applicant Name",
+    "Belt No / PNO",
+    "Rank",
+    "Branch",
+    "Leave Type",
+    "From Date",
+    "To Date",
+    "Sanctioned Days",
+    "Originally Applied Days",
+    "Reason / Ground",
+    "Station Leave Permission",
+    "Station Destination / Address",
+    "Handover To",
+    "Emergency Contact No",
+    "Status",
+    "Applied At",
+    "Branch Incharge Remarks",
+    "SP Cyber Sanction Remarks"
   ];
   
   const rows = AppState.leaves.map((l, idx) => [
@@ -2803,7 +2803,7 @@ function exportLeavesToCSV() {
     l.totalDays,
     l.originalDays || l.totalDays,
     `"${(l.reason || '').replace(/"/g, '""')}"`,
-    l.stationLeave ? "स्वीकृत (Yes)" : "मुख्यालय पर (No)",
+    l.stationLeave ? "Granted (Yes)" : "At Station (No)",
     `"${(l.stationLeaveAddress || '').replace(/"/g, '""')}"`,
     `"${(l.handoverTo || '').replace(/"/g, '""')}"`,
     `"${l.emergencyContact || ''}"`,
@@ -2825,7 +2825,7 @@ function exportLeavesToCSV() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  showToast("अवकाश रजिस्टर सफलतापूर्वक एक्सेल (CSV) में डाउनलोड किया गया।", "success");
+  showToast("Leave Register downloaded successfully as Excel (CSV).", "success");
 }
 
 // Export Personnel Staff Directory to CSV / Excel
@@ -2835,23 +2835,23 @@ function exportStaffToCSV() {
   const targetUsers = isSP ? AppState.users : AppState.users.filter(u => u.branchId === user.branchId);
 
   const headers = [
-    "क्र.",
-    "कर्मचारी आईडी",
-    "पूरा नाम",
-    "बेल्ट नंबर / PNO",
-    "पद (Rank)",
-    "शाखा (Branch)",
-    "प्रणाली भूमिका (Role)",
-    "मोबाइल नंबर",
-    "ईमेल",
-    "CL शेष",
-    "EL शेष",
-    "ML शेष",
-    "PL शेष",
-    "CCL शेष",
-    "C-OFF शेष",
-    "HPL शेष",
-    "RH शेष"
+    "S.No.",
+    "Officer ID",
+    "Full Name",
+    "Belt No / PNO",
+    "Rank",
+    "Branch",
+    "System Role",
+    "Mobile Number",
+    "Email",
+    "CL Balance",
+    "EL Balance",
+    "ML Balance",
+    "PL Balance",
+    "CCL Balance",
+    "C-OFF Balance",
+    "HPL Balance",
+    "RH Balance"
   ];
 
   const rows = targetUsers.map((u, idx) => {
@@ -2891,7 +2891,7 @@ function exportStaffToCSV() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  showToast("स्टाफ डायरेक्टरी एक्सेल (CSV) सफलतापूर्वक डाउनलोड हो गई।", "success");
+  showToast("Personnel Staff Directory downloaded successfully as Excel (CSV).", "success");
 }
 
 // Open Database Backup & Excel Center Modal
@@ -2899,18 +2899,18 @@ function openBackupModal() {
   const user = AppState.currentUser;
   const canAccess = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   if (!canAccess) {
-    showToast("डेटा बैकअप केंद्र केवल एसपी साइबर एवं रीडर पटल हेतु उपलब्ध है।", "error");
+    showToast("Data Backup & Restore Center is restricted to SP Cyber and Reader Desk.", "error");
     return;
   }
 
   const statsEl = document.getElementById("backupDbStats");
   if (statsEl) {
     statsEl.innerHTML = `
-      शाखाएं: <strong>${AppState.branches.length}</strong> | 
-      दर्ज पुलिस नफरी: <strong>${AppState.users.length}</strong> | 
-      अवकाश रिकॉर्ड: <strong>${AppState.leaves.length}</strong> | 
-      सक्रिय नोटिस/आदेश: <strong>${(AppState.notices || []).length}</strong> | 
-      सर्वर LAN सिंक: <strong style="color: ${isLanServerConnected ? '#15803d' : '#b45309'};">${isLanServerConnected ? 'सक्रिय (LAN पोर्ट 8085)' : 'लोकल मोड (ऑफ़लाइन)'}</strong>
+      Branches: <strong>${AppState.branches.length}</strong> | 
+      Registered Force: <strong>${AppState.users.length}</strong> | 
+      Leave Records: <strong>${AppState.leaves.length}</strong> | 
+      Active Orders/Notices: <strong>${(AppState.notices || []).length}</strong> | 
+      Server LAN Sync: <strong style="color: ${isLanServerConnected ? '#15803d' : '#b45309'};">${isLanServerConnected ? 'Active (LAN Port 8085)' : 'Local Mode (Offline)'}</strong>
     `;
   }
   const previewBox = document.getElementById("restorePreviewBox");
@@ -2937,7 +2937,7 @@ function downloadFullJsonBackup() {
     headquarters: "Sector 20, Panchkula (Haryana)",
     version: "2.5-OFFICE",
     backupTimestamp: now.toISOString(),
-    backupDateReadable: now.toLocaleString("hi-IN"),
+    backupDateReadable: now.toLocaleString("en-IN"),
     exportedBy: user ? `${user.name} (${user.rank})` : "SP Cyber",
     statistics: {
       branches: AppState.branches.length,
@@ -2962,14 +2962,14 @@ function downloadFullJsonBackup() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  showToast("डेटाबेस का संपूर्ण बैकअप सफलतापूर्वक सुरक्षित डाउनलोड हो गया (.json)", "success");
+  showToast("Full database backup snapshot downloaded successfully (.json)", "success");
 }
 
 // Handle Database Restore from Selected JSON File
 function handleRestoreBackupSubmit() {
   const fileInput = document.getElementById("restoreBackupFileInput");
   if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    showToast("कृपया पहले कोई बैकअप JSON फ़ाइल चुनें", "error");
+    showToast("Please select a valid JSON backup file first.", "error");
     return;
   }
 
@@ -2980,16 +2980,16 @@ function handleRestoreBackupSubmit() {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.users || !data.leaves || !data.branches) {
-        showToast("अमान्य बैकअप फ़ाइल: आवश्यक फ़ील्ड (users, leaves, branches) अनुपस्थित हैं।", "error");
+        showToast("Invalid backup file: Missing required fields (users, leaves, branches).", "error");
         return;
       }
 
       const usersCount = data.users.length;
       const leavesCount = data.leaves.length;
       const noticesCount = (data.notices || []).length;
-      const exportDate = data.backupDateReadable || data.backupTimestamp || "अज्ञात";
+      const exportDate = data.backupDateReadable || data.backupTimestamp || "Unknown";
 
-      const confirmMsg = `फ़ाइल सत्यापन विवरण:\n\n• कुल नफरी (Users): ${usersCount}\n• कुल अवकाश रिकॉर्ड: ${leavesCount}\n• नोटिस व आदेश: ${noticesCount}\n• बैकअप दिनांक: ${exportDate}\n\nसावधानी: क्या आप वास्तव में वर्तमान डेटाबेस को इस बैकअप से बदलना चाहते हैं?`;
+      const confirmMsg = `File Verification Details:\n\n• Total Police Strength (Users): ${usersCount}\n• Total Leave Records: ${leavesCount}\n• Official Notices/Orders: ${noticesCount}\n• Backup Timestamp: ${exportDate}\n\nWARNING: Are you sure you want to restore and replace the current database with this backup file?`;
 
       if (confirm(confirmMsg)) {
         AppState.branches = data.branches;
@@ -3003,11 +3003,11 @@ function handleRestoreBackupSubmit() {
         renderApp();
         closeModals();
 
-        showToast("डेटाबेस सफलतापूर्वक रिस्टोर कर दिया गया!", "success");
+        showToast("Database restored successfully!", "success");
       }
     } catch (err) {
       console.error("Backup parse error", err);
-      showToast("फ़ाइल पढ़ने में त्रुटि: कृपया वैध JSON फ़ाइल चुनें।", "error");
+      showToast("File reading error: Please select a valid JSON file.", "error");
     }
   };
 
@@ -3020,11 +3020,11 @@ function handleRestoreBackupSubmit() {
 
 function getNoticeCategoryHindi(category) {
   switch (category) {
-    case "ORDER": return "📋 कार्यालय आदेश";
-    case "MEETING": return "📅 समीक्षा बैठक";
-    case "DIRECTIVE": return "⚡ तत्काल निर्देश";
-    case "GENERAL": return "ℹ️ सामान्य सूचना";
-    default: return "📢 आधिकारिक नोटिस";
+    case "ORDER": return "📋 Office Order";
+    case "MEETING": return "📅 Review Meeting";
+    case "DIRECTIVE": return "⚡ Urgent Directive";
+    case "GENERAL": return "ℹ️ General Notice";
+    default: return "📢 Official Notice";
   }
 }
 
@@ -3058,45 +3058,45 @@ function renderDashboardNoticesWidget() {
       <div class="notice-hero-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          साइबर सेल आधिकारिक नोटिस एवं कार्यालय आदेश (Official Notices & Orders)
+          Official Notices & Office Orders
         </h3>
         <div style="display: flex; gap: 8px; align-items: center;">
           ${isAuthorizedToPost ? `
             <button class="btn btn-gold btn-sm" onclick="openCreateNoticeModal()" style="padding: 4px 10px; font-size: 0.8rem;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              + नया आदेश / नोटिस जारी करें
+              + Issue New Order / Notice
             </button>
           ` : ''}
           <button class="btn btn-outline btn-sm" onclick="switchTab('notices')" style="color: #fff; border-color: rgba(255,255,255,0.4); padding: 4px 10px; font-size: 0.8rem;">
-            सभी नोटिस देखें (${allNotices.length}) &rarr;
+            View All Notices (${allNotices.length}) &rarr;
           </button>
         </div>
       </div>
       <div class="notice-hero-body">
         ${previewNotices.length === 0 ? `
           <div style="text-align: center; color: #64748b; padding: 14px; font-size: 0.88rem;">
-            वर्तमान में कोई सक्रिय कार्यालय नोटिस नहीं है।
+            No active office notices or circulars at present.
           </div>
         ` : previewNotices.map(n => `
           <div class="notice-item-row ${n.priority === 'URGENT' ? 'urgent' : ''} ${n.pinned ? 'pinned' : ''}">
             <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1;">
               <span class="notice-badge ${n.priority === 'URGENT' ? 'urgent' : (n.category ? n.category.toLowerCase() : 'general')}">
-                ${n.priority === 'URGENT' ? '🚨 तत्काल' : getNoticeCategoryHindi(n.category)}
+                ${n.priority === 'URGENT' ? '🚨 URGENT' : getNoticeCategoryHindi(n.category)}
               </span>
               <div>
                 <strong style="color: #0f274c; font-size: 0.95rem; cursor: pointer;" onclick="openViewNoticeModal('${n.id}')">
                   ${n.pinned ? '📌 ' : ''}${n.title}
                 </strong>
                 <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">
-                  <span>जारीकर्ता: <strong>${n.postedBy}</strong></span> | 
-                  <span>लक्षित: <span class="branch-tag" style="padding: 1px 6px; font-size: 0.72rem;">${n.targetBranchName || 'समस्त शाखाएं'}</span></span> | 
+                  <span>Issued By: <strong>${n.postedBy}</strong></span> | 
+                  <span>Target: <span class="branch-tag" style="padding: 1px 6px; font-size: 0.72rem;">${n.targetBranchName || 'All Branches'}</span></span> | 
                   <span>${n.postedAt}</span>
                 </div>
               </div>
             </div>
             <div style="margin-left: 14px; flex-shrink: 0;">
               <button class="btn btn-outline btn-sm" onclick="openViewNoticeModal('${n.id}')" style="padding: 3px 10px; font-size: 0.8rem;">
-                आदेश पढ़ें
+                Read Order
               </button>
             </div>
           </div>
@@ -3118,19 +3118,19 @@ function renderNoticesView(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          साइबर सेल आधिकारिक नोटिस बोर्ड एवं आदेश (Official Notice Board & Orders)
+          Cyber Crime Official Notice Board & Orders
         </h2>
-        <p>हरियाणा राज्य साइबर अपराध शाखा, पंचकूला मुख्यालय | आधिकारिक सर्कुलर, बैठक सूचना एवं निर्देश</p>
+        <p>State Cyber Crime Branch, Headquarters Panchkula | Official Circulars, Directives & Notices</p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         ${isAuthorizedToPost ? `
           <button class="btn btn-primary" onclick="openCreateNoticeModal()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            + नया आदेश / नोटिस जारी करें
+            + Issue New Order / Notice
           </button>
           <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            डेटा बैकअप केंद्र
+            Backup Center
           </button>
         ` : ''}
       </div>
@@ -3140,26 +3140,26 @@ function renderNoticesView(container) {
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-filters" style="width: 100%;">
-          <input type="text" id="noticeSearchInput" class="search-input" placeholder="शीर्षक, विषय अथवा निर्देश से खोजें..." oninput="filterNoticesGrid()" style="min-width: 260px;">
+          <input type="text" id="noticeSearchInput" class="search-input" placeholder="Search notices by title, subject or content..." oninput="filterNoticesGrid()" style="min-width: 260px;">
           
           <select id="noticeCategoryFilter" class="select-filter" onchange="filterNoticesGrid()">
-            <option value="">-- सभी श्रेणियां (All Categories) --</option>
-            <option value="ORDER">कार्यालय आदेश (Official Orders)</option>
-            <option value="MEETING">समीक्षा बैठकें (Review Meetings)</option>
-            <option value="DIRECTIVE">तत्काल निर्देश (Directives)</option>
-            <option value="GENERAL">सामान्य सूचना (General Notices)</option>
+            <option value="">-- All Notice Categories --</option>
+            <option value="ORDER">Office Orders</option>
+            <option value="MEETING">Review Meetings</option>
+            <option value="DIRECTIVE">Directives & Instructions</option>
+            <option value="GENERAL">General Notices</option>
           </select>
 
           <select id="noticeBranchFilter" class="select-filter" onchange="filterNoticesGrid()">
-            <option value="">-- समस्त शाखाएं / लक्षित --</option>
-            <option value="ALL">समस्त 13 साइबर शाखाएं</option>
+            <option value="">-- All Branches / Targeted --</option>
+            <option value="ALL">All 13 Cyber Branches</option>
             ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
           </select>
 
           <select id="noticePriorityFilter" class="select-filter" onchange="filterNoticesGrid()">
-            <option value="">-- सभी प्राथमिकताएं --</option>
-            <option value="URGENT">केवल तत्काल / High Priority</option>
-            <option value="NORMAL">सामान्य प्राथमिकता</option>
+            <option value="">-- All Priorities --</option>
+            <option value="URGENT">Urgent / High Priority Only</option>
+            <option value="NORMAL">Normal Priority</option>
           </select>
         </div>
       </div>
@@ -3186,8 +3186,8 @@ function renderNoticesGridCards(noticesList) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b; background: #fff; border-radius: 8px;">
         <div style="font-size: 2rem; margin-bottom: 8px;">📭</div>
-        <h4 style="color: #0f274c; margin-bottom: 6px;">कोई नोटिस या आदेश उपलब्ध नहीं है</h4>
-        <p style="font-size: 0.85rem;">चयनित फ़िल्टर के अनुसार कोई रिकॉर्ड नहीं मिला।</p>
+        <h4 style="color: #0f274c; margin-bottom: 6px;">No Notices or Orders Available</h4>
+        <p style="font-size: 0.85rem;">No records found matching the selected filter.</p>
       </div>
     `;
     return;
@@ -3205,11 +3205,11 @@ function renderNoticesGridCards(noticesList) {
       <div class="notice-card-header">
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
           <span class="notice-badge ${n.priority === 'URGENT' ? 'urgent' : (n.category ? n.category.toLowerCase() : 'general')}">
-            ${n.priority === 'URGENT' ? '🚨 तत्काल' : getNoticeCategoryHindi(n.category)}
+            ${n.priority === 'URGENT' ? '🚨 URGENT' : getNoticeCategoryHindi(n.category)}
           </span>
           ${n.pinned ? `<span class="notice-badge pinned">📌 PINNED</span>` : ''}
         </div>
-        <span class="branch-tag" style="font-size: 0.72rem;">${n.targetBranchName || 'समस्त शाखाएं'}</span>
+        <span class="branch-tag" style="font-size: 0.72rem;">${n.targetBranchName || 'All Branches'}</span>
       </div>
 
       <div class="notice-card-body">
@@ -3224,10 +3224,10 @@ function renderNoticesGridCards(noticesList) {
         </div>
         <div style="display: flex; gap: 6px;">
           <button class="btn btn-outline btn-sm" onclick="openViewNoticeModal('${n.id}')" style="padding: 4px 8px; font-size: 0.78rem;">
-            पूर्ण आदेश
+            Full Order
           </button>
           ${isAuthorizedToPost ? `
-            <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n.id}')" title="नोटिस हटाएं" style="padding: 4px 8px; font-size: 0.78rem;">
+            <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n.id}')" title="Delete Notice" style="padding: 4px 8px; font-size: 0.78rem;">
               🗑️
             </button>
           ` : ''}
@@ -3263,8 +3263,8 @@ function openCreateNoticeModal() {
   const branchSelect = document.getElementById("noticeTargetBranch");
   if (branchSelect) {
     branchSelect.innerHTML = `
-      <option value="ALL">समस्त 13 साइबर शाखाएं (All Cyber Branches)</option>
-      ${AppState.branches.map(b => `<option value="${b.id}">${b.name} (${b.hindi})</option>`).join("")}
+      <option value="ALL">All 13 Cyber Branches</option>
+      ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
     `;
   }
   document.getElementById("noticeTitle").value = "";
@@ -3286,7 +3286,7 @@ function handleCreateNoticeSubmit(e) {
   const content = document.getElementById("noticeContent").value.trim();
   const pinned = document.getElementById("noticePinTop").checked;
 
-  let targetBranchName = "समस्त 13 साइबर शाखाएं";
+  let targetBranchName = "All 13 Cyber Branches";
   if (targetBranch !== "ALL") {
     const b = AppState.branches.find(x => x.id === targetBranch);
     targetBranchName = b ? b.name : targetBranch;
@@ -3317,7 +3317,7 @@ function handleCreateNoticeSubmit(e) {
   closeModals();
   renderNavigationTabs();
   renderApp();
-  showToast(`कार्यालय आदेश/नोटिस सफलतापूर्वक जारी किया गया (${newNotice.id})`, "success");
+  showToast(`Official order/notice issued successfully (${newNotice.id})`, "success");
 }
 
 function openViewNoticeModal(noticeId) {
@@ -3330,24 +3330,24 @@ function openViewNoticeModal(noticeId) {
   bodyEl.innerHTML = `
     <div class="notice-print-sheet">
       <div class="notice-print-header">
-        <div style="font-size: 0.85rem; font-weight: 700; color: #475569; letter-spacing: 1px;">हरियाणा सरकार | GOVERNMENT OF HARYANA</div>
-        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f274c; margin: 6px 0 2px;">राज्य साइबर अपराध शाखा (STATE CYBER CRIME BRANCH)</h2>
-        <div style="font-size: 0.9rem; font-weight: 600; color: #1e3a8a;">पुलिस मुख्यालय, सेक्टर-20, पंचकूला (हरियाणा)</div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: #475569; letter-spacing: 1px;">GOVERNMENT OF HARYANA | STATE CYBER CRIME BRANCH</div>
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f274c; margin: 6px 0 2px;">STATE CYBER CRIME BRANCH, HARYANA</h2>
+        <div style="font-size: 0.9rem; font-weight: 600; color: #1e3a8a;">Police Headquarters, Sector 20, Panchkula (Haryana)</div>
         <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.84rem; color: #334155; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-          <span><strong>पत्रांक:</strong> CYB/HQ/ORD/2026/${notice.id.replace('NOT-2026-', '')}</span>
-          <span><strong>दिनांक:</strong> ${notice.postedAt}</span>
+          <span><strong>Dispatch No:</strong> CYB/HQ/ORD/2026/${notice.id.replace('NOT-2026-', '')}</span>
+          <span><strong>Date:</strong> ${notice.postedAt}</span>
         </div>
       </div>
 
       <div style="margin-bottom: 16px;">
         <span class="notice-badge ${notice.priority === 'URGENT' ? 'urgent' : (notice.category ? notice.category.toLowerCase() : 'general')}" style="font-size: 0.8rem; padding: 4px 10px;">
-          ${notice.priority === 'URGENT' ? '🚨 तत्काल / आवश्यक' : getNoticeCategoryHindi(notice.category)}
+          ${notice.priority === 'URGENT' ? '🚨 URGENT' : getNoticeCategoryHindi(notice.category)}
         </span>
-        <span class="branch-tag" style="margin-left: 8px;">लक्षित: ${notice.targetBranchName || 'समस्त शाखाएं'}</span>
+        <span class="branch-tag" style="margin-left: 8px;">Target: ${notice.targetBranchName || 'All Branches'}</span>
       </div>
 
       <h3 style="font-size: 1.15rem; color: #0f274c; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-        विषय: ${notice.title}
+        Subject: ${notice.title}
       </h3>
 
       <div style="font-size: 0.95rem; line-height: 1.7; color: #1e293b; white-space: pre-line; margin-bottom: 30px;">
@@ -3357,8 +3357,8 @@ function openViewNoticeModal(noticeId) {
       <div style="display: flex; justify-content: flex-end; margin-top: 40px; padding-top: 20px; border-top: 1px solid #cbd5e1;">
         <div style="text-align: center; min-width: 220px;">
           <div style="font-weight: 700; color: #0f274c; font-size: 0.95rem;">${notice.postedBy}</div>
-          <div style="font-size: 0.84rem; color: #475569;">राज्य साइबर अपराध शाखा</div>
-          <div style="font-size: 0.8rem; color: #64748b;">पंचकूला (हरियाणा)</div>
+          <div style="font-size: 0.84rem; color: #475569;">State Cyber Crime Branch</div>
+          <div style="font-size: 0.8rem; color: #64748b;">Panchkula (Haryana)</div>
         </div>
       </div>
     </div>
@@ -3368,13 +3368,13 @@ function openViewNoticeModal(noticeId) {
 }
 
 function deleteNotice(noticeId) {
-  if (confirm("क्या आप इस नोटिस/आदेश को हटाना चाहते हैं?")) {
+  if (confirm("Are you sure you want to delete this notice/order?")) {
     AppState.notices = (AppState.notices || []).filter(n => n.id !== noticeId);
     saveData();
     broadcastLiveAction({ action: "DELETE_NOTICE", noticeId: noticeId });
     renderNavigationTabs();
     renderApp();
-    showToast("नोटिस सफलतापूर्वक हटा दिया गया।", "info");
+    showToast("Notice deleted successfully.", "info");
   }
 }
 
@@ -3391,18 +3391,18 @@ function renderPersonnelDirectory(container) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
-        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">पहुंच प्रतिबंधित (Access Restricted)</h3>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-          साइबर पुलिस स्टाफ डायरेक्टरी देखने की अनुमति केवल <strong>शाखा प्रभारी (Branch Incharge)</strong> एवं <strong>पुलिस अधीक्षक (SP Cyber)</strong> महोदय को है।
+          Personnel Staff Directory is restricted to authorized <strong>Branch Incharges</strong> and the <strong>Superintendent of Police (SP Cyber)</strong>.
         </p>
-        <button class="btn btn-primary" onclick="switchTab('dashboard')">डैशबोर्ड पर वापस जाएं</button>
+        <button class="btn btn-primary" onclick="switchTab('dashboard')">Return to Dashboard</button>
       </div>
     `;
     return;
   }
 
   const userBranch = AppState.branches.find(b => b.id === user.branchId);
-  const userBranchName = userBranch ? (userBranch.hindi ? `${userBranch.hindi} (${userBranch.name})` : userBranch.name) : "आपकी शाखा";
+  const userBranchName = userBranch ? userBranch.name : "Your Branch";
 
   // If SP / Reader: Show full directory of all 13 branches.
   // If Branch Incharge: Show ONLY members belonging to their own branch.
@@ -3415,22 +3415,22 @@ function renderPersonnelDirectory(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          ${isSP ? 'केंद्रीय स्टाफ डायरेक्टरी (State Cyber Crime - All Branches)' : `शाखा स्टाफ डायरेक्टरी | ${userBranchName}`}
+          ${isSP ? 'State Cyber Crime Central Staff Directory' : `Branch Personnel Directory | ${userBranchName}`}
         </h2>
         <p>
           ${isSP 
-            ? 'समस्त 13 साइबर शाखाओं में पदस्थ संपूर्ण पुलिस बल (Full Police Force Directory)' 
-            : `केवल आपकी शाखा (<strong>${userBranchName}</strong>) में पदस्थ पुलिस अधिकारियों व जवानों की सूची`}
+            ? 'Complete personnel directory across all 13 specialized Cyber Crime branches' 
+            : `Roster of police officers and personnel posted in <strong>${userBranchName}</strong>`}
         </p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <button class="btn btn-outline" onclick="exportStaffToCSV()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          स्टाफ एक्सेल डाउनलोड
+          Download Staff CSV
         </button>
         <button class="btn btn-primary" onclick="openAddUserModal()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          ${isSP ? 'नया पुलिस जवान जोड़ें (Add Member)' : `अपनी शाखा में जवान जोड़ें (Add Member)`}
+          ${isSP ? '+ Add Personnel / Member' : `+ Add Branch Member`}
         </button>
       </div>
     </div>
@@ -3439,14 +3439,14 @@ function renderPersonnelDirectory(container) {
       <div class="table-toolbar">
         <div class="table-title">
           ${isSP 
-            ? `कुल दर्ज नफरी: <strong>${displayedUsers.length} अधिकारी / जवान</strong> (समस्त 13 शाखाएं)` 
-            : `शाखा नफरी: <strong>${displayedUsers.length} अधिकारी / जवान</strong> [${userBranchName}]`}
+            ? `Total Strength: <strong>${displayedUsers.length} Officers / Personnel</strong> (All 13 Branches)` 
+            : `Branch Strength: <strong>${displayedUsers.length} Personnel</strong> [${userBranchName}]`}
         </div>
         ${isSP ? `
           <div>
             <select id="directoryBranchFilter" class="select-filter" onchange="filterDirectoryTable(this.value)">
-              <option value="">-- सभी 13 शाखाएं देखें --</option>
-              ${AppState.branches.map(b => `<option value="${b.id}">${b.name} (${b.hindi})</option>`).join("")}
+              <option value="">-- View All 13 Branches --</option>
+              ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
             </select>
           </div>
         ` : ''}
@@ -3455,21 +3455,21 @@ function renderPersonnelDirectory(container) {
         <table class="data-table" id="directoryTable">
           <thead>
             <tr>
-              <th>आईडी / बेल्ट नं.</th>
-              <th>नाम</th>
-              <th>पद (Rank)</th>
-              <th>पदस्थ शाखा (Branch)</th>
-              <th>रोल (System Role)</th>
-              <th>संपर्क</th>
-              <th>CL कोटा</th>
-              <th>EL कोटा</th>
+              <th>ID / Belt No.</th>
+              <th>Name</th>
+              <th>Rank</th>
+              <th>Branch</th>
+              <th>System Role</th>
+              <th>Contact</th>
+              <th>CL Balance</th>
+              <th>EL Balance</th>
             </tr>
           </thead>
           <tbody id="directoryTableBody">
             ${displayedUsers.length === 0 ? `
               <tr>
                 <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">
-                  इस शाखा में वर्तमान में कोई अन्य सदस्य दर्ज नहीं है।
+                  No personnel records found for this branch.
                 </td>
               </tr>
             ` : displayedUsers.map(u => {
@@ -3482,8 +3482,8 @@ function renderPersonnelDirectory(container) {
                   <td><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
                   <td><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
                   <td><small>${u.mobile}<br>${u.email}</small></td>
-                  <td><strong>${u.leaveBalances?.CL ?? 0}</strong> दिन</td>
-                  <td><strong>${u.leaveBalances?.EL ?? 0}</strong> दिन</td>
+                  <td><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
+                  <td><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
                 </tr>
               `;
             }).join("")}
@@ -3531,7 +3531,7 @@ function printSitrepReport() {
   const user = AppState.currentUser;
   const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   if (!canViewSitrep) {
-    showToast("अनुमति नहीं है (Permission Denied)", "error");
+    showToast("Permission Denied", "error");
     return;
   }
   window.print();
@@ -3541,7 +3541,7 @@ function exportSitrepCSV(targetDate) {
   const user = AppState.currentUser;
   const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   if (!canViewSitrep) {
-    showToast("अनुमति नहीं है (Permission Denied)", "error");
+    showToast("Permission Denied", "error");
     return;
   }
   const dateStr = targetDate || currentSitrepDate;
@@ -3550,31 +3550,31 @@ function exportSitrepCSV(targetDate) {
     return l.fromDate <= dateStr && l.toDate >= dateStr;
   });
 
-  let csvContent = "\uFEFF"; // UTF-8 BOM for Excel Hindi support
-  csvContent += `हरियाणा पुलिस - राज्य साइबर अपराध शाखा पंचकूला\n`;
-  csvContent += `दैनिक नफरी एवं अवकाश रोज़नामचा रिपोर्ट (Daily Sitrep)\n`;
-  csvContent += `दिनांक: ${dateStr}, कुल नफरी: ${AppState.users.length}, ऑन-ड्यूटी: ${AppState.users.length - onLeaveList.length}, अवकाश पर: ${onLeaveList.length}\n\n`;
+  let csvContent = "\uFEFF"; // UTF-8 BOM for Excel
+  csvContent += `Haryana Police - State Cyber Crime Branch Headquarters Panchkula\n`;
+  csvContent += `Daily Force Strength & Leave Roznamcha Sitrep Report\n`;
+  csvContent += `Date: ${dateStr}, Total Strength: ${AppState.users.length}, On-Duty: ${AppState.users.length - onLeaveList.length}, On Leave: ${onLeaveList.length}\n\n`;
   
-  csvContent += `क्र. सं.,आईडी,आवेदक का नाम,पद (Rank),बेल्ट नं.,शाखा,अवकाश प्रकार,प्रारंभ तिथि,समाप्ति तिथि,कुल दिन,स्टेशन लीव गंतव्य,आपातकालीन संपर्क\n`;
+  csvContent += `S.No.,Application ID,Applicant Name,Rank,Belt No.,Branch,Leave Type,From Date,To Date,Days,Station Leave / Destination,Emergency Contact\n`;
 
   if (onLeaveList.length === 0) {
-    csvContent += `1,-,कोई पुलिस कर्मी अवकाश पर नहीं है (समस्त नफरी ड्यूटी पर उपस्थित),-,-,-,-,-,-,0,-,-\n`;
+    csvContent += `1,-,No personnel on leave (100% force present on duty),-,-,-,-,-,-,0,-,-\n`;
   } else {
     onLeaveList.forEach((l, idx) => {
-      csvContent += `${idx + 1},"${l.id}","${l.applicantName}","${l.rank}","${l.beltNo}","${l.branchName}","${l.leaveType} - ${l.leaveTypeName}","${l.fromDate}","${l.toDate}",${l.totalDays},"${l.stationLeave ? (l.stationDestination || l.stationLeaveAddress || 'स्वीकृत') : 'मुख्यालय पर'}","${l.emergencyContact || ''}"\n`;
+      csvContent += `${idx + 1},"${l.id}","${l.applicantName}","${l.rank}","${l.beltNo}","${l.branchName}","${l.leaveType} - ${l.leaveTypeName || ''}","${l.fromDate}","${l.toDate}",${l.totalDays},"${l.stationLeave ? (l.stationDestination || l.stationLeaveAddress || 'Granted') : 'Station HQ'}","${l.emergencyContact || ''}"\n`;
     });
   }
 
-  csvContent += `\n\nसमस्त 13 शाखाओं की नफरी स्थिति:\n`;
-  csvContent += `शाखा क्र.,शाखा का नाम,शाखा प्रभारी,कुल नफरी,ऑन-ड्यूटी,अवकाश पर,स्थिति\n`;
+  csvContent += `\n\nBranch Deployment Matrix (13 Cyber Units):\n`;
+  csvContent += `Branch No.,Branch Name,Branch Incharge,Total Strength,On-Duty,On Leave,Operational Status\n`;
 
   AppState.branches.forEach((b, idx) => {
     const branchUsers = AppState.users.filter(u => u.branchId === b.id);
     const branchIncharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
     const branchOnLeave = onLeaveList.filter(l => l.branchId === b.id).length;
     const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
-    const statusText = branchOnLeave > 0 ? `${branchOnLeave} अवकाश पर` : "100% उपस्थित";
-    csvContent += `${idx + 1},"${b.name}","${branchIncharge ? branchIncharge.name : 'नोडल अधिकारी'}",${branchUsers.length},${branchOnDuty},${branchOnLeave},"${statusText}"\n`;
+    const statusText = branchOnLeave > 0 ? `${branchOnLeave} On Leave` : "100% Present";
+    csvContent += `${idx + 1},"${b.name}","${branchIncharge ? branchIncharge.name : 'Nodal Officer'}",${branchUsers.length},${branchOnDuty},${branchOnLeave},"${statusText}"\n`;
   });
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -3585,7 +3585,7 @@ function exportSitrepCSV(targetDate) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  showToast(`दैनिक रोज़नामचा CSV (${dateStr}) सफलतापूर्वक डाउनलोड हुई।`, "success");
+  showToast(`Daily SITREP CSV (${dateStr}) downloaded successfully.`, "success");
 }
 
 function renderDailySitrep(container) {
@@ -3598,11 +3598,11 @@ function renderDailySitrep(container) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
-        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">पहुंच प्रतिबंधित (Access Restricted)</h3>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-          दैनिक नफरी एवं अवकाश रोज़नामचा (Sitrep) देखने व प्रिंट करने की अनुमति केवल <strong>पुलिस अधीक्षक (SP Cyber)</strong> एवं <strong>रीडर पटल (Reader Desk)</strong> को है।
+          Daily Force & Leave Sitrep Roznamcha is restricted to <strong>Superintendent of Police (SP Cyber)</strong> and the <strong>Reader Desk</strong>.
         </p>
-        <button class="btn btn-primary" onclick="switchTab('dashboard')">डैशबोर्ड पर वापस जाएं</button>
+        <button class="btn btn-primary" onclick="switchTab('dashboard')">Return to Dashboard</button>
       </div>
     `;
     return;
@@ -3639,25 +3639,25 @@ function renderDailySitrep(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          दैनिक नफरी व अवकाश रोज़नामचा (Daily Force & Leave Sitrep)
+          Daily Force & Leave Roznamcha (Daily Sitrep)
         </h2>
-        <p>हरियाणा राज्य साइबर अपराध मुख्यालय, पंचकूला | A4 प्रिंटेबल जनरल डायरी रोज़नामचा रिपोर्ट</p>
+        <p>State Cyber Crime Headquarters, Panchkula | Official A4 Printable General Diary Roznamcha Report</p>
       </div>
 
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
         <!-- Date Selector -->
         <div style="display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
-          <label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin: 0;">दिनांक:</label>
+          <label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin: 0;">Date:</label>
           <input type="date" value="${targetDate}" onchange="changeSitrepDate(this.value)" class="form-control" style="padding: 4px 8px; font-size: 0.84rem; border: none; width: auto; font-weight: 600;">
         </div>
 
-        <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-outline'}" onclick="setSitrepQuickDate(0)" title="आज की रिपोर्ट">आज</button>
-        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(1)" title="कल की रिपोर्ट">कल</button>
-        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(-1)" title="बीते कल की रिपोर्ट">बीता कल</button>
+        <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-outline'}" onclick="setSitrepQuickDate(0)" title="Today's Report">Today</button>
+        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(1)" title="Tomorrow's Report">Tomorrow</button>
+        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(-1)" title="Yesterday's Report">Yesterday</button>
 
         <button class="btn btn-gold btn-sm" onclick="printSitrepReport()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          प्रिंट / A4 रिपोर्ट (Print Sitrep)
+          Print A4 Report
         </button>
 
         <button class="btn btn-outline btn-sm" onclick="exportSitrepCSV('${targetDate}')">
@@ -3672,78 +3672,78 @@ function renderDailySitrep(container) {
       <!-- Top Emblem / Watermark Header -->
       <div class="sitrep-official-header">
         <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 1px;">HARYANA POLICE | STATE CYBER CRIME HEADQUARTERS</div>
-        <div class="sitrep-title">दैनिक नफरी एवं अवकाश रोज़नामचा रिपोर्ट (Daily Sitrep / GD Entry)</div>
-        <div class="sitrep-subtitle">हरियाणा राज्य साइबर अपराध शाखा, सेक्टर 20, पंचकूला | सक्षम प्राधिकारी: Mayank Gupta, IPS, SP Cyber Crime</div>
+        <div class="sitrep-title">DAILY STRENGTH & LEAVE ROZNAMCHA REPORT (DAILY SITREP / GD ENTRY)</div>
+        <div class="sitrep-subtitle">State Cyber Crime Branch, Sector 20, Panchkula | Competent Authority: Mayank Gupta, IPS, SP Cyber Crime</div>
         
         <div class="sitrep-meta-bar">
-          <div>रपट दिनांक: <strong>${displayDate}</strong></div>
-          <div>रपट पंजी क्रमांक: <strong>CYB/PKL/ROZ/${targetDate.replace(/-/g, '')}/01</strong></div>
-          <div>सत्र / समय: <strong>09:00 AM (मॉर्निंग परेड व रवानगी स्थिति)</strong></div>
+          <div>Report Date: <strong>${displayDate}</strong></div>
+          <div>GD Entry Dispatch No: <strong>CYB/PKL/ROZ/${targetDate.replace(/-/g, '')}/01</strong></div>
+          <div>Session / Time: <strong>09:00 Hours (Morning Roll Call & Departure Status)</strong></div>
         </div>
       </div>
 
       <!-- SITREP SUMMARY METRIC GRID -->
       <div class="sitrep-summary-grid">
         <div class="sitrep-metric-card navy">
-          <div class="sitrep-metric-title">कुल स्वीकृत नफरी (Total Force)</div>
+          <div class="sitrep-metric-title">Total Force Strength</div>
           <div class="sitrep-metric-num">${totalForce}</div>
-          <small style="color: #64748b; font-size: 0.72rem;">पंजीकृत साइबर पुलिस बल</small>
+          <small style="color: #64748b; font-size: 0.72rem;">Registered Cyber Police Strength</small>
         </div>
 
         <div class="sitrep-metric-card green">
-          <div class="sitrep-metric-title">ड्यूटी पर उपस्थित (On Duty)</div>
+          <div class="sitrep-metric-title">Personnel on Duty</div>
           <div class="sitrep-metric-num" style="color: #15803d;">${onDutyCount}</div>
-          <small style="color: #15803d; font-size: 0.72rem;">विभिन्न विंग्स व डेस्क पर तैनात</small>
+          <small style="color: #15803d; font-size: 0.72rem;">Deployed across wings & desks</small>
         </div>
 
         <div class="sitrep-metric-card amber">
-          <div class="sitrep-metric-title">स्वीकृत अवकाश पर (On Leave)</div>
+          <div class="sitrep-metric-title">Sanctioned on Leave</div>
           <div class="sitrep-metric-num" style="color: #b45309;">${onLeaveCount}</div>
-          <small style="color: #b45309; font-size: 0.72rem;">सक्षम स्तर से आदेशित</small>
+          <small style="color: #b45309; font-size: 0.72rem;">Sanctioned by Competent Authority</small>
         </div>
 
         <div class="sitrep-metric-card blue">
-          <div class="sitrep-metric-title">1930 हेल्पलाइन डेस्क</div>
+          <div class="sitrep-metric-title">1930 Helpline Operations</div>
           <div class="sitrep-metric-num" style="color: #1d4ed8;">${helplineOnDuty} / ${helplineUsers.length}</div>
-          <small style="color: #1d4ed8; font-size: 0.72rem;">24x7 कॉल सेंटर सक्रिय नफरी</small>
+          <small style="color: #1d4ed8; font-size: 0.72rem;">24x7 Call Center Duty Staff</small>
         </div>
 
         <div class="sitrep-metric-card navy">
-          <div class="sitrep-metric-title">स्टेशन लीव (HQ से बाहर)</div>
+          <div class="sitrep-metric-title">Station Leave (Out of HQ)</div>
           <div class="sitrep-metric-num" style="color: #6b21a8;">${stationLeaveCount}</div>
-          <small style="color: #6b21a8; font-size: 0.72rem;">मुख्यालय त्याग अनुमति प्राप्त</small>
+          <small style="color: #6b21a8; font-size: 0.72rem;">Permission to leave HQ granted</small>
         </div>
       </div>
 
       <!-- SECTION 1: PERSONNEL CURRENTLY ON LEAVE -->
       <div class="sitrep-section-header">
-        <span>भाग - 1: आज अवकाश पर रहने वाले पुलिस जवानों की सूची (Personnel on Sanctioned Leave)</span>
-        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">दिनांक: ${displayDate}</span>
+        <span>SECTION 1: PERSONNEL CURRENTLY ON SANCTIONED LEAVE</span>
+        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">Date: ${displayDate}</span>
       </div>
 
       ${onLeaveLeaves.length === 0 ? `
         <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 6px; padding: 22px; text-align: center; color: #166534; margin-bottom: 20px;">
-          <div style="font-size: 1.1rem; font-weight: 700;">✓ चयनित तिथि को कोई भी पुलिस कर्मी अवकाश पर नहीं है।</div>
-          <div style="font-size: 0.85rem; margin-top: 4px; color: #15803d;">मुख्यालय की समस्त 13 शाखाओं की कुल ${totalForce} नफरी पूर्णतः ऑन-ड्यूटी उपस्थित है।</div>
+          <div style="font-size: 1.1rem; font-weight: 700;">✓ No police personnel on leave on the selected date.</div>
+          <div style="font-size: 0.85rem; margin-top: 4px; color: #15803d;">Entire force strength of ${totalForce} personnel across all 13 branches is present on duty.</div>
         </div>
       ` : `
         <table class="sitrep-table">
           <thead>
             <tr>
-              <th style="width: 40px; text-align: center;">क्र.</th>
-              <th>नाम, पद व बेल्ट नं.</th>
-              <th>संबद्ध शाखा (Branch)</th>
-              <th>अवकाश का प्रकार</th>
-              <th>अवकाश अवधि (From - To)</th>
-              <th style="text-align: center;">कुल दिन</th>
-              <th>स्टेशन लीव / गंतव्य</th>
-              <th>आपातकालीन मोबाइल</th>
-              <th>वापसी ड्यूटी संभावित</th>
+              <th style="width: 40px; text-align: center;">S.No.</th>
+              <th>Name, Rank & Belt No.</th>
+              <th>Branch</th>
+              <th>Leave Type</th>
+              <th>Leave Period (From - To)</th>
+              <th style="text-align: center;">Days</th>
+              <th>Station Leave / Destination</th>
+              <th>Emergency Contact</th>
+              <th>Expected Resumption</th>
             </tr>
           </thead>
           <tbody>
             ${onLeaveLeaves.map((l, idx) => {
-              let returnDateStr = "अगले कार्यदिवस";
+              let returnDateStr = "Next Working Day";
               try {
                 const toD = new Date(l.toDate);
                 toD.setDate(toD.getDate() + 1);
@@ -3760,19 +3760,19 @@ function renderDailySitrep(container) {
                   <td><span class="branch-tag">${l.branchName}</span></td>
                   <td>
                     <strong style="color: #1e3a8a;">${l.leaveType}</strong><br>
-                    <small style="color: #64748b;">${l.leaveTypeName}</small>
+                    <small style="color: #64748b;">${l.leaveTypeName || ''}</small>
                   </td>
                   <td>
-                    <strong>${formatDate(l.fromDate)}</strong> से<br>
+                    <strong>${formatDate(l.fromDate)}</strong> to<br>
                     <strong>${formatDate(l.toDate)}</strong>
                   </td>
-                  <td style="text-align: center; font-weight: 700; color: #0f172a;">${l.totalDays} दिन</td>
+                  <td style="text-align: center; font-weight: 700; color: #0f172a;">${l.totalDays} Days</td>
                   <td>
                     ${l.stationLeave ? `
-                      <span style="color: #b45309; font-weight: 700;">★ स्टेशन लीव</span><br>
-                      <small style="color: #475569;">${l.stationDestination || l.stationLeaveAddress || 'स्वीकृत पते पर'}</small>
+                      <span style="color: #b45309; font-weight: 700;">★ Station Leave</span><br>
+                      <small style="color: #475569;">${l.stationDestination || l.stationLeaveAddress || 'At Sanctioned Address'}</small>
                     ` : `
-                      <span style="color: #166534; font-weight: 600;">मुख्यालय पर</span>
+                      <span style="color: #166534; font-weight: 600;">At Station HQ</span>
                     `}
                   </td>
                   <td><strong>${l.emergencyContact || '-'}</strong></td>
@@ -3786,20 +3786,20 @@ function renderDailySitrep(container) {
 
       <!-- SECTION 2: 13 BRANCHES FORCE STRENGTH MATRIX -->
       <div class="sitrep-section-header">
-        <span>भाग - 2: समस्त 13 साइबर शाखाओं की नफरी व उपस्थिति स्थिति (13 Branches Deployment Matrix)</span>
-        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">कुल शाखाएं: 13 | मुख्यालय पंचकूला</span>
+        <span>SECTION 2: 13 CYBER BRANCHES DEPLOYMENT & STRENGTH MATRIX</span>
+        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">Total Units: 13 | Headquarters Panchkula</span>
       </div>
 
       <table class="sitrep-table">
         <thead>
           <tr>
-            <th style="width: 40px; text-align: center;">क्र.</th>
-            <th>शाखा का नाम (Cyber Branch)</th>
-            <th>शाखा प्रभारी (Branch Incharge)</th>
-            <th style="text-align: center;">स्वीकृत नफरी</th>
-            <th style="text-align: center;">ड्यूटी उपस्थित</th>
-            <th style="text-align: center;">अवकाश पर</th>
-            <th>संचालन स्थिति (Operational Status)</th>
+            <th style="width: 40px; text-align: center;">S.No.</th>
+            <th>Cyber Branch</th>
+            <th>Branch Incharge</th>
+            <th style="text-align: center;">Sanctioned</th>
+            <th style="text-align: center;">On Duty</th>
+            <th style="text-align: center;">On Leave</th>
+            <th>Operational Status</th>
           </tr>
         </thead>
         <tbody>
@@ -3814,11 +3814,11 @@ function renderDailySitrep(container) {
               <tr>
                 <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
                 <td>
-                  <strong>${b.hindi || b.name}</strong><br>
-                  <small style="color: #64748b;">${b.name}</small>
+                  <strong>${b.name}</strong><br>
+                  <small style="color: #64748b;">CODE: ${b.id.toUpperCase()}</small>
                 </td>
                 <td>
-                  ${incharge ? `<strong>${incharge.name}</strong><br><small style="color: #64748b;">${incharge.rank}</small>` : '<span style="color: #94a3b8;">नोडल अधिकारी</span>'}
+                  ${incharge ? `<strong>${incharge.name}</strong><br><small style="color: #64748b;">${incharge.rank}</small>` : '<span style="color: #94a3b8;">Nodal Officer</span>'}
                 </td>
                 <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
                 <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
@@ -3827,12 +3827,12 @@ function renderDailySitrep(container) {
                   ${isFullStrength ? `
                     <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d; font-weight: 600; font-size: 0.78rem;">
                       <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a;"></span>
-                      पूर्ण सक्रिय (100% On-Duty)
+                      100% Operational (On-Duty)
                     </span>
                   ` : `
                     <span style="display: inline-flex; align-items: center; gap: 4px; color: #b45309; font-weight: 600; font-size: 0.78rem;">
                       <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span>
-                      सक्रिय (${branchOnDuty} उपस्थित, ${branchOnLeave} अवकाश पर)
+                      Active (${branchOnDuty} Present, ${branchOnLeave} on Leave)
                     </span>
                   `}
                 </td>
@@ -3845,33 +3845,33 @@ function renderDailySitrep(container) {
       <!-- OFFICIAL VERIFICATION & SIGNATURES BLOCK -->
       <div class="sitrep-signature-block">
         <div class="sitrep-sig-box">
-          <div style="font-size: 0.78rem; color: #64748b;">तैयारकर्ता / उपस्थिति मिलान:</div>
+          <div style="font-size: 0.78rem; color: #64748b;">Prepared & Verified By:</div>
           <div class="sitrep-sig-line">
-            मुंशी / रीडर एसपी साइबर<br>
+            Reader to SP Cyber Crime<br>
             <span style="font-size: 0.76rem; font-weight: normal; color: #64748b;">Reader to SP Cyber Crime, Panchkula</span>
           </div>
         </div>
 
         <div class="sitrep-sig-box">
-          <div style="font-size: 0.78rem; color: #64748b;">सत्यापनकर्ता अधिकारी:</div>
+          <div style="font-size: 0.78rem; color: #64748b;">Supervisory Officer:</div>
           <div class="sitrep-sig-line">
-            डीएसपी साइबर / नोडल अधिकारी<br>
+            DSP Cyber Crime / Establishment<br>
             <span style="font-size: 0.76rem; font-weight: normal; color: #64748b;">DSP Cyber / Establishment Incharge</span>
           </div>
         </div>
 
         <div class="sitrep-sig-box">
-          <div style="font-size: 0.78rem; color: #64748b;">सक्षम स्वीकृति प्राधिकारी:</div>
+          <div style="font-size: 0.78rem; color: #64748b;">Sanctioning Authority:</div>
           <div class="sitrep-sig-line">
             Mayank Gupta, IPS<br>
-            <span style="font-size: 0.76rem; font-weight: 600; color: #0f274c;">पुलिस अधीक्षक, राज्य साइबर अपराध</span><br>
-            <span style="font-size: 0.74rem; font-weight: normal; color: #64748b;">पंचकूला (हरियाणा)</span>
+            <span style="font-size: 0.76rem; font-weight: 600; color: #0f274c;">Superintendent of Police, State Cyber Crime</span><br>
+            <span style="font-size: 0.74rem; font-weight: normal; color: #64748b;">Panchkula (Haryana)</span>
           </div>
         </div>
       </div>
 
       <div style="margin-top: 18px; font-size: 0.74rem; color: #94a3b8; text-align: center; border-top: 1px dotted #cbd5e1; padding-top: 8px;">
-        यह दैनिक रोज़नामचा रपट हरियाणा राज्य साइबर अपराध मुख्यालय पंचकूला के डिजिटल अवकाश प्रबंधन सर्वर द्वारा स्वतः संकलित की गई है।
+        This Daily Sitrep Roznamcha report is electronically generated and compiled by the Digital Leave Management System of State Cyber Crime Headquarters, Panchkula (Haryana).
       </div>
     </div>
   `;
@@ -3905,64 +3905,64 @@ function openLeaveDetailsModal(leaveId) {
     <div class="stepper-box">
       <div class="step-node completed">
         <div class="step-circle">1</div>
-        <div class="step-label">आवेदन दर्ज (Applied)</div>
+        <div class="step-label">Applied</div>
       </div>
       <div class="step-node ${isRecommended || isApproved ? 'completed' : (isPendingIncharge ? 'active' : '')}">
         <div class="step-circle">${isRecommended || isApproved ? '✓' : '2'}</div>
-        <div class="step-label">शाखा प्रभारी अनुशंसा</div>
+        <div class="step-label">Branch Recommendation</div>
       </div>
       <div class="step-node ${isApproved ? 'completed' : (isRecommended ? 'active' : '')}">
         <div class="step-circle">${isApproved ? '✓' : '3'}</div>
-        <div class="step-label">एसपी साइबर स्वीकृति</div>
+        <div class="step-label">SP Cyber Sanction</div>
       </div>
       <div class="step-node ${isApproved ? 'completed' : ''}">
         <div class="step-circle">${isApproved ? '★' : '4'}</div>
-        <div class="step-label">आदेश निर्गत</div>
+        <div class="step-label">Order Dispatched</div>
       </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.88rem;">
       <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
-        <span style="color: #64748b; font-size: 0.78rem;">आवेदक:</span><br>
+        <span style="color: #64748b; font-size: 0.78rem;">Applicant:</span><br>
         <strong>${leave.applicantName}</strong> (${leave.rank})<br>
-        बेल्ट नं: <strong>${leave.beltNo}</strong><br>
-        शाखा: <strong>${leave.branchName}</strong>
+        Belt No: <strong>${leave.beltNo}</strong><br>
+        Branch: <strong>${leave.branchName}</strong>
       </div>
 
       <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
-        <span style="color: #64748b; font-size: 0.78rem;">अवकाश विवरण:</span><br>
-        प्रकार: <strong>${leave.leaveTypeName}</strong><br>
-        अवधि: <strong>${formatDate(leave.fromDate)}</strong> से <strong>${formatDate(leave.toDate)}</strong><br>
-        कुल दिन: <strong>${leave.totalDays} दिन</strong>
-        ${leave.isHalfDay ? `<br><span style="color: #b45309; font-weight: 600;">(आधा दिन / 0.5 Day: ${leave.halfDayShift})</span>` : ''}
-        ${leave.prefixDays > 0 || leave.suffixDays > 0 ? `<br><small style="color: #475569;">प्रीफिक्स: ${leave.prefixDays || 0} दिन | सफिक्स: ${leave.suffixDays || 0} दिन</small>` : ''}
+        <span style="color: #64748b; font-size: 0.78rem;">Leave Details:</span><br>
+        Type: <strong>${leave.leaveTypeName || leave.leaveType}</strong><br>
+        Period: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong><br>
+        Total Days: <strong>${leave.totalDays} Days</strong>
+        ${leave.isHalfDay ? `<br><span style="color: #b45309; font-weight: 600;">(Half Day - ${leave.halfDayShift})</span>` : ''}
+        ${leave.prefixDays > 0 || leave.suffixDays > 0 ? `<br><small style="color: #475569;">Prefix: ${leave.prefixDays || 0} Days | Suffix: ${leave.suffixDays || 0} Days</small>` : ''}
       </div>
 
       <!-- CURTAILMENT / REDUCTION NOTICE IF APPLICABLE -->
       ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
         <div style="grid-column: 1 / -1; background: #fffbeb; border: 1px solid #fef08a; padding: 12px 16px; border-radius: 8px;">
-          <span style="color: #92400e; font-weight: 700;">✂️ अवकाश दिवस में कटौती विवरण (Curtailment Note):</span>
+          <span style="color: #92400e; font-weight: 700;">✂️ Leave Curtailment / Modification Record:</span>
           <div style="color: #78350f; font-size: 0.82rem; margin-top: 4px;">
-            मूल आवेदित अवकाश: <strong>${leave.originalDays} दिन</strong> (${formatDate(leave.fromDate)} से ${formatDate(leave.originalToDate)}) ➔ 
-            घटाकर स्वीकृत/अनुशंसित: <strong>${leave.totalDays} दिन</strong> (${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)})<br>
-            कटौती करने वाले अधिकारी: <strong>${leave.curtailedBy || 'सक्षम अधिकारी'}</strong>
-            ${leave.curtailReason ? `<br>कारण: <em>"${leave.curtailReason}"</em>` : ''}
+            Originally Applied: <strong>${leave.originalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.originalToDate)}) ➔ 
+            Modified / Sanctioned: <strong>${leave.totalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)})<br>
+            Curtailing Authority: <strong>${leave.curtailedBy || 'Competent Authority'}</strong>
+            ${leave.curtailReason ? `<br>Ground: <em>"${leave.curtailReason}"</em>` : ''}
           </div>
         </div>
       ` : ''}
 
       <div style="grid-column: 1 / -1; background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
-        <span style="color: #64748b; font-size: 0.78rem;">अवकाश का कारण (Reason):</span><br>
+        <span style="color: #64748b; font-size: 0.78rem;">Reason / Ground for Leave:</span><br>
         <p style="margin-top: 4px;">${leave.reason}</p>
       </div>
 
       <!-- COURT EVIDENCE / DUTY HANDOVER IF APPLICABLE -->
       ${leave.courtDuty ? `
         <div style="grid-column: 1 / -1; background: #fefce8; border: 1px solid #fef08a; padding: 12px; border-radius: 8px; font-size: 0.84rem;">
-          <span style="color: #854d0e; font-weight: 700;">⚖️ न्यायालयीन गवाही / पेशी विवरण:</span>
+          <span style="color: #854d0e; font-weight: 700;">⚖️ Court Evidence & Appearance Details:</span>
           <div style="color: #713f12; margin-top: 4px;">
-            केस / अदालत: <strong>${leave.courtCaseDetails || 'उल्लिखित'}</strong><br>
-            केस डायरी व पैरवी सुपुर्द: <strong>${leave.courtHandoverOfficer || 'नामित सहकर्मी'}</strong>
+            Case / Court: <strong>${leave.courtCaseDetails || 'Declared'}</strong><br>
+            Case Diary / Pairvi Handover: <strong>${leave.courtHandoverOfficer || 'Nominated Colleague'}</strong>
           </div>
         </div>
       ` : ''}
@@ -3977,58 +3977,58 @@ function openLeaveDetailsModal(leaveId) {
               </div>
               <div>
                 <strong style="color: #0f274c; font-size: 0.88rem;">${leave.attachment.name}</strong>
-                <div style="font-size: 0.74rem; color: #64748b;">आकार: ${leave.attachment.size || 'उपलब्ध'} | प्रकार: ${leave.attachment.type || 'दस्तावेज'}</div>
+                <div style="font-size: 0.74rem; color: #64748b;">Size: ${leave.attachment.size || 'Available'} | Type: ${leave.attachment.type || 'Document'}</div>
               </div>
             </div>
             <button class="btn btn-primary btn-sm" onclick="viewAttachment('${leave.id}')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              दस्तावेज देखें (View)
+              View Document
             </button>
           </div>
         ` : `
           <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px; text-align: center; color: #64748b; font-size: 0.8rem;">
-            कोई दस्तावेज संलग्न नहीं किया गया है (No Attachment Attached)
+            No supporting document attached.
           </div>
         `}
       </div>
 
       ${leave.stationLeave ? `
         <div style="grid-column: 1 / -1; background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 8px;">
-          <span style="color: #92400e; font-weight: 700; font-size: 0.82rem;">★ स्टेशन लीव विस्तृत विवरण (Station Leave / Out-of-HQ Itinerary):</span>
+          <span style="color: #92400e; font-weight: 700; font-size: 0.82rem;">★ Station Leave (Out-of-Headquarters) Itinerary:</span>
           <div style="margin-top: 6px; font-size: 0.84rem; color: #78350f; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div>गंतव्य: <strong>${leave.stationDestination || 'उल्लिखित नहीं'}</strong></div>
-            <div>स्थानीय थाना: <strong>${leave.stationLocalPS || '-'}</strong></div>
-            <div>यात्रा साधन: <strong>${leave.stationTravelMode || '-'}</strong></div>
-            <div>आपातकालीन परिजन संपर्क: <strong>${leave.stationFamilyContact || '-'}</strong></div>
-            <div style="grid-column: 1 / -1;">बाहर ठहरने का पता: <strong>${leave.stationLeaveAddress || '-'}</strong></div>
+            <div>Destination: <strong>${leave.stationDestination || 'Not specified'}</strong></div>
+            <div>Local Police Station: <strong>${leave.stationLocalPS || '-'}</strong></div>
+            <div>Mode of Travel: <strong>${leave.stationTravelMode || '-'}</strong></div>
+            <div>Family Emergency Contact: <strong>${leave.stationFamilyContact || '-'}</strong></div>
+            <div style="grid-column: 1 / -1;">Residential Address during Leave: <strong>${leave.stationLeaveAddress || '-'}</strong></div>
           </div>
         </div>
       ` : ""}
 
       <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
-        <span style="color: #64748b; font-size: 0.78rem;">प्रभार सौंपा गया (Handover):</span><br>
-        <strong>${leave.handoverTo || "शाखा प्रभारी"}</strong>
+        <span style="color: #64748b; font-size: 0.78rem;">Duty Charge Handover:</span><br>
+        <strong>${leave.handoverTo || "Branch Incharge"}</strong>
       </div>
 
       <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
-        <span style="color: #64748b; font-size: 0.78rem;">आपातकालीन मोबाइल:</span><br>
+        <span style="color: #64748b; font-size: 0.78rem;">Emergency Mobile:</span><br>
         <strong>${leave.emergencyContact}</strong>
       </div>
 
       <!-- APPROVAL AUDIT LOG -->
       <div style="grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 6px;">
-        <h5 style="color: #0f274c; font-weight: 700; margin-bottom: 8px;">स्वीकृति / अनुशंसा विवरण (Audit Trail)</h5>
+        <h5 style="color: #0f274c; font-weight: 700; margin-bottom: 8px;">Approval Workflow & Audit Trail</h5>
         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem;">
           <div style="padding: 8px 12px; background: #f1f5f9; border-radius: 6px;">
-            <strong>1. आवेदन दर्ज:</strong> ${leave.appliedAt} द्वारा ${leave.applicantName}
+            <strong>1. Application Submitted:</strong> ${leave.appliedAt} by ${leave.applicantName}
           </div>
           <div style="padding: 8px 12px; background: ${leave.inchargeActionAt ? '#eff6ff' : '#f8fafc'}; border-radius: 6px;">
-            <strong>2. शाखा प्रभारी टिप्पणी:</strong> ${leave.inchargeRemarks || "विचाराधीन (Awaiting Review)"}
-            ${leave.inchargeActionAt ? `<br><small style="color: #64748b;">दिनांक: ${leave.inchargeActionAt}</small>` : ''}
+            <strong>2. Branch Incharge Recommendation:</strong> ${leave.inchargeRemarks || "Pending Incharge Review"}
+            ${leave.inchargeActionAt ? `<br><small style="color: #64748b;">Date: ${leave.inchargeActionAt}</small>` : ''}
           </div>
           <div style="padding: 8px 12px; background: ${leave.spActionAt ? '#f0fdf4' : '#f8fafc'}; border-radius: 6px;">
-            <strong>3. एसपी साइबर महोदय का आदेश:</strong> ${leave.spRemarks || "विचाराधीन (Awaiting SP Approval)"}
-            ${leave.spActionAt ? `<br><small style="color: #64748b;">स्वीकृति आदेश क्रमांक: ${leave.sanctionNo} | दिनांक: ${leave.spActionAt}</small>` : ''}
+            <strong>3. SP Cyber Sanction Order:</strong> ${leave.spRemarks || "Pending SP Sanction"}
+            ${leave.spActionAt ? `<br><small style="color: #64748b;">Sanction Order No: ${leave.sanctionNo} | Date: ${leave.spActionAt}</small>` : ''}
           </div>
         </div>
       </div>
@@ -4037,11 +4037,11 @@ function openLeaveDetailsModal(leaveId) {
       ${canActAsIncharge && isPendingIncharge ? `
         <div style="grid-column: 1 / -1; margin-top: 10px; background: #eff6ff; border: 2px solid #2563eb; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <strong style="color: #1e3a8a; font-size: 0.95rem;">👮‍♂️ यह आवेदन आपकी अनुशंसा हेतु प्रतीक्षारत है</strong>
-            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">आप इस अवकाश को अनुशंसित कर एसपी साइबर को अग्रेषित कर सकते हैं अथवा अस्वीकार कर सकते हैं।</div>
+            <strong style="color: #1e3a8a; font-size: 0.95rem;">👮‍♂️ Action Required: Awaiting Your Recommendation</strong>
+            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">You may examine the duty arrangements and recommend to SP Cyber or record rejection.</div>
           </div>
           <button type="button" class="btn btn-primary" onclick="closeModals(); openInchargeActionModal('${leave.id}')">
-            समीक्षा व अनुशंसा करें (Review Application)
+            Review & Recommend Application
           </button>
         </div>
       ` : ''}
@@ -4050,11 +4050,11 @@ function openLeaveDetailsModal(leaveId) {
       ${user && user.role === "sp_cyber" && isRecommended ? `
         <div style="grid-column: 1 / -1; margin-top: 10px; background: #fefce8; border: 2px solid #ca8a04; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <strong style="color: #854d0e; font-size: 0.95rem;">★ एसपी साइबर अंतिम स्वीकृति हेतु अनुशंसित</strong>
-            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">शाखा प्रभारी द्वारा अनुशंसित। स्वीकृति आदेश जारी करने हेतु क्लिक करें।</div>
+            <strong style="color: #854d0e; font-size: 0.95rem;">★ Recommended for SP Cyber Final Sanction</strong>
+            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">Recommended by Branch Incharge. Click below to issue final sanction order.</div>
           </div>
           <button type="button" class="btn btn-gold" onclick="closeModals(); openSPActionModal('${leave.id}')">
-            स्वीकृति आदेश जारी करें (Approve Leave)
+            Sanction Leave & Dispatch Order
           </button>
         </div>
       ` : ''}
@@ -4080,40 +4080,40 @@ function openInchargeActionModal(leaveId) {
         <span class="branch-tag">${leave.branchName}</span>
       </div>
       <div style="color: #475569; margin-top: 6px;">
-        अवकाश: <strong>${leave.leaveTypeName}</strong> | आवेदित अवधि: <strong>${leave.totalDays} दिन</strong> (${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)})
+        Leave Type: <strong>${leave.leaveTypeName || leave.leaveType}</strong> | Applied Period: <strong>${leave.totalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)})
       </div>
       <div style="margin-top: 6px; color: #1e293b;">
-        कारण: <em>"${leave.reason}"</em>
+        Reason: <em>"${leave.reason}"</em>
       </div>
 
       <!-- ATTACHMENT CARD IF PRESENT -->
       ${leave.attachment ? `
         <div style="margin-top: 10px; padding: 8px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 0.82rem; color: #1e40af;">📎 संलग्न दस्तावेज: <strong>${leave.attachment.name}</strong></span>
-          <button type="button" class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" style="background: #fff;">दस्तावेज देखें</button>
+          <span style="font-size: 0.82rem; color: #1e40af;">📎 Supporting Attachment: <strong>${leave.attachment.name}</strong></span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" style="background: #fff;">View Document</button>
         </div>
       ` : ''}
 
-      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 600; margin-top: 6px;">⚠ स्टेशन लीव अनुमति मांगी गई है (${leave.stationLeaveAddress})</div>` : ''}
+      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 600; margin-top: 6px;">⚠ Station Leave Permission Requested (${leave.stationLeaveAddress})</div>` : ''}
     </div>
 
     <!-- CURTAIL / REDUCE LEAVE DAYS CONTROL -->
     <div class="curtail-control-box">
       <div class="curtail-header">
-        <span>✂️ क्या अवकाश के दिन कम करने हैं? (Reduce / Curtail Leave Days?)</span>
+        <span>✂️ Curtail / Reduce Leave Days?</span>
         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; font-weight: normal; color: #451a03;">
           <input type="checkbox" id="inchargeCurtailCheck" onchange="toggleInchargeCurtail(this)">
-          दिन घटाएं (Reduce Days)
+          Reduce Days
         </label>
       </div>
       <div id="inchargeCurtailFields" style="display: none; margin-top: 10px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
-            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">प्रारंभिक तिथि (From Date):</label>
+            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">From Date:</label>
             <input type="text" class="form-control" value="${formatDate(leave.fromDate)}" readonly>
           </div>
           <div>
-            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">नई समाप्ति तिथि (New To Date):</label>
+            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">New To Date:</label>
             <input type="date" id="inchargeNewToDate" class="form-control" min="${leave.fromDate}" max="${leave.toDate}" value="${leave.toDate}" onchange="calculateInchargeCurtailDays()">
           </div>
         </div>
@@ -4122,8 +4122,8 @@ function openInchargeActionModal(leaveId) {
     </div>
 
     <div class="form-group">
-      <label for="inchargeRemarksText">शाखा प्रभारी की टिप्पणी / अनुशंसा (Incharge Remarks) <span class="required">*</span></label>
-      <textarea id="inchargeRemarksText" class="form-control" rows="3" placeholder="उदा: अनुशंसित। इस दौरान हेल्पलाइन / शाखा में अन्य जवानों की ड्यूटी समायोजित कर ली गई है।"></textarea>
+      <label for="inchargeRemarksText">Branch Incharge Recommendation & Operational Remarks <span class="required">*</span></label>
+      <textarea id="inchargeRemarksText" class="form-control" rows="3" placeholder="e.g. Recommended. Duty roster and console coverage adjusted with relieving staff."></textarea>
     </div>
   `;
 
@@ -4146,7 +4146,7 @@ function calculateInchargeCurtailDays() {
   const fromDate = new Date(leave.fromDate);
   const newToDate = new Date(newToVal);
   if (newToDate < fromDate) {
-    preview.innerHTML = `<span style="color: #dc2626;">त्रुटि: नई समाप्ति तिथि प्रारंभिक तिथि से पहले नहीं हो सकती।</span>`;
+    preview.innerHTML = `<span style="color: #dc2626;">Error: New end date cannot be prior to start date.</span>`;
     return;
   }
 
@@ -4156,11 +4156,11 @@ function calculateInchargeCurtailDays() {
   const cutDays = originalDays - newDays;
 
   if (cutDays < 0) {
-    preview.innerHTML = `<span style="color: #dc2626;">त्रुटि: आप केवल दिन कम कर सकते हैं (अधिकतम ${originalDays} दिन)।</span>`;
+    preview.innerHTML = `<span style="color: #dc2626;">Error: You can only reduce days (maximum ${originalDays} days).</span>`;
   } else if (cutDays === 0) {
-    preview.innerHTML = `दिन में कोई कटौती नहीं (कुल: <strong>${newDays} दिन</strong>)`;
+    preview.innerHTML = `No curtailment applied (Total: <strong>${newDays} Days</strong>)`;
   } else {
-    preview.innerHTML = `✂️ संशोधित अवधि: <strong>${formatDate(leave.fromDate)}</strong> से <strong>${formatDate(newToVal)}</strong> (कुल <strong>${newDays} दिन</strong>) | <strong>${cutDays} दिन कम</strong> किए जा रहे हैं।`;
+    preview.innerHTML = `✂️ Modified Period: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(newToVal)}</strong> (Total <strong>${newDays} Days</strong>) | Curtailed by <strong>${cutDays} Days</strong>.`;
   }
 }
 
@@ -4170,7 +4170,7 @@ function submitInchargeDecision(action) {
 
   let remarks = document.getElementById("inchargeRemarksText")?.value.trim() || "";
   if (!remarks) {
-    alert("कृपया अपनी अनुशंसा या कारण टिप्पणी अवश्य दर्ज करें।");
+    alert("Please enter your recommendation remarks or ground for decision.");
     return;
   }
 
@@ -4190,22 +4190,22 @@ function submitInchargeDecision(action) {
         leave.originalToDate = leave.originalToDate || leave.toDate;
         leave.toDate = newToVal;
         leave.totalDays = newDays;
-        leave.curtailedBy = `शाखा प्रभारी (${AppState.currentUser.name})`;
-        leave.curtailReason = `शाखा प्रभारी द्वारा नफरी व्यवस्था हेतु दिन घटाकर ${newDays} दिन अनुशंसित किए गए`;
+        leave.curtailedBy = `Branch Incharge (${AppState.currentUser.name})`;
+        leave.curtailReason = `Curtailed to ${newDays} days by Branch Incharge for operational coverage`;
 
-        remarks += ` [नोट: शाखा प्रभारी द्वारा प्रशासनिक आवश्यकता हेतु अवकाश मूल ${leave.originalDays} दिन से घटाकर ${newDays} दिन अनुशंसित]`;
+        remarks += ` [Note: Leave curtailed from ${leave.originalDays} to ${newDays} days by Branch Incharge due to operational requirement]`;
       }
     }
 
     leave.inchargeRemarks = remarks;
     leave.inchargeActionAt = now;
     leave.status = "RECOMMENDED";
-    showToast(`आवेदन ${leave.id} (${leave.totalDays} दिन) अनुशंसित कर पुलिस अधीक्षक महोदय को अग्रेषित किया गया।`, "success");
+    showToast(`Application ${leave.id} (${leave.totalDays} Days) recommended and forwarded to SP Cyber.`, "success");
   } else {
     leave.inchargeRemarks = remarks;
     leave.inchargeActionAt = now;
     leave.status = "REJECTED";
-    showToast(`आवेदन ${leave.id} शाखा स्तर पर अस्वीकृत किया गया।`, "error");
+    showToast(`Application ${leave.id} rejected at branch level.`, "error");
   }
 
   saveData();
@@ -4236,50 +4236,50 @@ function openSPActionModal(leaveId) {
   modalBody.innerHTML = `
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px; font-size: 0.88rem;">
       <div style="display: flex; justify-content: space-between;">
-        <strong>${leave.applicantName} (${leave.rank}) - बेल्ट नं: ${leave.beltNo}</strong>
+        <strong>${leave.applicantName} (${leave.rank}) - Belt No: ${leave.beltNo}</strong>
         <span class="branch-tag">${leave.branchName}</span>
       </div>
       <div style="margin-top: 6px;">
-        अवकाश: <strong>${leave.leaveTypeName}</strong> | वर्तमान अवधि: <strong>${leave.totalDays} दिन</strong> (${formatDate(leave.fromDate)} से ${formatDate(leave.toDate)})
+        Leave Type: <strong>${leave.leaveTypeName || leave.leaveType}</strong> | Current Period: <strong>${leave.totalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)})
         ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
-          <br><span style="color: #b45309; font-weight: 600;">(मूल आवेदन: ${leave.originalDays} दिन - शाखा प्रभारी द्वारा पहले ही घटाया गया)</span>
+          <br><span style="color: #b45309; font-weight: 600;">(Originally applied: ${leave.originalDays} Days - curtailed by Branch Incharge)</span>
         ` : ''}
       </div>
       <div style="margin-top: 6px;">
-        कारण: <em>"${leave.reason}"</em>
+        Reason: <em>"${leave.reason}"</em>
       </div>
 
       <!-- ATTACHMENT CARD IF PRESENT -->
       ${leave.attachment ? `
         <div style="margin-top: 10px; padding: 8px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 0.82rem; color: #1e40af;">📎 संलग्न दस्तावेज: <strong>${leave.attachment.name}</strong></span>
-          <button type="button" class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" style="background: #fff;">दस्तावेज देखें</button>
+          <span style="font-size: 0.82rem; color: #1e40af;">📎 Supporting Attachment: <strong>${leave.attachment.name}</strong></span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" style="background: #fff;">View Document</button>
         </div>
       ` : ''}
 
       <div style="margin-top: 8px; padding: 8px 12px; background: #e0e7ff; border-radius: 6px; color: #1e1b4b;">
-        <strong>शाखा प्रभारी की अनुशंसा:</strong> "${leave.inchargeRemarks || 'अग्रेषित'}"
+        <strong>Branch Incharge Recommendation:</strong> "${leave.inchargeRemarks || 'Recommended'}"
       </div>
-      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 700; margin-top: 6px;">★ स्टेशन लीव अनुमति मांगी गई है: ${leave.stationLeaveAddress}</div>` : ''}
+      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 700; margin-top: 6px;">★ Station Leave Permission Requested: ${leave.stationLeaveAddress}</div>` : ''}
     </div>
 
     <!-- SP CURTAIL / REDUCE DAYS CONTROL -->
     <div class="curtail-control-box">
       <div class="curtail-header">
-        <span>✂️ एसपी महोदय द्वारा अवकाश दिवस कम / संशोधित करना (Curtail by SP Cyber)</span>
+        <span>✂️ Curtail / Modify Leave Days by SP Cyber</span>
         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; font-weight: normal; color: #451a03;">
           <input type="checkbox" id="spCurtailCheck" onchange="toggleSPCurtail(this)">
-          दिन घटाकर स्वीकृत करें
+          Curtail Sanctioned Days
         </label>
       </div>
       <div id="spCurtailFields" style="display: none; margin-top: 10px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
-            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">प्रारंभ तिथि:</label>
+            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">Sanctioned From Date:</label>
             <input type="text" class="form-control" value="${formatDate(leave.fromDate)}" readonly>
           </div>
           <div>
-            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">स्वीकृत नई समाप्ति तिथि (Sanctioned To Date):</label>
+            <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">Sanctioned New To Date:</label>
             <input type="date" id="spNewToDate" class="form-control" min="${leave.fromDate}" max="${leave.toDate}" value="${leave.toDate}" onchange="calculateSPCurtailDays()">
           </div>
         </div>
@@ -4288,8 +4288,8 @@ function openSPActionModal(leaveId) {
     </div>
 
     <div class="form-group">
-      <label for="spRemarksText">पुलिस अधीक्षक का आदेश / टिप्पणी (SP Cyber Sanction Order Remarks)</label>
-      <input type="text" id="spRemarksText" class="form-control" value="अवकाश एवं स्टेशन लीव अनुमति नियमानुसार स्वीकृत की जाती है।" placeholder="स्वीकृति आदेश टिप्पणी">
+      <label for="spRemarksText">Superintendent of Police Sanction Order & Directive</label>
+      <input type="text" id="spRemarksText" class="form-control" value="Leave and Station Leave permission sanctioned as per rules." placeholder="Enter sanction order remarks">
     </div>
   `;
 
@@ -4312,7 +4312,7 @@ function calculateSPCurtailDays() {
   const fromDate = new Date(leave.fromDate);
   const newToDate = new Date(newToVal);
   if (newToDate < fromDate) {
-    preview.innerHTML = `<span style="color: #dc2626;">त्रुटि: नई समाप्ति तिथि प्रारंभिक तिथि से पहले नहीं हो सकती।</span>`;
+    preview.innerHTML = `<span style="color: #dc2626;">Error: Sanctioned To Date cannot be prior to From Date.</span>`;
     return;
   }
 
@@ -4322,11 +4322,11 @@ function calculateSPCurtailDays() {
   const cutDays = currentDays - newDays;
 
   if (cutDays < 0) {
-    preview.innerHTML = `<span style="color: #dc2626;">त्रुटि: स्वीकृत दिन वर्तमान ${currentDays} दिन से अधिक नहीं हो सकते।</span>`;
+    preview.innerHTML = `<span style="color: #dc2626;">Error: Sanctioned days cannot exceed current ${currentDays} days.</span>`;
   } else if (cutDays === 0) {
-    preview.innerHTML = `दिन में कोई कटौती नहीं (स्वीकृत: <strong>${newDays} दिन</strong>)`;
+    preview.innerHTML = `No curtailment applied (Sanctioned: <strong>${newDays} Days</strong>)`;
   } else {
-    preview.innerHTML = `★ एसपी महोदय द्वारा संशोधित: <strong>${formatDate(leave.fromDate)}</strong> से <strong>${formatDate(newToVal)}</strong> (कुल <strong>${newDays} दिन स्वीकृत</strong>) | <strong>${cutDays} दिन कम</strong> किए गए।`;
+    preview.innerHTML = `★ Modified by SP Cyber: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(newToVal)}</strong> (Total <strong>${newDays} Days Sanctioned</strong>) | Curtailed by <strong>${cutDays} Days</strong>.`;
   }
 }
 
@@ -4352,9 +4352,9 @@ function submitSPDecision(action) {
         leave.toDate = newToVal;
         leave.totalDays = newDays;
         leave.curtailedBy = "SP Cyber (Mayank Gupta, IPS)";
-        leave.curtailReason = `एसपी साइबर द्वारा प्रशासनिक आधार पर दिन घटाकर ${newDays} दिन स्वीकृत किए गए`;
+        leave.curtailReason = `Curtailed to ${newDays} days by SP Cyber on administrative grounds`;
 
-        remarks += ` [आदेश: एसपी साइबर द्वारा प्रशासनिक आधार पर अवकाश घटाकर ${newDays} दिन स्वीकृत किया गया]`;
+        remarks += ` [Order: Curtailed to ${newDays} days by SP Cyber on administrative grounds]`;
       }
     }
 
@@ -4368,12 +4368,12 @@ function submitSPDecision(action) {
       applicant.leaveBalances[leave.leaveType] = Math.max(0, applicant.leaveBalances[leave.leaveType] - leave.totalDays);
     }
 
-    showToast(`अवकाश स्वीकृत! आदेश क्रमांक ${leave.sanctionNo} जारी किया गया (${leave.totalDays} दिन)।`, "success");
+    showToast(`Leave Sanctioned! Official Order Dispatch No. ${leave.sanctionNo} issued (${leave.totalDays} Days).`, "success");
   } else {
     leave.spRemarks = remarks;
     leave.spActionAt = now;
     leave.status = "REJECTED";
-    showToast(`आवेदन ${leave.id} निरस्त (Reject) कर दिया गया।`, "error");
+    showToast(`Application ${leave.id} rejected.`, "error");
   }
 
   saveData();
@@ -4396,7 +4396,7 @@ function submitSPDecision(action) {
 function viewAttachment(leaveId) {
   const leave = AppState.leaves.find(l => l.id === leaveId);
   if (!leave || !leave.attachment) {
-    alert("इस आवेदन के साथ कोई दस्तावेज संलग्न नहीं है।");
+    alert("No document is attached with this leave application.");
     return;
   }
 
@@ -4406,7 +4406,7 @@ function viewAttachment(leaveId) {
   const contentEl = document.getElementById("attachmentPreviewContent");
   const downloadBtn = document.getElementById("attachmentDownloadBtn");
 
-  if (titleEl) titleEl.innerHTML = `संलग्न दस्तावेज: <strong>${att.name}</strong> (${att.size || ''})`;
+  if (titleEl) titleEl.innerHTML = `Supporting Attachment: <strong>${att.name}</strong> (${att.size || ''})`;
 
   if (att.dataUrl && (att.type.startsWith("image/") || att.type === "image/png" || att.type === "image/jpeg")) {
     contentEl.innerHTML = `
@@ -4429,8 +4429,8 @@ function viewAttachment(leaveId) {
       <div style="padding: 40px 20px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #2563eb; margin-bottom: 12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
         <h4>${att.name}</h4>
-        <p style="color: #64748b; font-size: 0.85rem; margin-top: 6px;">आकार: ${att.size} | प्रकार: ${att.type}</p>
-        <p style="margin-top: 14px;">दस्तावेज को देखने हेतु कृपया नीचे दिए गए बटन से डाउनलोड करें।</p>
+        <p style="color: #64748b; font-size: 0.85rem; margin-top: 6px;">Size: ${att.size} | Type: ${att.type}</p>
+        <p style="margin-top: 14px;">Please download the document using the button below to view.</p>
       </div>
     `;
     downloadBtn.href = att.dataUrl;
@@ -4487,7 +4487,7 @@ function openSanctionSlipModal(leaveId) {
       </div>
 
       <div class="sanction-heading">
-        OFFICE ORDER / अवकाश स्वीकृति आदेश
+        OFFICE ORDER / LEAVE SANCTION ORDER
       </div>
 
       <div class="sanction-body">
@@ -4575,11 +4575,11 @@ function openAddUserModal() {
 
   if (branchSelect) {
     if (isSP) {
-      branchSelect.innerHTML = AppState.branches.map(b => `<option value="${b.id}">${b.name} (${b.hindi})</option>`).join("");
+      branchSelect.innerHTML = AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
       branchSelect.disabled = false;
     } else {
       const myBranch = AppState.branches.find(b => b.id === (user ? user.branchId : ""));
-      branchSelect.innerHTML = `<option value="${user ? user.branchId : ''}" selected>${myBranch ? myBranch.name : 'आपकी शाखा'}</option>`;
+      branchSelect.innerHTML = `<option value="${user ? user.branchId : ''}" selected>${myBranch ? myBranch.name : 'Your Branch'}</option>`;
       branchSelect.disabled = true;
     }
   }
@@ -4631,7 +4631,7 @@ function handleAddUserSubmit(e) {
   populateUserSwitcher();
   closeModals();
   renderApp();
-  showToast(`नया पुलिस कर्मी ${name} (${beltNo}) सफलतापूर्वक जोड़ा गया।`, "success");
+  showToast(`New police personnel ${name} (${beltNo}) added successfully.`, "success");
 }
 
 // Close any open modal
