@@ -45,36 +45,54 @@ function updateSyncIndicator(isConnected, statusText) {
   }
 }
 
-// Load data from localStorage or Seed Data
+// Load data from localStorage or Seed Data (with Anti-Corruption ? sanitization)
 function loadFromLocalStorage() {
   try {
-    const storedBranches = localStorage.getItem("cyber_police_branches");
-    AppState.branches = storedBranches ? JSON.parse(storedBranches) : BRANCHES;
+    const rawBranches = localStorage.getItem("cyber_police_branches");
+    const rawUsers = localStorage.getItem("cyber_police_users");
+    const rawLeaves = localStorage.getItem("cyber_police_leaves");
+    const rawNotices = localStorage.getItem("cyber_police_notices");
 
-    const storedUsers = localStorage.getItem("cyber_police_users");
-    AppState.users = storedUsers ? JSON.parse(storedUsers) : DEFAULT_USERS;
-    const spUser = AppState.users.find(u => u.id === "SP-001" || u.role === "sp_cyber");
-    if (spUser) {
-      spUser.name = "Mayank Gupta, IPS";
-    }
+    // CRITICAL: If any stored data contains question marks '????' from earlier encoding bugs, purge immediately!
+    const isCorrupted = (rawBranches && rawBranches.includes("????")) ||
+                        (rawUsers && rawUsers.includes("????")) ||
+                        (rawLeaves && rawLeaves.includes("????")) ||
+                        (rawNotices && rawNotices.includes("????"));
 
-    const storedLeaves = localStorage.getItem("cyber_police_leaves");
-    if (storedLeaves) {
-      AppState.leaves = JSON.parse(storedLeaves);
-      AppState.leaves.forEach(l => {
-        if (!l.originalDays) l.originalDays = l.totalDays;
-        if (!l.originalToDate) l.originalToDate = l.toDate;
-        if (l.attachment === undefined) l.attachment = null;
-      });
-    } else {
+    if (isCorrupted) {
+      console.warn("Detected corrupted UTF-8 question marks in localStorage. Purging and resetting to clean defaults.");
+      localStorage.removeItem("cyber_police_branches");
+      localStorage.removeItem("cyber_police_users");
+      localStorage.removeItem("cyber_police_leaves");
+      localStorage.removeItem("cyber_police_notices");
+      AppState.branches = BRANCHES;
+      AppState.users = DEFAULT_USERS;
       AppState.leaves = DEFAULT_LEAVES;
-    }
-
-    const storedNotices = localStorage.getItem("cyber_police_notices");
-    if (storedNotices) {
-      AppState.notices = JSON.parse(storedNotices);
-    } else {
       AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+    } else {
+      AppState.branches = rawBranches ? JSON.parse(rawBranches) : BRANCHES;
+      AppState.users = rawUsers ? JSON.parse(rawUsers) : DEFAULT_USERS;
+      const spUser = AppState.users.find(u => u.id === "SP-001" || u.role === "sp_cyber");
+      if (spUser) {
+        spUser.name = "Mayank Gupta, IPS";
+      }
+
+      if (rawLeaves) {
+        AppState.leaves = JSON.parse(rawLeaves);
+        AppState.leaves.forEach(l => {
+          if (!l.originalDays) l.originalDays = l.totalDays;
+          if (!l.originalToDate) l.originalToDate = l.toDate;
+          if (l.attachment === undefined) l.attachment = null;
+        });
+      } else {
+        AppState.leaves = DEFAULT_LEAVES;
+      }
+
+      if (rawNotices) {
+        AppState.notices = JSON.parse(rawNotices);
+      } else {
+        AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+      }
     }
 
     const savedUserId = localStorage.getItem("cyber_police_current_user_id");
@@ -97,6 +115,8 @@ function loadFromLocalStorage() {
 // Central Cloud Database Endpoint for Real-time Multi-Device Sync over Internet
 const CLOUD_DB_URL = "https://extendsclass.com/api/json-storage/bin/cbffbde";
 let isCloudConnected = false;
+let lastLocalSaveTime = 0;
+let isSavingInProgress = false;
 
 // Connect and Sync with Shared Office Database (Local LAN server OR Central Cloud DB)
 async function syncWithOfficeDatabase() {
@@ -106,21 +126,17 @@ async function syncWithOfficeDatabase() {
     if (res.ok) {
       const data = await res.json();
       if (data && data.users && data.leaves && data.branches) {
-        AppState.branches = data.branches;
-        AppState.users = data.users;
-        AppState.leaves = data.leaves;
-        if (data.notices && Array.isArray(data.notices)) {
-          AppState.notices = data.notices;
-        } else if (!AppState.notices || AppState.notices.length === 0) {
-          AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+        const jsonStr = JSON.stringify(data);
+        if (!jsonStr.includes("????")) {
+          mergeIncomingData(data);
+          isLanServerConnected = true;
+          updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
+          saveToLocalStorageOnly();
+          populateUserSwitcher();
+          renderNavigationTabs();
+          renderApp();
+          return;
         }
-        isLanServerConnected = true;
-        updateSyncIndicator(true, "ऑफिस LAN सिंक ✓");
-        saveToLocalStorageOnly();
-        populateUserSwitcher();
-        renderNavigationTabs();
-        renderApp();
-        return;
       }
     }
   } catch (e) {
@@ -133,21 +149,20 @@ async function syncWithOfficeDatabase() {
     if (cloudRes.ok) {
       const cloudData = await cloudRes.json();
       if (cloudData && cloudData.users && cloudData.leaves && cloudData.branches) {
-        AppState.branches = cloudData.branches;
-        AppState.users = cloudData.users;
-        AppState.leaves = cloudData.leaves;
-        if (cloudData.notices && Array.isArray(cloudData.notices)) {
-          AppState.notices = cloudData.notices;
-        } else if (!AppState.notices || AppState.notices.length === 0) {
-          AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
+        const jsonStr = JSON.stringify(cloudData);
+        if (!jsonStr.includes("????")) {
+          mergeIncomingData(cloudData);
+          isCloudConnected = true;
+          updateSyncIndicator(true, "क्लाउड लाइव सिंक (Online) ✓");
+          saveToLocalStorageOnly();
+          populateUserSwitcher();
+          renderNavigationTabs();
+          renderApp();
+          return;
+        } else {
+          console.warn("Cloud DB had ???? question marks. Restoring clean data.");
+          pushDataToCloudServer();
         }
-        isCloudConnected = true;
-        updateSyncIndicator(true, "क्लाउड लाइव सिंक (Online) ✓");
-        saveToLocalStorageOnly();
-        populateUserSwitcher();
-        renderNavigationTabs();
-        renderApp();
-        return;
       }
     }
   } catch (e) {
@@ -161,6 +176,7 @@ async function syncWithOfficeDatabase() {
 
 // Save data to localStorage, Local LAN Server and Central Cloud Database
 function saveData() {
+  lastLocalSaveTime = Date.now();
   saveToLocalStorageOnly();
   if (isLanServerConnected) {
     pushDataToOfficeServer();
@@ -203,19 +219,26 @@ async function pushDataToOfficeServer() {
 
 // Push data to Central Cloud Database so all other computers and phones update in real time
 async function pushDataToCloudServer() {
+  const payload = {
+    branches: AppState.branches,
+    users: AppState.users,
+    leaves: AppState.leaves,
+    notices: AppState.notices || [],
+    updatedAt: new Date().toISOString()
+  };
+  const jsonStr = JSON.stringify(payload);
+  if (jsonStr.includes("????")) {
+    console.error("Refusing to push corrupted question marks to cloud!");
+    return;
+  }
+
+  isSavingInProgress = true;
   try {
     updateSyncIndicator(true, "क्लाउड सिंक हो रहा है...");
-    const payload = {
-      branches: AppState.branches,
-      users: AppState.users,
-      leaves: AppState.leaves,
-      notices: AppState.notices || [],
-      updatedAt: new Date().toISOString()
-    };
     const res = await fetch(CLOUD_DB_URL, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: jsonStr
     });
     if (res.ok) {
       isCloudConnected = true;
@@ -223,6 +246,8 @@ async function pushDataToCloudServer() {
     }
   } catch (e) {
     console.warn("Could not push to Cloud DB", e);
+  } finally {
+    isSavingInProgress = false;
   }
 }
 
@@ -231,6 +256,10 @@ function startLanBackgroundSync() {
   if (lanSyncPollingId) clearInterval(lanSyncPollingId);
   lanSyncPollingId = setInterval(async () => {
     if (document.hidden) return; // Save resources when tab is minimized
+    // Skip polling if user just performed a save within the last 6 seconds or save is in progress
+    if (isSavingInProgress || (Date.now() - lastLocalSaveTime < 6000)) {
+      return;
+    }
 
     // If local LAN server is connected, poll LAN first
     if (isLanServerConnected) {
@@ -259,27 +288,104 @@ function startLanBackgroundSync() {
   }, 6000);
 }
 
+// Smart Merge: Merges incoming data without ever wiping locally applied un-synced leaves
+function mergeIncomingData(data) {
+  if (!data || !data.leaves || !data.users) return false;
+
+  const dataString = JSON.stringify(data);
+  if (dataString.includes("????")) {
+    console.warn("Incoming sync data contains corrupted question marks (????). Ignoring.");
+    return false;
+  }
+
+  let hasChanged = false;
+
+  // 1. Build map of incoming leaves
+  const incomingMap = new Map();
+  (data.leaves || []).forEach(l => incomingMap.set(l.id, l));
+
+  // 2. Keep local leaves that aren't yet in incoming data
+  const mergedLeaves = [];
+  let hasLocalOnlyLeave = false;
+
+  AppState.leaves.forEach(localLeave => {
+    if (incomingMap.has(localLeave.id)) {
+      const incomingLeave = incomingMap.get(localLeave.id);
+      if (JSON.stringify(localLeave) !== JSON.stringify(incomingLeave)) {
+        mergedLeaves.push(incomingLeave);
+        hasChanged = true;
+      } else {
+        mergedLeaves.push(localLeave);
+      }
+      incomingMap.delete(localLeave.id);
+    } else {
+      // Local leave not present in cloud yet - PRESERVE IT!
+      mergedLeaves.push(localLeave);
+      hasLocalOnlyLeave = true;
+    }
+  });
+
+  // 3. Add brand new leaves from cloud
+  incomingMap.forEach(cloudLeave => {
+    mergedLeaves.push(cloudLeave);
+    hasChanged = true;
+  });
+
+  // Sort: newest first
+  mergedLeaves.sort((a, b) => {
+    const timeA = new Date(a.appliedAt || 0).getTime();
+    const timeB = new Date(b.appliedAt || 0).getTime();
+    return timeB - timeA;
+  });
+
+  if (JSON.stringify(AppState.leaves) !== JSON.stringify(mergedLeaves)) {
+    AppState.leaves = mergedLeaves;
+    hasChanged = true;
+  }
+
+  if (data.branches && data.branches.length > 0) {
+    if (JSON.stringify(AppState.branches) !== JSON.stringify(data.branches)) {
+      AppState.branches = data.branches;
+      hasChanged = true;
+    }
+  }
+
+  if (data.users && data.users.length > 0) {
+    if (JSON.stringify(AppState.users) !== JSON.stringify(data.users)) {
+      AppState.users = data.users;
+      hasChanged = true;
+    }
+  }
+
+  if (data.notices && Array.isArray(data.notices)) {
+    if (JSON.stringify(AppState.notices) !== JSON.stringify(data.notices)) {
+      AppState.notices = data.notices;
+      hasChanged = true;
+    }
+  }
+
+  // If local had a new leave that wasn't in cloud yet, trigger an immediate push to cloud
+  if (hasLocalOnlyLeave) {
+    pushDataToCloudServer();
+  }
+
+  return hasChanged;
+}
+
 function handleIncomingSyncData(data, syncLabel) {
   if (!data || !data.leaves || !data.users) return;
 
-  const currentLeavesJson = JSON.stringify(AppState.leaves);
-  const newLeavesJson = JSON.stringify(data.leaves);
-  const currentNoticesJson = JSON.stringify(AppState.notices || []);
-  const newNoticesJson = JSON.stringify(data.notices || []);
+  const prevCount = AppState.leaves.length;
+  const changed = mergeIncomingData(data);
 
-  if (currentLeavesJson !== newLeavesJson || currentNoticesJson !== newNoticesJson) {
-    const isNewLeaveAdded = data.leaves.length > AppState.leaves.length;
-    AppState.leaves = data.leaves;
-    AppState.users = data.users;
-    if (data.notices) AppState.notices = data.notices;
-
+  if (changed) {
     saveToLocalStorageOnly();
     renderNavigationTabs();
     if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves"].includes(AppState.activeTab)) {
       renderApp();
     }
 
-    if (isNewLeaveAdded) {
+    if (AppState.leaves.length > prevCount) {
       showToast("🔔 नया अवकाश आवेदन दूसरे कंप्यूटर से प्राप्त हुआ (New Application Synced)", "info");
     }
   }
@@ -2017,8 +2123,17 @@ function handleApplyLeaveSubmit(e) {
   const now = new Date();
   const appliedAt = now.toISOString().replace("T", " ").substring(0, 16);
 
-  const newId = `LV-2026-${String(AppState.leaves.length + 1).padStart(3, "0")}`;
-  const sanctionNo = `CYB/PKL/LEAVE/2026/${String(AppState.leaves.length + 140).padStart(4, "0")}`;
+  let maxLeaveNum = 0;
+  (AppState.leaves || []).forEach(l => {
+    const m = String(l.id).match(/LV-2026-(\d+)/);
+    if (m) {
+      const num = parseInt(m[1], 10);
+      if (num > maxLeaveNum) maxLeaveNum = num;
+    }
+  });
+  const nextNum = Math.max(maxLeaveNum + 1, AppState.leaves.length + 1);
+  const newId = `LV-2026-${String(nextNum).padStart(3, "0")}`;
+  const sanctionNo = `CYB/PKL/LEAVE/2026/${String(nextNum + 140).padStart(4, "0")}`;
 
   const newLeave = {
     id: newId,
