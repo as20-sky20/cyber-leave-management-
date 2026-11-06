@@ -1262,24 +1262,24 @@ function renderDashboard(container) {
         <div class="stat-subtext">Accumulated Privilege Leave</div>
       </div>
 
-      <div class="stat-card gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view My Leaves">
+      <div class="stat-card gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view In-Process Leaves in My Leaves">
         <div class="stat-header">
-          <span class="stat-title">My Applications</span>
+          <span class="stat-title">In-Process Leaves</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
         <div class="stat-number" style="color: ${pendingLeaves.length > 0 ? '#dc2626' : '#15803d'};">
           ${pendingLeaves.length}
         </div>
-        <div class="stat-subtext">${pendingLeaves.length > 0 ? 'In-Process (Click to view)' : `${approvedLeaves.length} Approved / Sanctioned`}</div>
+        <div class="stat-subtext">${pendingLeaves.length > 0 ? 'Awaiting Sanction' : 'No Active Applications'}</div>
       </div>
 
-      <div class="stat-card purple">
+      <div class="stat-card purple" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view Approved Leaves in My Leaves">
         <div class="stat-header">
-          <span class="stat-title">Force On-Duty</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+          <span class="stat-title">Sanctioned Leaves</span>
+          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
         </div>
-        <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-        <div class="stat-subtext">${currentlyOnLeave} Personnel on Leave Today</div>
+        <div class="stat-number" style="color: #15803d;">${approvedLeaves.length}</div>
+        <div class="stat-subtext">Official Sanctions Issued</div>
       </div>
     </div>
 
