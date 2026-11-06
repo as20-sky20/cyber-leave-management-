@@ -2337,29 +2337,42 @@ function renderMyLeaves(container) {
       </div>
     </div>
 
-    <div class="card-table-wrap">
-      <div class="responsive-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Application ID</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Ground / Reason</th>
-              <th>Station Leave</th>
-              <th>Current Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${userLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 30px;">No leave applications found.</td></tr>
-            ` : userLeaves.map(leave => renderLeaveTableRow(leave)).join("")}
-          </tbody>
-        </table>
+    ${userLeaves.length === 0 ? `
+      <div class="card-table-wrap" style="padding: 44px 20px; text-align: center; background: #ffffff; border-radius: 12px; border: 1.5px dashed #cbd5e1; margin-top: 14px;">
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: #f8fafc; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 1.6rem;">
+          📋
+        </div>
+        <h3 style="font-size: 1.15rem; color: #0f274c; margin-bottom: 6px; font-weight: 700;">No Leave Applications Found</h3>
+        <p style="color: #64748b; font-size: 0.9rem; max-width: 480px; margin: 0 auto 20px; line-height: 1.5;">
+          You have not submitted any leave applications yet. Once you apply, your application status, recommendation trail, and official sanction slips will appear here.
+        </p>
+        <button class="btn btn-gold" onclick="switchTab('apply_leave')" style="padding: 10px 22px; font-weight: 600; font-size: 0.92rem;">
+          + Apply New Leave Now
+        </button>
       </div>
-    </div>
+    ` : `
+      <div class="card-table-wrap">
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Application ID</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Station Leave</th>
+                <th>Current Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${userLeaves.map(leave => renderLeaveTableRow(leave)).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `}
   `;
 
   container.innerHTML = html;
@@ -2466,63 +2479,64 @@ function renderInchargeDesk(container) {
           <span class="tab-badge" style="margin-left: 6px;">${branchPendingLeaves.length}</span>
         </div>
       </div>
-      <div class="responsive-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Application ID</th>
-              <th>Personnel Details</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Ground / Reason</th>
-              <th>Relieving Handover</th>
-              <th>Incharge Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${branchPendingLeaves.length === 0 ? `
+      ${branchPendingLeaves.length === 0 ? `
+        <div style="padding: 32px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
+          <div style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">✓ All Clear - No Pending Applications</div>
+          <div style="font-size: 0.88rem; color: #15803d;">No pending leave applications under selected filter (${activeFilter === 'ALL' ? 'All Cyber Branches' : branchName}).</div>
+          ${activeFilter !== 'ALL' && allPendingLeaves.length > 0 ? `
+            <div style="margin-top: 10px;">
+              <span style="color: #b45309; font-weight: 600; font-size: 0.84rem;">Notice: There are ${allPendingLeaves.length} pending applications in other branches.</span><br>
+              <button class="btn btn-primary btn-sm" style="margin-top: 6px;" onclick="setInchargeBranchFilter('ALL')">
+                🌐 View All ${allPendingLeaves.length} Applications
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      ` : `
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td colspan="8" style="text-align: center; color: #166534; padding: 22px; background: #f0fdf4;">
-                  ✓ No pending applications under selected filter (${activeFilter === 'ALL' ? 'All Cyber Branches' : branchName}).
-                  ${activeFilter !== 'ALL' && allPendingLeaves.length > 0 ? `
-                    <div style="margin-top: 8px;">
-                      <span style="color: #b45309; font-weight: 600; font-size: 0.84rem;">Notice: There are ${allPendingLeaves.length} pending applications in other branches.</span><br>
-                      <button class="btn btn-primary btn-sm" style="margin-top: 6px;" onclick="setInchargeBranchFilter('ALL')">
-                        🌐 View All ${allPendingLeaves.length} Applications
+                <th>Application ID</th>
+                <th>Personnel Details</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Relieving Handover</th>
+                <th>Incharge Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${branchPendingLeaves.map(leave => `
+                <tr class="leave-card-row">
+                  <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
+                  <td data-label="Personnel Details">
+                    <strong>${leave.applicantName}</strong><br>
+                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
+                    <span class="branch-tag">${leave.branchName}</span>
+                  </td>
+                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
+                  <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                  <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
+                  <td data-label="Ground / Reason" style="max-width: 200px;">${leave.reason}</td>
+                  <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
+                  <td data-label="Incharge Action" class="mobile-card-actions">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
+                      <button class="btn btn-primary btn-sm mobile-action-btn" style="flex: 1;" onclick="openInchargeActionModal('${leave.id}')">
+                        Review & Recommend
+                      </button>
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        Details
                       </button>
                     </div>
-                  ` : ''}
-                </td>
-              </tr>
-            ` : branchPendingLeaves.map(leave => `
-              <tr class="leave-card-row">
-                <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
-                <td data-label="Personnel Details">
-                  <strong>${leave.applicantName}</strong><br>
-                  <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-                  <span class="branch-tag">${leave.branchName}</span>
-                </td>
-                <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
-                <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
-                <td data-label="Ground / Reason" style="max-width: 200px;">${leave.reason}</td>
-                <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
-                <td data-label="Incharge Action" class="mobile-card-actions">
-                  <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
-                    <button class="btn btn-primary btn-sm mobile-action-btn" style="flex: 1;" onclick="openInchargeActionModal('${leave.id}')">
-                      Review & Recommend
-                    </button>
-                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
-                      Details
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
     </div>
 
     <!-- PREVIOUSLY PROCESSED LEAVES -->
@@ -2530,38 +2544,42 @@ function renderInchargeDesk(container) {
       <div class="table-toolbar">
         <div class="table-title">Branch Disposed / Processed Leave Register</div>
       </div>
-      <div class="responsive-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Leave ID</th>
-              <th>Personnel</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Incharge Remarks</th>
-              <th>Current Status</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${branchProcessedLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No previous records found.</td></tr>
-            ` : branchProcessedLeaves.slice(0, 8).map(leave => `
+      ${branchProcessedLeaves.length === 0 ? `
+        <div style="padding: 24px 20px; text-align: center; color: #64748b; background: #ffffff; border-radius: 0 0 12px 12px; font-size: 0.88rem;">
+          No previous processed leave applications found for this branch.
+        </div>
+      ` : `
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td>${leave.id}</td>
-                <td><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
-                <td>${leave.leaveType}</td>
-                <td>${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}</td>
-                <td>${leave.totalDays} Days</td>
-                <td><small>${leave.inchargeRemarks || "-"}</small></td>
-                <td>${getStatusBadge(leave.status)}</td>
-                <td><button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">Details</button></td>
+                <th>Leave ID</th>
+                <th>Personnel</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Incharge Remarks</th>
+                <th>Current Status</th>
+                <th>Details</th>
               </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              ${branchProcessedLeaves.slice(0, 8).map(leave => `
+                <tr>
+                  <td>${leave.id}</td>
+                  <td><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
+                  <td>${leave.leaveType}</td>
+                  <td>${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}</td>
+                  <td>${leave.totalDays} Days</td>
+                  <td><small>${leave.inchargeRemarks || "-"}</small></td>
+                  <td>${getStatusBadge(leave.status)}</td>
+                  <td><button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">Details</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
     </div>
   `;
 
@@ -2642,55 +2660,60 @@ function renderSPDesk(container) {
           <span class="tab-badge" style="margin-left: 6px;">${recommendedLeaves.length}</span>
         </div>
       </div>
-      <div class="responsive-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Application ID</th>
-              <th>Personnel & Branch</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Ground / Reason</th>
-              <th>Incharge Remarks</th>
-              <th>Station Leave</th>
-              <th>SP Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${recommendedLeaves.length === 0 ? `
-              <tr><td colspan="9" style="text-align: center; color: #166534; padding: 22px; background: #f0fdf4;">✓ No leave applications currently pending for SP sanction.</td></tr>
-            ` : recommendedLeaves.map(leave => `
-              <tr class="leave-card-row">
-                <td data-label="Application ID"><strong>${leave.id}</strong></td>
-                <td data-label="Personnel & Branch">
-                  <strong>${leave.applicantName}</strong><br>
-                  <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-                  <span class="branch-tag">${leave.branchName}</span>
-                </td>
-                <td data-label="Leave Type"><span style="font-weight: 700;">${leave.leaveType}</span></td>
-                <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                <td data-label="Days"><strong>${leave.totalDays}</strong> Days</td>
-                <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
-                <td data-label="Incharge Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
-                  "${leave.inchargeRemarks || 'Recommended'}"
-                </td>
-                <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
-                <td data-label="SP Action" class="mobile-card-actions">
-                  <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
-                    <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
-                      Sanction Order
-                    </button>
-                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
-                      Details
-                    </button>
-                  </div>
-                </td>
+      ${recommendedLeaves.length === 0 ? `
+        <div style="padding: 28px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
+          <div style="font-size: 1.02rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
+          <div style="font-size: 0.86rem; color: #15803d;">No leave applications currently pending for SP sanction.</div>
+        </div>
+      ` : `
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Application ID</th>
+                <th>Personnel & Branch</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Incharge Remarks</th>
+                <th>Station Leave</th>
+                <th>SP Action</th>
               </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              ${recommendedLeaves.map(leave => `
+                <tr class="leave-card-row">
+                  <td data-label="Application ID"><strong>${leave.id}</strong></td>
+                  <td data-label="Personnel & Branch">
+                    <strong>${leave.applicantName}</strong><br>
+                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
+                    <span class="branch-tag">${leave.branchName}</span>
+                  </td>
+                  <td data-label="Leave Type"><span style="font-weight: 700;">${leave.leaveType}</span></td>
+                  <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                  <td data-label="Days"><strong>${leave.totalDays}</strong> Days</td>
+                  <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
+                  <td data-label="Incharge Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
+                    "${leave.inchargeRemarks || 'Recommended'}"
+                  </td>
+                  <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
+                  <td data-label="SP Action" class="mobile-card-actions">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
+                      <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
+                        Sanction Order
+                      </button>
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        Details
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
     </div>
 
     <!-- SECTION 2: DIRECT / INITIAL APPLICATIONS (AWAITING BRANCH REVIEW) -->
@@ -2702,50 +2725,55 @@ function renderSPDesk(container) {
           <span class="tab-badge" style="background: #d97706; margin-left: 6px;">${initialPendingLeaves.length}</span>
         </div>
       </div>
-      <div class="responsive-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Application ID</th>
-              <th>Personnel Details</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Ground / Reason</th>
-              <th>Branch</th>
-              <th>SP Direct Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${initialPendingLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 20px; background: #f0fdf4;">✓ No fresh applications awaiting branch review.</td></tr>
-            ` : initialPendingLeaves.map(leave => `
-              <tr class="leave-card-row">
-                <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
-                <td data-label="Personnel Details">
-                  <strong>${leave.applicantName}</strong><br>
-                  <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small>
-                </td>
-                <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
-                <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
-                <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
-                <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
-                <td data-label="SP Direct Action" class="mobile-card-actions">
-                  <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
-                    <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
-                      ⚡ Direct Sanction
-                    </button>
-                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
-                      Details
-                    </button>
-                  </div>
-                </td>
+      ${initialPendingLeaves.length === 0 ? `
+        <div style="padding: 24px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
+          <div style="font-size: 0.98rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
+          <div style="font-size: 0.85rem; color: #15803d;">No fresh applications awaiting branch review.</div>
+        </div>
+      ` : `
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Application ID</th>
+                <th>Personnel Details</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Branch</th>
+                <th>SP Direct Action</th>
               </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              ${initialPendingLeaves.map(leave => `
+                <tr class="leave-card-row">
+                  <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
+                  <td data-label="Personnel Details">
+                    <strong>${leave.applicantName}</strong><br>
+                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small>
+                  </td>
+                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
+                  <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                  <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
+                  <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
+                  <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
+                  <td data-label="SP Direct Action" class="mobile-card-actions">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
+                      <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
+                        ⚡ Direct Sanction
+                      </button>
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        Details
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
     </div>
   `;
 
@@ -2894,26 +2922,33 @@ function renderMasterRegister(container) {
         </div>
       </div>
 
-      <div class="responsive-table">
-        <table class="data-table" id="masterTable">
-          <thead>
-            <tr>
-              <th>ID & Applied Date</th>
-              <th>Personnel Details</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Ground / Reason</th>
-              <th>Station Leave</th>
-              <th>Current Status</th>
-              <th>Action / Order</th>
-            </tr>
-          </thead>
-          <tbody id="masterTableBody">
-            ${AppState.leaves.map(leave => renderLeaveTableRow(leave, true)).join("")}
-          </tbody>
-        </table>
-      </div>
+      ${AppState.leaves.length === 0 ? `
+        <div style="padding: 36px 20px; text-align: center; color: #64748b; background: #ffffff; border-radius: 0 0 12px 12px;">
+          <div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 4px;">No Applications in Register</div>
+          <div style="font-size: 0.86rem; color: #64748b;">No leave records found in the system.</div>
+        </div>
+      ` : `
+        <div class="responsive-table">
+          <table class="data-table" id="masterTable">
+            <thead>
+              <tr>
+                <th>ID & Applied Date</th>
+                <th>Personnel Details</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Station Leave</th>
+                <th>Current Status</th>
+                <th>Action / Order</th>
+              </tr>
+            </thead>
+            <tbody id="masterTableBody">
+              ${AppState.leaves.map(leave => renderLeaveTableRow(leave, true)).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
     </div>
   `;
 
