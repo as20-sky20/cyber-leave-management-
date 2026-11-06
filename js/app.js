@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Haryana Cyber Police - Leave Management Portal
  * Core Application Engine & Workflow Controller
  */
@@ -2412,24 +2412,13 @@ function renderInchargeDesk(container) {
   const branch = AppState.branches.find(b => b.id === user.branchId);
   const branchName = branch ? branch.name : "Cyber Branch";
 
-  const allPendingLeaves = AppState.leaves.filter(l => l.status === "PENDING_INCHARGE");
-  const myBranchPendingCount = AppState.leaves.filter(l => l.status === "PENDING_INCHARGE" && l.branchId === user.branchId).length;
-
-  if (!AppState.inchargeBranchFilter) {
-    AppState.inchargeBranchFilter = myBranchPendingCount > 0 ? user.branchId : "ALL";
-  }
-
-  const activeFilter = AppState.inchargeBranchFilter;
+  // STRICTLY filter only for current Incharge's own branch
   const branchPendingLeaves = AppState.leaves.filter(l => {
-    if (l.status !== "PENDING_INCHARGE") return false;
-    if (activeFilter === "ALL") return true;
-    return l.branchId === activeFilter;
+    return l.status === "PENDING_INCHARGE" && l.branchId === user.branchId;
   });
 
   const branchProcessedLeaves = AppState.leaves.filter(l => {
-    if (l.status === "PENDING_INCHARGE") return false;
-    if (activeFilter === "ALL") return true;
-    return l.branchId === activeFilter;
+    return l.status !== "PENDING_INCHARGE" && l.branchId === user.branchId;
   });
 
   let html = `
@@ -2449,26 +2438,18 @@ function renderInchargeDesk(container) {
       </div>
     </div>
 
-    <!-- FILTER TOOLBAR (UNIVERSAL BRANCH FILTER) -->
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-        <span style="font-size: 0.82rem; font-weight: 700; color: #0f274c;">Filter Branch:</span>
-        <button class="btn ${activeFilter === 'ALL' ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="setInchargeBranchFilter('ALL')">
-          🌐 All 13 Wings (${allPendingLeaves.length})
-        </button>
-        <button class="btn ${activeFilter === user.branchId ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="setInchargeBranchFilter('${user.branchId}')">
-          🏢 My Branch (${myBranchPendingCount})
-        </button>
+    <!-- EXCLUSIVE BRANCH BANNER -->
+    <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.25rem;">&#127970;</span>
+        <div>
+          <strong style="color: #0f274c; font-size: 0.96rem;">${branchName}</strong>
+          <div style="font-size: 0.78rem; color: #64748b;">Incharge Verification Scope: Restricted exclusively to ${branchName} personnel</div>
+        </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 200px; justify-content: flex-end;">
-        <select id="inchargeBranchFilterSelect" class="form-control" style="font-size: 0.85rem; padding: 6px 10px; height: 38px; width: auto; max-width: 100%;" onchange="setInchargeBranchFilter(this.value)">
-          <option value="ALL" ${activeFilter === 'ALL' ? 'selected' : ''}>🌐 All 13 Cyber Wings (${allPendingLeaves.length})</option>
-          ${AppState.branches.map(b => {
-            const count = AppState.leaves.filter(l => l.status === 'PENDING_INCHARGE' && l.branchId === b.id).length;
-            return `<option value="${b.id}" ${activeFilter === b.id ? 'selected' : ''}>${b.name} (${count})</option>`;
-          }).join('')}
-        </select>
-      </div>
+      <span class="branch-tag" style="font-size: 0.82rem; font-weight: 700; padding: 4px 10px;">
+        ${branchPendingLeaves.length} Pending Recommendation
+      </span>
     </div>
 
     <div class="card-table-wrap">
@@ -2481,16 +2462,8 @@ function renderInchargeDesk(container) {
       </div>
       ${branchPendingLeaves.length === 0 ? `
         <div style="padding: 32px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">✓ All Clear - No Pending Applications</div>
-          <div style="font-size: 0.88rem; color: #15803d;">No pending leave applications under selected filter (${activeFilter === 'ALL' ? 'All Cyber Branches' : branchName}).</div>
-          ${activeFilter !== 'ALL' && allPendingLeaves.length > 0 ? `
-            <div style="margin-top: 10px;">
-              <span style="color: #b45309; font-weight: 600; font-size: 0.84rem;">Notice: There are ${allPendingLeaves.length} pending applications in other branches.</span><br>
-              <button class="btn btn-primary btn-sm" style="margin-top: 6px;" onclick="setInchargeBranchFilter('ALL')">
-                🌐 View All ${allPendingLeaves.length} Applications
-              </button>
-            </div>
-          ` : ''}
+          <div style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">All Clear - No Pending Applications</div>
+          <div style="font-size: 0.88rem; color: #15803d;">No pending leave applications for ${branchName}. All applications from your branch personnel have been reviewed and disposed.</div>
         </div>
       ` : `
         <div class="responsive-table">
@@ -2542,11 +2515,11 @@ function renderInchargeDesk(container) {
     <!-- PREVIOUSLY PROCESSED LEAVES -->
     <div class="card-table-wrap" style="margin-top: 24px;">
       <div class="table-toolbar">
-        <div class="table-title">Branch Disposed / Processed Leave Register</div>
+        <div class="table-title">${branchName} Disposed / Processed Leave Register</div>
       </div>
       ${branchProcessedLeaves.length === 0 ? `
         <div style="padding: 24px 20px; text-align: center; color: #64748b; background: #ffffff; border-radius: 0 0 12px 12px; font-size: 0.88rem;">
-          No previous processed leave applications found for this branch.
+          No previous processed leave applications found for ${branchName}.
         </div>
       ` : `
         <div class="responsive-table">
