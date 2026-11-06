@@ -121,7 +121,7 @@ function loadFromLocalStorage() {
 // ============================================================================
 const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync";
 const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync/sse";
-const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync/json?poll=1";
+const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync/json?poll=1&since=all";
 
 let isCloudConnected = false;
 let liveSseSource = null;
@@ -136,8 +136,24 @@ function getClientId() {
   return cid;
 }
 
+// Strip heavy base64 dataUrl before broadcast so message payload is < 1.5 KB
+function sanitizeLeaveForBroadcast(leave) {
+  if (!leave) return null;
+  const clone = { ...leave };
+  if (clone.attachment && clone.attachment.dataUrl) {
+    clone.attachment = {
+      name: clone.attachment.name,
+      size: clone.attachment.size,
+      type: clone.attachment.type
+    };
+  }
+  return clone;
+}
+
 // Connect and Sync with Shared Office Database (Local LAN server OR Real-time Cloud Stream)
 async function syncWithOfficeDatabase() {
+  updateSyncIndicator(false, "Syncing...");
+
   // 1. First try Local Office LAN Server (if running via start_server.ps1)
   try {
     const res = await fetch("/api/data", { cache: "no-store" });
@@ -149,10 +165,11 @@ async function syncWithOfficeDatabase() {
           mergeIncomingData(data);
           isLanServerConnected = true;
           updateSyncIndicator(true, "Office LAN Sync ✓");
-          saveToLocalStorageOnly();
+          saveData();
           populateUserSwitcher();
           renderNavigationTabs();
           renderApp();
+          showToast(`Synced with Office Server (${AppState.leaves.length} Applications)`, "success");
           return;
         }
       }
@@ -161,14 +178,23 @@ async function syncWithOfficeDatabase() {
     // Local server not available, fall through to Cloud sync
   }
 
-  // 2. Poll Cloud Live Sync History
-  pollLiveSyncHistory();
+  // 2. Poll Cloud Live Sync History & Request Peer Sync
+  await pollLiveSyncHistory();
+  await broadcastLiveAction({ action: "REQUEST_SYNC" });
+  updateSyncIndicator(true, "Live Cloud Sync Active ✓");
+  showToast(`Cloud Sync Active: ${AppState.leaves.length} applications synced across all devices`, "success");
+  renderApp();
 }
 
 // Start Live Cross-Device Real-Time Sync (SSE + Background Polling)
 function startLiveSync() {
   pollLiveSyncHistory();
   connectLiveSSE();
+
+  // Send request for latest leaves after initial connection
+  setTimeout(() => {
+    broadcastLiveAction({ action: "REQUEST_SYNC" });
+  }, 1200);
 
   // Background refresh every 10 seconds to catch any missed updates
   setInterval(() => {
@@ -197,7 +223,10 @@ function connectLiveSSE() {
           if (msg.id && lastProcessedSyncIds.has(msg.id)) return;
           if (msg.id) lastProcessedSyncIds.add(msg.id);
 
-          const payload = JSON.parse(msg.message);
+          const msgStr = msg.message.trim();
+          if (!msgStr.startsWith("{")) return;
+
+          const payload = JSON.parse(msgStr);
           handleLiveSyncAction(payload);
         }
       } catch (err) {
@@ -227,7 +256,10 @@ async function pollLiveSyncHistory() {
             if (data.id && lastProcessedSyncIds.has(data.id)) return;
             if (data.id) lastProcessedSyncIds.add(data.id);
 
-            const payload = JSON.parse(data.message);
+            const msgStr = data.message.trim();
+            if (!msgStr.startsWith("{")) return;
+
+            const payload = JSON.parse(msgStr);
             handleLiveSyncAction(payload);
           }
         } catch (e) {}
@@ -245,6 +277,14 @@ async function broadcastLiveAction(actionPayload) {
   try {
     actionPayload.clientId = getClientId();
     actionPayload.timestamp = Date.now();
+
+    if (actionPayload.leave) {
+      actionPayload.leave = sanitizeLeaveForBroadcast(actionPayload.leave);
+    }
+    if (Array.isArray(actionPayload.leaves)) {
+      actionPayload.leaves = actionPayload.leaves.map(sanitizeLeaveForBroadcast);
+    }
+
     const bodyText = JSON.stringify(actionPayload);
 
     // Uses text/plain to guarantee zero CORS preflight issues across all browsers
@@ -327,13 +367,68 @@ function handleLiveSyncAction(payload) {
     }
   }
 
+  // 5. REQUEST_SYNC (Another newly connected device wants all leaves)
+  else if (payload.action === "REQUEST_SYNC") {
+    if (AppState.leaves && AppState.leaves.length > 0) {
+      broadcastLiveAction({
+        action: "SYNC_ALL_LEAVES",
+        leaves: AppState.leaves.slice(0, 50).map(sanitizeLeaveForBroadcast)
+      });
+    }
+    return;
+  }
+
+  // 6. SYNC_ALL_LEAVES (Incoming full state sync)
+  else if (payload.action === "SYNC_ALL_LEAVES" && Array.isArray(payload.leaves)) {
+    payload.leaves.forEach(incoming => {
+      if (!incoming || !incoming.id) return;
+      const existing = AppState.leaves.find(l => l.id === incoming.id);
+      if (!existing) {
+        AppState.leaves.push(incoming);
+        hasChanged = true;
+      } else {
+        if (existing.status !== incoming.status || existing.totalDays !== incoming.totalDays) {
+          Object.assign(existing, incoming);
+          hasChanged = true;
+        }
+      }
+    });
+
+    if (hasChanged) {
+      AppState.leaves.sort((a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0));
+    }
+  }
+
   if (hasChanged) {
-    saveToLocalStorageOnly();
+    saveData();
     renderNavigationTabs();
     if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves"].includes(AppState.activeTab)) {
       renderApp();
     }
   }
+}
+
+// 1-Click Role / User Switcher Helper
+function quickSwitchUser(userId) {
+  const target = AppState.users.find(u => u.id === userId);
+  if (target) {
+    AppState.currentUser = target;
+    localStorage.setItem("cyber_police_current_user_id", target.id);
+    const sel = document.getElementById("userSwitchSelect");
+    if (sel) sel.value = target.id;
+    const mobSel = document.getElementById("mobileUserSwitchSelect");
+    if (mobSel) mobSel.value = target.id;
+    updateUserBadge();
+    renderNavigationTabs();
+    renderApp();
+    showToast(`Switched account to ${target.name} (${target.rank})`, "info");
+  }
+}
+
+// Filter Branch Incharge Desk by Branch ID or "ALL"
+function setInchargeBranchFilter(branchId) {
+  AppState.inchargeBranchFilter = branchId;
+  renderApp();
 }
 
 // Save data to localStorage and local LAN office server if running
@@ -978,23 +1073,21 @@ function renderDashboard(container) {
       <div class="page-header">
         <div class="page-title-group">
           <h2>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Executive Command Dashboard | ${user.name} (SP Cyber Crime, Panchkula)
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            SP Command Dashboard
           </h2>
-          <p>Apex Sanctioning Authority | <strong>All 13 Cyber Wings / Branches</strong> | Status: Active & Operational</p>
+          <p><strong>${user.name}</strong> (SP Cyber Crime, Panchkula)</p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="Data Backup & Security Vault">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <button class="btn btn-gold btn-sm" onclick="switchTab('sp_desk')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Open SP Desk
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="openBackupModal()" title="Data Backup">
             Data Backup
           </button>
-          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="Daily Force Strength & Leave SITREP Report">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            Daily SITREP (Attendance)
-          </button>
-          <button class="btn btn-gold" onclick="switchTab('sp_desk')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Open SP Sanction Desk
+          <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" title="Daily Attendance">
+            SITREP
           </button>
         </div>
       </div>
@@ -1006,38 +1099,38 @@ function renderDashboard(container) {
       <div class="stats-grid">
         <div class="stat-card gold">
           <div class="stat-header">
-            <span class="stat-title">Pending SP Sanction</span>
-            <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+            <span class="stat-title">Pending Sanction</span>
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
           </div>
           <div class="stat-number">${spPendingLeaves.length}</div>
-          <div class="stat-subtext">Recommended by Branch Incharges</div>
+          <div class="stat-subtext">Recommended by Incharges</div>
         </div>
 
         <div class="stat-card blue">
           <div class="stat-header">
-            <span class="stat-title">Pending with Incharges</span>
-            <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
+            <span class="stat-title">Initial Pending</span>
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
           </div>
           <div class="stat-number">${inchargePendingCount}</div>
-          <div class="stat-subtext">Under Initial Branch Review</div>
+          <div class="stat-subtext">Awaiting Branch Review</div>
         </div>
 
         <div class="stat-card green">
           <div class="stat-header">
-            <span class="stat-title">Total Sanctioned Leaves</span>
-            <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+            <span class="stat-title">Sanctioned Orders</span>
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
           </div>
           <div class="stat-number">${unitApprovedCount}</div>
-          <div class="stat-subtext">Official Orders Issued in 2026</div>
+          <div class="stat-subtext">Official Orders Issued</div>
         </div>
 
         <div class="stat-card purple">
           <div class="stat-header">
-            <span class="stat-title">Cyber Force Strength</span>
-            <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+            <span class="stat-title">Force Strength</span>
+            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
           </div>
           <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-          <div class="stat-subtext">${currentlyOnLeave} Personnel on Leave (${onDutyCount} On-Duty)</div>
+          <div class="stat-subtext">${currentlyOnLeave} on Leave | ${onDutyCount} On-Duty</div>
         </div>
       </div>
 
@@ -1190,31 +1283,19 @@ function renderDashboard(container) {
     <div class="page-header">
       <div class="page-title-group">
         <h2>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          Dashboard | Welcome, ${user.name} (${user.beltNo})
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          ${user.name} (${user.beltNo})
         </h2>
-        <p>Branch: <strong>${branchName}</strong> | Rank: <strong>${user.rank}</strong> | System Status: Active & Operational</p>
+        <p>${user.rank} | Branch: <strong>${branchName}</strong></p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         ${isBranchInchargeUser ? `
-          <button class="btn btn-primary" onclick="switchTab('incharge_desk')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-            Branch Incharge Desk (${branchPendingLeaves.length} Pending)
+          <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
+            Incharge Desk (${branchPendingLeaves.length})
           </button>
         ` : ''}
-        ${isReaderUser ? `
-          <button class="btn btn-outline" onclick="openBackupModal()" style="border-color: #15803d; color: #15803d;" title="Data Backup & Security Vault">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Data Backup
-          </button>
-          <button class="btn btn-outline" onclick="switchTab('daily_sitrep')" title="Daily Force Strength & Leave SITREP Report">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            Daily SITREP (Attendance)
-          </button>
-        ` : ''}
-        <button class="btn btn-gold" onclick="switchTab('apply_leave')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Submit Leave Application
+        <button class="btn btn-gold btn-sm" onclick="switchTab('apply_leave')">
+          + Apply Leave
         </button>
       </div>
     </div>
@@ -1515,42 +1596,42 @@ function renderApplyLeave(container) {
     <div class="page-header">
       <div class="page-title-group">
         <h2>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          Leave Application Form (Cyber Crime Panchkula)
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          Leave Application Form
         </h2>
-        <p>Office of the Superintendent of Police, State Cyber Crime, Panchkula (Haryana)</p>
+        <p>State Cyber Crime, Panchkula</p>
       </div>
       <div>
-        <button class="btn btn-outline" onclick="switchTab('my_leaves')">View Leave History</button>
+        <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">My Applications</button>
       </div>
     </div>
 
-    <div style="background: #fff; border-radius: 12px; border: 1px solid var(--border-light); padding: 24px; box-shadow: var(--shadow-sm); max-width: 920px; margin: 0 auto;">
+    <div style="background: #fff; border-radius: 12px; border: 1px solid var(--border-light); padding: 18px; box-shadow: var(--shadow-sm); max-width: 920px; margin: 0 auto;">
       
       <!-- FEATURE 7: LAST LEAVE BANNER -->
       ${lastLeaveHtml}
 
       <form id="applyLeaveForm" onsubmit="handleApplyLeaveSubmit(event)">
         
-        <!-- APPLICANT INFO (READONLY) -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 22px;">
-          <h4 style="font-size: 0.9rem; color: #0f274c; margin-bottom: 10px; font-weight: 700;">Applicant Police Personnel Details</h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.85rem;">
-            <div>Name: <strong>${user.name}</strong></div>
-            <div>Belt No: <strong>${user.beltNo}</strong></div>
-            <div>Rank: <strong>${user.rank}</strong></div>
-            <div>Mobile: <strong>${user.mobile}</strong></div>
-            <div>Email: <strong>${user.email}</strong></div>
+        <!-- SLEEK APPLICANT CARD -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.25rem;">👮</span>
+            <div>
+              <strong style="color: #0f274c; font-size: 0.95rem;">${user.name}</strong> (${user.rank})
+              <div style="font-size: 0.78rem; color: #64748b;">Belt: <strong>${user.beltNo}</strong> | Ph: ${user.mobile}</div>
+            </div>
           </div>
+          <span class="branch-tag" style="font-size: 0.8rem;">${branchName}</span>
         </div>
 
         <div class="form-grid">
           <!-- BRANCH SELECTION DROPDOWN -->
           <div class="form-group form-full">
-            <label for="leaveBranchSelect" style="font-weight: 700; color: #0f274c; font-size: 0.9rem;">
-              Select Your Cyber Branch <span class="required">*</span>
+            <label for="leaveBranchSelect" style="font-weight: 700; color: #0f274c; font-size: 0.88rem;">
+              Select Cyber Branch <span class="required">*</span>
             </label>
-            <select id="leaveBranchSelect" class="form-control" required onchange="handleLeaveBranchChange(this.value)" style="border: 2px solid var(--police-blue); font-weight: 600; font-size: 0.92rem; padding: 10px;">
+            <select id="leaveBranchSelect" class="form-control" required onchange="handleLeaveBranchChange(this.value)" style="border: 1.5px solid var(--police-blue); font-weight: 600;">
               <option value="">-- Select Cyber Branch --</option>
               ${AppState.branches.map(b => `
                 <option value="${b.id}" ${b.id === user.branchId ? 'selected' : ''}>
@@ -1558,9 +1639,6 @@ function renderApplyLeave(container) {
                 </option>
               `).join("")}
             </select>
-            <small style="color: #64748b; font-size: 0.78rem; margin-top: 2px;">
-              * This leave application will be routed to the respective Branch Incharge for initial recommendation.
-            </small>
           </div>
 
           <!-- LEAVE TYPE -->
@@ -1625,28 +1703,25 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
                   <input type="checkbox" id="prefixSuffixCheck" onchange="togglePrefixSuffix(this)">
-                  📅 Add Prefix & Suffix Holidays? (Prefix & Suffix)
+                  📅 Add Prefix / Suffix Holidays (Optional)
                 </label>
-                <span style="font-size: 0.78rem; color: #64748b;">(C-OFF, Sunday, or Gazetted Holidays)</span>
+                <span style="font-size: 0.78rem; color: #64748b;">(Holidays / C-OFF)</span>
               </div>
               <div id="prefixSuffixFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                   <div>
                     <label for="prefixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
-                      Prefix Days (Holidays preceding leave start)
+                      Prefix Days (Preceding start)
                     </label>
                     <input type="number" id="prefixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="Days">
                   </div>
                   <div>
                     <label for="suffixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
-                      Suffix Days (Holidays succeeding leave end)
+                      Suffix Days (Succeeding end)
                     </label>
                     <input type="number" id="suffixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="Days">
                   </div>
                 </div>
-                <small style="color: #64748b; font-size: 0.76rem; margin-top: 6px; display: block;">
-                  * Police Manual Rules: Prefix and suffix holidays are not deducted from leave quota but recorded in absence itinerary.
-                </small>
               </div>
             </div>
           </div>
@@ -1803,18 +1878,17 @@ function renderApplyLeave(container) {
         </div>
 
         <!-- FORM ACTION BUTTONS WITH PREVIEW OPTION -->
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap;">
+        <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
           <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">Cancel</button>
           
-          <!-- FEATURE 8: PREVIEW BUTTON -->
-          <button type="button" class="btn btn-outline" onclick="openApplicationPreviewModal()" style="border-color: #0f274c; color: #0f274c; font-weight: 600;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            Preview Application Memorandum
+          <button type="button" class="btn btn-outline" onclick="openApplicationPreviewModal()" style="border-color: #0f274c; color: #0f274c;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            Preview Memo
           </button>
 
-          <button type="submit" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            Submit Leave Application
+          <button type="submit" class="btn btn-primary" style="flex-grow: 1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Submit Application
           </button>
         </div>
       </form>
@@ -2479,16 +2553,21 @@ function renderInchargeDesk(container) {
 
   if (!isBranchIncharge) {
     container.innerHTML = `
-      <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
-        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted to Branch Incharges</h3>
-        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-          This verification desk is restricted to authorized <strong>Branch Incharges</strong>.
-          ${isSPRole ? '<br><span style="color: #1e3a8a; font-weight: 600;">Superintendent of Police may use the SP Sanction Desk for final approval orders.</span>' : ''}
+      <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 28px 20px; text-align: center; max-width: 520px; margin: 30px auto; box-shadow: var(--shadow-sm);">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem;">🔒</div>
+        <h3 style="color: #991b1b; font-size: 1.15rem; margin-bottom: 6px;">Branch Incharge Access Required</h3>
+        <p style="color: #64748b; font-size: 0.88rem; margin-bottom: 16px;">
+          You are currently logged in as <strong>${user ? user.name : 'Police Personnel'} (${user ? user.rank : 'Member'})</strong>.
+          <br>Switch officer to verify and recommend leave applications:
         </p>
-        <button class="btn btn-primary" onclick="switchTab('${isSPRole ? 'sp_desk' : 'dashboard'}')">
-          ${isSPRole ? 'Open SP Sanction Desk' : 'Go to Dashboard'}
-        </button>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-sm" onclick="quickSwitchUser('INCH-1930')">
+            👮 Switch to 1930 Incharge (Insp. Rajesh Kumar)
+          </button>
+          <button class="btn btn-gold btn-sm" onclick="quickSwitchUser('SP-001')">
+            🛡️ Switch to SP Cyber (Mayank Gupta, IPS)
+          </button>
+        </div>
       </div>
     `;
     return;
@@ -2497,25 +2576,34 @@ function renderInchargeDesk(container) {
   const branch = AppState.branches.find(b => b.id === user.branchId);
   const branchName = branch ? branch.name : "Cyber Branch";
 
-  // Filter pending leaves for this branch (or all branches for Admin / Reader / SP)
+  const allPendingLeaves = AppState.leaves.filter(l => l.status === "PENDING_INCHARGE");
+  const myBranchPendingCount = AppState.leaves.filter(l => l.status === "PENDING_INCHARGE" && l.branchId === user.branchId).length;
+
+  if (!AppState.inchargeBranchFilter) {
+    AppState.inchargeBranchFilter = myBranchPendingCount > 0 ? user.branchId : "ALL";
+  }
+
+  const activeFilter = AppState.inchargeBranchFilter;
   const branchPendingLeaves = AppState.leaves.filter(l => {
     if (l.status !== "PENDING_INCHARGE") return false;
-    return isSP ? true : (l.branchId === user.branchId);
+    if (activeFilter === "ALL") return true;
+    return l.branchId === activeFilter;
   });
 
   const branchProcessedLeaves = AppState.leaves.filter(l => {
     if (l.status === "PENDING_INCHARGE") return false;
-    return isSP ? true : (l.branchId === user.branchId);
+    if (activeFilter === "ALL") return true;
+    return l.branchId === activeFilter;
   });
 
   let html = `
     <div class="page-header">
       <div class="page-title-group">
         <h2>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-          Branch Incharge Verification & Recommendation Desk
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+          Branch Incharge Verification Desk
         </h2>
-        <p>Branch: <strong>${isSP ? "All 13 Cyber Branches (Supervisory Admin / Reader Privileges)" : branchName}</strong> | Incharge: <strong>${user.name} (${user.rank})</strong></p>
+        <p>Incharge: <strong>${user.name} (${user.rank})</strong> | Unit: <strong>${branchName}</strong></p>
       </div>
       <div>
         <button class="btn btn-outline btn-sm" onclick="renderApp()">
@@ -2525,17 +2613,34 @@ function renderInchargeDesk(container) {
       </div>
     </div>
 
-    <!-- NOTICE ON WORKFLOW -->
-    <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 18px; border-radius: 6px; margin-bottom: 20px; font-size: 0.85rem; color: #1e3a8a;">
-      <strong>Standard Operating Procedure:</strong> Branch Incharge shall examine leave applications of staff under their command. Verify duty roster, court duties, and work arrangement, then forward with <strong>Recommendation to SP Cyber</strong> or reject with recorded grounds.
+    <!-- FILTER TOOLBAR (UNIVERSAL BRANCH FILTER) -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <span style="font-size: 0.82rem; font-weight: 700; color: #0f274c;">Filter Branch:</span>
+        <button class="btn ${activeFilter === 'ALL' ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="setInchargeBranchFilter('ALL')">
+          🌐 All 13 Wings (${allPendingLeaves.length})
+        </button>
+        <button class="btn ${activeFilter === user.branchId ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="setInchargeBranchFilter('${user.branchId}')">
+          🏢 My Branch (${myBranchPendingCount})
+        </button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 200px; justify-content: flex-end;">
+        <select id="inchargeBranchFilterSelect" class="form-control" style="font-size: 0.85rem; padding: 6px 10px; height: 38px; width: auto; max-width: 100%;" onchange="setInchargeBranchFilter(this.value)">
+          <option value="ALL" ${activeFilter === 'ALL' ? 'selected' : ''}>🌐 All 13 Cyber Wings (${allPendingLeaves.length})</option>
+          ${AppState.branches.map(b => {
+            const count = AppState.leaves.filter(l => l.status === 'PENDING_INCHARGE' && l.branchId === b.id).length;
+            return `<option value="${b.id}" ${activeFilter === b.id ? 'selected' : ''}>${b.name} (${count})</option>`;
+          }).join('')}
+        </select>
+      </div>
     </div>
 
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          Applications Awaiting Branch Verification & Recommendation
-          <span class="tab-badge" style="margin-left: 8px;">${branchPendingLeaves.length}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Applications Awaiting Branch Recommendation
+          <span class="tab-badge" style="margin-left: 6px;">${branchPendingLeaves.length}</span>
         </div>
       </div>
       <div class="responsive-table">
@@ -2554,7 +2659,19 @@ function renderInchargeDesk(container) {
           </thead>
           <tbody>
             ${branchPendingLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 24px; background: #f0fdf4;">✓ No applications pending for recommendation. All matters disposed.</td></tr>
+              <tr>
+                <td colspan="8" style="text-align: center; color: #166534; padding: 22px; background: #f0fdf4;">
+                  ✓ No pending applications under selected filter (${activeFilter === 'ALL' ? 'All Cyber Branches' : branchName}).
+                  ${activeFilter !== 'ALL' && allPendingLeaves.length > 0 ? `
+                    <div style="margin-top: 8px;">
+                      <span style="color: #b45309; font-weight: 600; font-size: 0.84rem;">Notice: There are ${allPendingLeaves.length} pending applications in other branches.</span><br>
+                      <button class="btn btn-primary btn-sm" style="margin-top: 6px;" onclick="setInchargeBranchFilter('ALL')">
+                        🌐 View All ${allPendingLeaves.length} Applications
+                      </button>
+                    </div>
+                  ` : ''}
+                </td>
+              </tr>
             ` : branchPendingLeaves.map(leave => `
               <tr class="leave-card-row">
                 <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
@@ -2634,16 +2751,23 @@ function renderInchargeDesk(container) {
 function renderSPDesk(container) {
   const user = AppState.currentUser;
   const recommendedLeaves = AppState.leaves.filter(l => l.status === "RECOMMENDED");
+  const initialPendingLeaves = AppState.leaves.filter(l => l.status === "PENDING_INCHARGE");
   const approvedLeaves = AppState.leaves.filter(l => l.status === "APPROVED");
 
   let html = `
     <div class="page-header">
       <div class="page-title-group">
         <h2>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          Superintendent of Police (Cyber) Sanction Desk
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Superintendent of Police Sanction Desk
         </h2>
-        <p>Sanctioning Authority: <strong>Mayank Gupta, IPS (SP Cyber Crime, Panchkula)</strong></p>
+        <p>Sanctioning Authority: <strong>Mayank Gupta, IPS</strong> (SP Cyber Crime, Panchkula)</p>
+      </div>
+      <div>
+        <button class="btn btn-outline btn-sm" onclick="renderApp()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Refresh
+        </button>
       </div>
     </div>
 
@@ -2651,46 +2775,48 @@ function renderSPDesk(container) {
     <div class="stats-grid">
       <div class="stat-card gold">
         <div class="stat-header">
-          <span class="stat-title">Pending SP Sanction</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+          <span class="stat-title">Pending Sanction</span>
+          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
         <div class="stat-number">${recommendedLeaves.length}</div>
-        <div class="stat-subtext">Recommended by Branch Incharges</div>
-      </div>
-
-      <div class="stat-card green">
-        <div class="stat-header">
-          <span class="stat-title">Sanctioned Leaves</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        </div>
-        <div class="stat-number">${approvedLeaves.length}</div>
-        <div class="stat-subtext">Official Orders Dispatched</div>
+        <div class="stat-subtext">Recommended by Incharges</div>
       </div>
 
       <div class="stat-card blue">
         <div class="stat-header">
-          <span class="stat-title">Cyber Wings / Branches</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
+          <span class="stat-title">Awaiting Branch</span>
+          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
         </div>
-        <div class="stat-number">13</div>
-        <div class="stat-subtext">Panchkula HQ & Specialized Units</div>
+        <div class="stat-number">${initialPendingLeaves.length}</div>
+        <div class="stat-subtext">Direct Sanction Available</div>
+      </div>
+
+      <div class="stat-card green">
+        <div class="stat-header">
+          <span class="stat-title">Sanctioned Orders</span>
+          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </div>
+        <div class="stat-number">${approvedLeaves.length}</div>
+        <div class="stat-subtext">Official Orders Issued</div>
       </div>
 
       <div class="stat-card purple">
         <div class="stat-header">
-          <span class="stat-title">Helpline 1930 Staffing</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+          <span class="stat-title">Cyber Wings</span>
+          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
         </div>
-        <div class="stat-number">100%</div>
-        <div class="stat-subtext">24x7 Operations Online</div>
+        <div class="stat-number">13</div>
+        <div class="stat-subtext">Units Operational</div>
       </div>
     </div>
 
+    <!-- SECTION 1: RECOMMENDED APPLICATIONS -->
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          Leaves Recommended by Branch Incharges Awaiting SP Sanction
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          Recommended by Branch Incharges (Ready for Sanction)
+          <span class="tab-badge" style="margin-left: 6px;">${recommendedLeaves.length}</span>
         </div>
       </div>
       <div class="responsive-table">
@@ -2703,14 +2829,14 @@ function renderSPDesk(container) {
               <th>Period</th>
               <th>Days</th>
               <th>Ground / Reason</th>
-              <th>Incharge Recommendation / Remarks</th>
+              <th>Incharge Remarks</th>
               <th>Station Leave</th>
-              <th>Action / Order</th>
+              <th>SP Action</th>
             </tr>
           </thead>
           <tbody>
             ${recommendedLeaves.length === 0 ? `
-              <tr><td colspan="9" style="text-align: center; color: #166534; padding: 26px;">✓ No leave applications currently pending for SP sanction.</td></tr>
+              <tr><td colspan="9" style="text-align: center; color: #166534; padding: 22px; background: #f0fdf4;">✓ No leave applications currently pending for SP sanction.</td></tr>
             ` : recommendedLeaves.map(leave => `
               <tr class="leave-card-row">
                 <td data-label="Application ID"><strong>${leave.id}</strong></td>
@@ -2723,14 +2849,74 @@ function renderSPDesk(container) {
                 <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
                 <td data-label="Days"><strong>${leave.totalDays}</strong> Days</td>
                 <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
-                <td data-label="Incharge Recommendation / Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
+                <td data-label="Incharge Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
                   "${leave.inchargeRemarks || 'Recommended'}"
                 </td>
                 <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
-                <td data-label="Action / Order" class="mobile-card-actions">
-                  <button class="btn btn-gold btn-sm mobile-action-btn" style="width: 100%;" onclick="openSPActionModal('${leave.id}')">
-                    Sanction / Record Order
-                  </button>
+                <td data-label="SP Action" class="mobile-card-actions">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
+                    <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
+                      Sanction Order
+                    </button>
+                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                      Details
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 2: DIRECT / INITIAL APPLICATIONS (AWAITING BRANCH REVIEW) -->
+    <div class="card-table-wrap" style="margin-top: 20px;">
+      <div class="table-toolbar" style="background: #fffbeb; border-bottom: 1.5px solid #fde68a;">
+        <div class="table-title" style="color: #92400e;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Direct & Initial Applications (Awaiting Branch Review)
+          <span class="tab-badge" style="background: #d97706; margin-left: 6px;">${initialPendingLeaves.length}</span>
+        </div>
+      </div>
+      <div class="responsive-table">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Application ID</th>
+              <th>Personnel Details</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th>Days</th>
+              <th>Ground / Reason</th>
+              <th>Branch</th>
+              <th>SP Direct Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${initialPendingLeaves.length === 0 ? `
+              <tr><td colspan="8" style="text-align: center; color: #166534; padding: 20px; background: #f0fdf4;">✓ No fresh applications awaiting branch review.</td></tr>
+            ` : initialPendingLeaves.map(leave => `
+              <tr class="leave-card-row">
+                <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
+                <td data-label="Personnel Details">
+                  <strong>${leave.applicantName}</strong><br>
+                  <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small>
+                </td>
+                <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
+                <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
+                <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
+                <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
+                <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
+                <td data-label="SP Direct Action" class="mobile-card-actions">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
+                    <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
+                      ⚡ Direct Sanction
+                    </button>
+                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                      Details
+                    </button>
+                  </div>
                 </td>
               </tr>
             `).join("")}
@@ -2984,15 +3170,15 @@ function exportLeavesToCSV() {
     `"${l.toDate}"`,
     l.totalDays,
     l.originalDays || l.totalDays,
-    `"${(l.reason || '').replace(/"/g, '""')}"`,
+    `"${(l.reason || '').replaceAll('"', '""')}"`,
     l.stationLeave ? "Granted (Yes)" : "At Station (No)",
-    `"${(l.stationLeaveAddress || '').replace(/"/g, '""')}"`,
-    `"${(l.handoverTo || '').replace(/"/g, '""')}"`,
+    `"${(l.stationLeaveAddress || '').replaceAll('"', '""')}"`,
+    `"${(l.handoverTo || '').replaceAll('"', '""')}"`,
     `"${l.emergencyContact || ''}"`,
     `"${l.status}"`,
     `"${l.appliedAt || ''}"`,
-    `"${(l.inchargeRemarks || '').replace(/"/g, '""')}"`,
-    `"${(l.spRemarks || '').replace(/"/g, '""')}"`
+    `"${(l.inchargeRemarks || '').replaceAll('"', '""')}"`,
+    `"${(l.spRemarks || '').replaceAll('"', '""')}"`
   ]);
 
   const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\r\n");
@@ -4439,9 +4625,15 @@ function openSPActionModal(leaveId) {
         </div>
       ` : ''}
 
-      <div style="margin-top: 8px; padding: 8px 12px; background: #e0e7ff; border-radius: 6px; color: #1e1b4b;">
-        <strong>Branch Incharge Recommendation:</strong> "${leave.inchargeRemarks || 'Recommended'}"
-      </div>
+      ${leave.status === 'RECOMMENDED' ? `
+        <div style="margin-top: 8px; padding: 8px 12px; background: #e0e7ff; border-radius: 6px; color: #1e1b4b;">
+          <strong>Branch Incharge Recommendation:</strong> "${leave.inchargeRemarks || 'Recommended'}"
+        </div>
+      ` : `
+        <div style="margin-top: 8px; padding: 8px 12px; background: #fef3c7; border-radius: 6px; color: #92400e;">
+          ⚡ <strong>Direct SP Sanction:</strong> Application is pending branch review. As SP Cyber, you may directly sanction or modify this application.
+        </div>
+      `}
       ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 700; margin-top: 6px;">★ Station Leave Permission Requested: ${leave.stationLeaveAddress}</div>` : ''}
     </div>
 

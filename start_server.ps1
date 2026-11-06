@@ -169,7 +169,7 @@ while ($true) {
         if ($pathOnly -eq "/api/save" -and $httpMethod -eq "POST") {
             if ($body) {
                 [System.IO.File]::WriteAllText($dbPath, $body, [System.Text.Encoding]::UTF8)
-                $reply = '{"success":true,"message":"डेटाबेस सुरक्षित किया गया"}'
+                $reply = '{"success":true,"message":"Database saved successfully"}'
                 $replyBytes = [System.Text.Encoding]::UTF8.GetBytes($reply)
                 $respHeader = "HTTP/1.1 200 OK`r`n" +
                               "Content-Type: application/json; charset=utf-8`r`n" +
@@ -179,7 +179,7 @@ while ($true) {
                 $stream.Write($hdrBytes, 0, $hdrBytes.Length)
                 $stream.Write($replyBytes, 0, $replyBytes.Length)
             } else {
-                $reply = '{"success":false,"message":"रिक्त डेटा"}'
+                $reply = '{"success":false,"message":"Empty data payload"}'
                 $replyBytes = [System.Text.Encoding]::UTF8.GetBytes($reply)
                 $respHeader = "HTTP/1.1 400 Bad Request`r`n" +
                               "Content-Type: application/json; charset=utf-8`r`n" +
@@ -211,7 +211,7 @@ while ($true) {
             $stream.Write($hdrBytes, 0, $hdrBytes.Length)
             $stream.Write($fileBytes, 0, $fileBytes.Length)
         } else {
-            $notFound = "<h1>404 Not Found</h1><p>हरियाणा साइबर पुलिस पोर्टल - फाइल नहीं मिली</p>"
+            $notFound = "<h1>404 Not Found</h1><p>Haryana Cyber Police Portal - File Not Found</p>"
             $nfBytes = [System.Text.Encoding]::UTF8.GetBytes($notFound)
             $respHeader = "HTTP/1.1 404 Not Found`r`n" +
                           "Content-Type: text/html; charset=utf-8`r`n" +

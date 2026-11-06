@@ -5,8 +5,9 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
-# Logs
-*.log
+# Scratch and temporary scripts
+scratch/
+test_runner.html
 
 # Editor directories and files
 .vscode/
