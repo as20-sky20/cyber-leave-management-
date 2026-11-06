@@ -1201,29 +1201,6 @@ function renderDashboard(container) {
   }) : [];
 
   let html = `
-    <div class="page-header">
-      <div class="page-title-group">
-        <h2>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          ${user.name} (${user.beltNo})
-        </h2>
-        <p>${user.rank} | Branch: <strong>${branchName}</strong></p>
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn btn-gold btn-sm" onclick="switchTab('apply_leave')">
-          + Apply Leave
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">
-          📋 My Leaves ${pendingLeaves.length > 0 ? `(${pendingLeaves.length})` : ''}
-        </button>
-        ${isBranchInchargeUser ? `
-          <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
-            🏢 Incharge Desk (${branchPendingLeaves.length})
-          </button>
-        ` : ''}
-      </div>
-    </div>
-
     <!-- COMPACT INCHARGE PENDING ACTION ALERT -->
     ${isBranchInchargeUser && branchPendingLeaves.length > 0 ? `
       <div class="clean-pending-alert" onclick="switchTab('incharge_desk')">
@@ -1243,7 +1220,7 @@ function renderDashboard(container) {
     ` : ''}
 
     <!-- STATS CARDS -->
-    <div class="stats-grid">
+    <div class="stats-grid" style="margin-top: 8px;">
       <div class="stat-card blue">
         <div class="stat-header">
           <span class="stat-title">Casual Leave (CL Balance)</span>
