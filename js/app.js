@@ -1180,41 +1180,6 @@ function renderDashboard(container) {
           </div>
         </div>
       </div>
-
-      <!-- EXECUTIVE COMMAND SHORTCUTS -->
-      <div class="dashboard-quick-grid">
-        <div class="quick-tile" onclick="switchTab('sp_desk')">
-          <div class="quick-tile-icon" style="background: #fef3c7; color: #b45309;">🛡️</div>
-          <div class="quick-tile-info">
-            <h4>SP Sanction Desk ${spPendingLeaves.length > 0 ? `<span class="tab-badge" style="background: #dc2626; color: #fff;">${spPendingLeaves.length} Pending</span>` : ''}</h4>
-            <p>Review, curtail, and sanction leave applications forwarded by branch incharges</p>
-          </div>
-        </div>
-
-        <div class="quick-tile" onclick="switchTab('notices')">
-          <div class="quick-tile-icon" style="background: #eff6ff; color: #1d4ed8;">📢</div>
-          <div class="quick-tile-info">
-            <h4>Official Notice Board</h4>
-            <p>Issue executive orders, circulars, and departmental directives</p>
-          </div>
-        </div>
-
-        <div class="quick-tile" onclick="switchTab('daily_sitrep')">
-          <div class="quick-tile-icon" style="background: #fdf2f8; color: #be185d;">📊</div>
-          <div class="quick-tile-info">
-            <h4>Daily SITREP & Attendance</h4>
-            <p>Monitor real-time strength, presence, and leaves across all 13 cyber wings</p>
-          </div>
-        </div>
-
-        <div class="quick-tile" onclick="switchTab('directory')">
-          <div class="quick-tile-icon" style="background: #f5f3ff; color: #6d28d9;">👥</div>
-          <div class="quick-tile-info">
-            <h4>Cyber Personnel Directory</h4>
-            <p>Roster of all officers, belt numbers, ranks, and wing assignments</p>
-          </div>
-        </div>
-      </div>
     `;
 
     container.innerHTML = html;
@@ -1337,51 +1302,6 @@ function renderDashboard(container) {
           `;
         }).join("")}
       </div>
-    </div>
-
-    <!-- PORTAL QUICK NAVIGATION TILES -->
-    <div class="dashboard-quick-grid">
-      <div class="quick-tile" onclick="switchTab('apply_leave')">
-        <div class="quick-tile-icon" style="background: #fef3c7; color: #b45309;">📝</div>
-        <div class="quick-tile-info">
-          <h4>Apply Leave</h4>
-          <p>Submit fresh application for Casual, Earned, Station or Medical leave</p>
-        </div>
-      </div>
-
-      <div class="quick-tile" onclick="switchTab('my_leaves')">
-        <div class="quick-tile-icon" style="background: #eff6ff; color: #1d4ed8;">📋</div>
-        <div class="quick-tile-info">
-          <h4>My Leaves ${pendingLeaves.length > 0 ? `<span class="tab-badge" style="background: #2563eb; color: #fff;">${pendingLeaves.length} Active</span>` : ''}</h4>
-          <p>Track application status, trail, and download official sanction slips</p>
-        </div>
-      </div>
-
-      <div class="quick-tile" onclick="switchTab('notices')">
-        <div class="quick-tile-icon" style="background: #f0fdf4; color: #15803d;">📢</div>
-        <div class="quick-tile-info">
-          <h4>Notice Board & Orders</h4>
-          <p>Read official headquarters circulars, orders, and branch directives</p>
-        </div>
-      </div>
-
-      ${isBranchInchargeUser ? `
-        <div class="quick-tile" onclick="switchTab('incharge_desk')">
-          <div class="quick-tile-icon" style="background: #ede9fe; color: #6d28d9;">🏢</div>
-          <div class="quick-tile-info">
-            <h4>Incharge Desk ${branchPendingLeaves.length > 0 ? `<span class="tab-badge" style="background: #dc2626; color: #fff;">${branchPendingLeaves.length}</span>` : ''}</h4>
-            <p>Review, curtail, and forward leave applications from ${branchName}</p>
-          </div>
-        </div>
-      ` : `
-        <div class="quick-tile" onclick="switchTab('directory')">
-          <div class="quick-tile-icon" style="background: #f5f3ff; color: #6d28d9;">👥</div>
-          <div class="quick-tile-info">
-            <h4>Staff Directory</h4>
-            <p>Search cyber police personnel, branch rosters, and emergency contacts</p>
-          </div>
-        </div>
-      `}
     </div>
   `;
 
