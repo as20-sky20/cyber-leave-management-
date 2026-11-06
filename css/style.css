@@ -1472,13 +1472,16 @@ table.data-table tr:hover {
 .mobile-drawer-overlay {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(15, 23, 42, 0.65);
-  z-index: 2000;
+  z-index: 20000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   backdrop-filter: blur(2px);
 }
 
@@ -1490,6 +1493,8 @@ table.data-table tr:hover {
 .mobile-drawer-content {
   background: #ffffff;
   width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   border-radius: 22px 22px 0 0;
   max-height: 86vh;
   overflow-y: auto;
@@ -2117,13 +2122,21 @@ body.force-mobile-view .mobile-bottom-nav {
   left: 50% !important;
   transform: translateX(-50%) !important;
 }
+body.force-mobile-view .mobile-drawer-overlay {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-end !important;
+}
 body.force-mobile-view .mobile-drawer-content {
+  width: 100% !important;
   max-width: 460px !important;
-  left: 50% !important;
-  transform: translateX(-50%) translateY(100%) !important;
+  margin: 0 auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: translateY(100%) !important;
 }
 body.force-mobile-view .mobile-drawer-overlay.active .mobile-drawer-content {
-  transform: translateX(-50%) translateY(0) !important;
+  transform: translateY(0) !important;
 }
 body.force-mobile-view .mobile-header-user-btn {
   display: flex !important;
