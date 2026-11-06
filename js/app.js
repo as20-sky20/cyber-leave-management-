@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Haryana Cyber Police - Leave Management Portal
  * Core Application Engine & Workflow Controller
  */
@@ -2495,8 +2495,8 @@ function renderInchargeDesk(container) {
                   <td data-label="Ground / Reason" style="max-width: 200px;">${leave.reason}</td>
                   <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
                   <td data-label="Incharge Action" class="mobile-card-actions">
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
-                      <button class="btn btn-primary btn-sm mobile-action-btn" style="flex: 1;" onclick="openInchargeActionModal('${leave.id}')">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openInchargeActionModal('${leave.id}')">
                         Review & Recommend
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
@@ -2672,8 +2672,8 @@ function renderSPDesk(container) {
                   </td>
                   <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
                   <td data-label="SP Action" class="mobile-card-actions">
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
-                      <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
                         Sanction Order
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
@@ -2732,8 +2732,8 @@ function renderSPDesk(container) {
                   <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
                   <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
                   <td data-label="SP Direct Action" class="mobile-card-actions">
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%;">
-                      <button class="btn btn-gold btn-sm mobile-action-btn" style="flex: 1;" onclick="openSPActionModal('${leave.id}')">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
                         ⚡ Direct Sanction
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
