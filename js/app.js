@@ -868,6 +868,13 @@ function renderNavigationTabs() {
     spBadge.style.display = pendingSPCount > 0 ? "inline-block" : "none";
   }
 
+  const myLeavesBadge = document.getElementById("myLeavesBadge");
+  if (myLeavesBadge) {
+    const activeLeavesCount = AppState.leaves.filter(l => l.applicantId === (user ? user.id : "") && (l.status === "PENDING_INCHARGE" || l.status === "RECOMMENDED")).length;
+    myLeavesBadge.textContent = activeLeavesCount;
+    myLeavesBadge.style.display = activeLeavesCount > 0 ? "inline-block" : "none";
+  }
+
   // Incharge Tab: Visible ONLY to Branch Incharges (HIDDEN from SP Cyber & normal members)
   const inchargeTabBtn = document.getElementById("tabBtnIncharge");
   if (inchargeTabBtn) {
@@ -1081,29 +1088,29 @@ function renderDashboard(container) {
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn btn-gold btn-sm" onclick="switchTab('sp_desk')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Open SP Desk
+            Open SP Desk (${spPendingLeaves.length})
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="switchTab('notices')" title="Official Notice Board">
+            📢 Notice Board
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" title="Daily Attendance">
+            📊 SITREP
           </button>
           <button class="btn btn-outline btn-sm" onclick="openBackupModal()" title="Data Backup">
             Data Backup
           </button>
-          <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" title="Daily Attendance">
-            SITREP
-          </button>
         </div>
       </div>
 
-      <!-- OFFICIAL NOTICE BOARD WIDGET -->
-      ${renderDashboardNoticesWidget()}
-
       <!-- SP EXECUTIVE STATS CARDS -->
       <div class="stats-grid">
-        <div class="stat-card gold">
+        <div class="stat-card gold" onclick="switchTab('sp_desk')" style="cursor: pointer;" title="Click to open SP Sanction Desk">
           <div class="stat-header">
             <span class="stat-title">Pending Sanction</span>
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
           </div>
-          <div class="stat-number">${spPendingLeaves.length}</div>
-          <div class="stat-subtext">Recommended by Incharges</div>
+          <div class="stat-number" style="color: ${spPendingLeaves.length > 0 ? '#dc2626' : '#15803d'};">${spPendingLeaves.length}</div>
+          <div class="stat-subtext">${spPendingLeaves.length > 0 ? 'Action Required (Click to review)' : 'All Applications Cleared'}</div>
         </div>
 
         <div class="stat-card blue">
@@ -1124,7 +1131,7 @@ function renderDashboard(container) {
           <div class="stat-subtext">Official Orders Issued</div>
         </div>
 
-        <div class="stat-card purple">
+        <div class="stat-card purple" onclick="switchTab('daily_sitrep')" style="cursor: pointer;" title="Click to view SITREP Roll Call">
           <div class="stat-header">
             <span class="stat-title">Force Strength</span>
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
@@ -1174,89 +1181,38 @@ function renderDashboard(container) {
         </div>
       </div>
 
-      <!-- PENDING APPROVALS TABLE FOR SP -->
-      <div class="card-table-wrap">
-        <div class="table-toolbar">
-          <div class="table-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Applications Awaiting SP Sanction
-          </div>
-          <div>
-            <button class="btn btn-outline btn-sm" onclick="switchTab('sp_desk')">Open SP Sanction Desk</button>
+      <!-- EXECUTIVE COMMAND SHORTCUTS -->
+      <div class="dashboard-quick-grid">
+        <div class="quick-tile" onclick="switchTab('sp_desk')">
+          <div class="quick-tile-icon" style="background: #fef3c7; color: #b45309;">🛡️</div>
+          <div class="quick-tile-info">
+            <h4>SP Sanction Desk ${spPendingLeaves.length > 0 ? `<span class="tab-badge" style="background: #dc2626; color: #fff;">${spPendingLeaves.length} Pending</span>` : ''}</h4>
+            <p>Review, curtail, and sanction leave applications forwarded by branch incharges</p>
           </div>
         </div>
-        <div class="responsive-table">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Application ID</th>
-                <th>Police Personnel</th>
-                <th>Leave Type</th>
-                <th>Period</th>
-                <th>Days</th>
-                <th>Attachment</th>
-                <th>Incharge Recommendation</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${spPendingLeaves.length === 0 ? `
-                <tr>
-                  <td colspan="8" style="text-align: center; color: #166534; padding: 28px; background: #f0fdf4;">
-                    <strong>✓ No leave applications are currently pending for SP Sanction.</strong><br>
-                    <small style="color: #64748b;">Applications recommended by Branch Incharges will appear here automatically in real time.</small>
-                  </td>
-                </tr>
-              ` : spPendingLeaves.map(leave => `
-                <tr>
-                  <td>
-                    <strong>${leave.id}</strong><br>
-                    <small style="color: #64748b;">${formatDate(leave.appliedDate)}</small>
-                  </td>
-                  <td>
-                    <strong>${leave.applicantName}</strong><br>
-                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-                    <span class="branch-tag">${leave.branchName}</span>
-                  </td>
-                  <td>
-                    <span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br>
-                    <small style="color: #64748b;">${leave.leaveTypeName}</small>
-                  </td>
-                  <td>
-                    ${formatDate(leave.fromDate)} to<br>${formatDate(leave.toDate)}
-                    ${leave.stationLeave ? `<br><small style="color: #b45309; font-weight: 600;">★ Station Leave</small>` : ''}
-                  </td>
-                  <td>
-                    <span style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">${leave.totalDays} Days</span>
-                    ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
-                      <br><small style="color: #b45309; font-weight: 600;">(Original: ${leave.originalDays} Days)</small>
-                    ` : ''}
-                  </td>
-                  <td>
-                    ${leave.attachment ? `
-                      <button class="attachment-chip" onclick="viewAttachment('${leave.id}')" title="${leave.attachment.name}">
-                        📎 Attachment
-                      </button>
-                    ` : `<span style="color: #94a3b8; font-size: 0.8rem;">-</span>`}
-                  </td>
-                  <td>
-                    <em style="color: #0369a1; font-size: 0.85rem;">"${leave.inchargeRemarks || 'Forwarded'}"</em><br>
-                    <small style="color: #64748b;">Recommended by: ${leave.inchargeName || 'Branch Incharge'}</small>
-                  </td>
-                  <td>
-                    <div style="display: flex; gap: 6px;">
-                      <button class="btn btn-gold btn-sm" onclick="openSPActionModal('${leave.id}')">
-                        Review & Sanction
-                      </button>
-                      <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
-                        Details
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
+
+        <div class="quick-tile" onclick="switchTab('notices')">
+          <div class="quick-tile-icon" style="background: #eff6ff; color: #1d4ed8;">📢</div>
+          <div class="quick-tile-info">
+            <h4>Official Notice Board</h4>
+            <p>Issue executive orders, circulars, and departmental directives</p>
+          </div>
+        </div>
+
+        <div class="quick-tile" onclick="switchTab('daily_sitrep')">
+          <div class="quick-tile-icon" style="background: #fdf2f8; color: #be185d;">📊</div>
+          <div class="quick-tile-info">
+            <h4>Daily SITREP & Attendance</h4>
+            <p>Monitor real-time strength, presence, and leaves across all 13 cyber wings</p>
+          </div>
+        </div>
+
+        <div class="quick-tile" onclick="switchTab('directory')">
+          <div class="quick-tile-icon" style="background: #f5f3ff; color: #6d28d9;">👥</div>
+          <div class="quick-tile-info">
+            <h4>Cyber Personnel Directory</h4>
+            <p>Roster of all officers, belt numbers, ranks, and wing assignments</p>
+          </div>
         </div>
       </div>
     `;
@@ -1289,76 +1245,35 @@ function renderDashboard(container) {
         <p>${user.rank} | Branch: <strong>${branchName}</strong></p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        ${isBranchInchargeUser ? `
-          <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
-            Incharge Desk (${branchPendingLeaves.length})
-          </button>
-        ` : ''}
         <button class="btn btn-gold btn-sm" onclick="switchTab('apply_leave')">
           + Apply Leave
         </button>
+        <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">
+          📋 My Leaves ${pendingLeaves.length > 0 ? `(${pendingLeaves.length})` : ''}
+        </button>
+        ${isBranchInchargeUser ? `
+          <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
+            🏢 Incharge Desk (${branchPendingLeaves.length})
+          </button>
+        ` : ''}
       </div>
     </div>
 
-    <!-- OFFICIAL NOTICE BOARD WIDGET -->
-    ${renderDashboardNoticesWidget()}
-
-    <!-- FEATURE: INCHARGE PENDING ACTION ALERT ON DASHBOARD -->
+    <!-- COMPACT INCHARGE PENDING ACTION ALERT -->
     ${isBranchInchargeUser && branchPendingLeaves.length > 0 ? `
-      <div class="card-table-wrap" style="border: 2px solid #2563eb; margin-bottom: 22px; box-shadow: var(--shadow-md); background: #fff;">
-        <div class="table-toolbar" style="background: #eff6ff; border-bottom: 1px solid #bfdbfe; padding: 12px 16px;">
-          <div class="table-title" style="color: #1e3a8a; font-weight: 700; font-size: 0.96rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            🚨 Applications Pending for Branch Recommendation
-            <span class="tab-badge" style="background: #dc2626; color: #fff; margin-left: 8px;">${branchPendingLeaves.length} Pending</span>
-          </div>
+      <div class="clean-pending-alert" onclick="switchTab('incharge_desk')">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.4rem;">🚨</span>
           <div>
-            <button class="btn btn-primary btn-sm" onclick="switchTab('incharge_desk')">
-              Open Branch Incharge Desk
-            </button>
+            <strong style="color: #1e3a8a; font-size: 0.95rem;">Branch Incharge Action Required</strong>
+            <div style="font-size: 0.82rem; color: #475569;">
+              You have <strong>${branchPendingLeaves.length} application(s)</strong> awaiting your recommendation from ${branchName}.
+            </div>
           </div>
         </div>
-        <div class="responsive-table">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Application ID</th>
-                <th>Personnel Details</th>
-                <th>Leave Type</th>
-                <th>Period</th>
-                <th>Days</th>
-                <th>Reason</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${branchPendingLeaves.map(leave => `
-                <tr style="background: #f8fafc;">
-                  <td><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
-                  <td>
-                    <strong>${leave.applicantName}</strong><br>
-                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-                    <span class="branch-tag">${leave.branchName}</span>
-                  </td>
-                  <td><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName.split("(")[0]}</small></td>
-                  <td>${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                  <td><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
-                  <td style="max-width: 200px;">${leave.reason}</td>
-                  <td>
-                    <div style="display: flex; gap: 6px;">
-                      <button class="btn btn-primary btn-sm" onclick="openInchargeActionModal('${leave.id}')">
-                        Review & Recommend
-                      </button>
-                      <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">
-                        Details
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); switchTab('incharge_desk')">
+          Open Incharge Desk &rarr;
+        </button>
       </div>
     ` : ''}
 
@@ -1382,15 +1297,15 @@ function renderDashboard(container) {
         <div class="stat-subtext">Accumulated Privilege Leave</div>
       </div>
 
-      <div class="stat-card gold">
+      <div class="stat-card gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view My Leaves">
         <div class="stat-header">
-          <span class="stat-title">${isBranchInchargeUser ? 'Branch Pending Applications' : 'In-Process Applications'}</span>
+          <span class="stat-title">My Applications</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
-        <div class="stat-number" style="color: ${(isBranchInchargeUser ? branchPendingLeaves.length : pendingLeaves.length) > 0 ? '#dc2626' : '#15803d'};">
-          ${isBranchInchargeUser ? branchPendingLeaves.length : pendingLeaves.length}
+        <div class="stat-number" style="color: ${pendingLeaves.length > 0 ? '#dc2626' : '#15803d'};">
+          ${pendingLeaves.length}
         </div>
-        <div class="stat-subtext">${isBranchInchargeUser ? 'Pending Branch Recommendation' : 'Under Consideration'}</div>
+        <div class="stat-subtext">${pendingLeaves.length > 0 ? 'In-Process (Click to view)' : `${approvedLeaves.length} Approved / Sanctioned`}</div>
       </div>
 
       <div class="stat-card purple">
@@ -1424,38 +1339,49 @@ function renderDashboard(container) {
       </div>
     </div>
 
-    <!-- RECENT APPLICATIONS TABLE -->
-    <div class="card-table-wrap">
-      <div class="table-toolbar">
-        <div class="table-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          Recent Leave Applications
-        </div>
-        <div>
-          <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">View All Applications</button>
+    <!-- PORTAL QUICK NAVIGATION TILES -->
+    <div class="dashboard-quick-grid">
+      <div class="quick-tile" onclick="switchTab('apply_leave')">
+        <div class="quick-tile-icon" style="background: #fef3c7; color: #b45309;">📝</div>
+        <div class="quick-tile-info">
+          <h4>Apply Leave</h4>
+          <p>Submit fresh application for Casual, Earned, Station or Medical leave</p>
         </div>
       </div>
-      <div class="responsive-table">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Application ID</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Days</th>
-              <th>Reason</th>
-              <th>Station Leave</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${userLeaves.length === 0 ? `
-              <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 28px;">No leave applications recorded yet.</td></tr>
-            ` : userLeaves.slice(0, 5).map(leave => renderLeaveTableRow(leave)).join("")}
-          </tbody>
-        </table>
+
+      <div class="quick-tile" onclick="switchTab('my_leaves')">
+        <div class="quick-tile-icon" style="background: #eff6ff; color: #1d4ed8;">📋</div>
+        <div class="quick-tile-info">
+          <h4>My Leaves ${pendingLeaves.length > 0 ? `<span class="tab-badge" style="background: #2563eb; color: #fff;">${pendingLeaves.length} Active</span>` : ''}</h4>
+          <p>Track application status, trail, and download official sanction slips</p>
+        </div>
       </div>
+
+      <div class="quick-tile" onclick="switchTab('notices')">
+        <div class="quick-tile-icon" style="background: #f0fdf4; color: #15803d;">📢</div>
+        <div class="quick-tile-info">
+          <h4>Notice Board & Orders</h4>
+          <p>Read official headquarters circulars, orders, and branch directives</p>
+        </div>
+      </div>
+
+      ${isBranchInchargeUser ? `
+        <div class="quick-tile" onclick="switchTab('incharge_desk')">
+          <div class="quick-tile-icon" style="background: #ede9fe; color: #6d28d9;">🏢</div>
+          <div class="quick-tile-info">
+            <h4>Incharge Desk ${branchPendingLeaves.length > 0 ? `<span class="tab-badge" style="background: #dc2626; color: #fff;">${branchPendingLeaves.length}</span>` : ''}</h4>
+            <p>Review, curtail, and forward leave applications from ${branchName}</p>
+          </div>
+        </div>
+      ` : `
+        <div class="quick-tile" onclick="switchTab('directory')">
+          <div class="quick-tile-icon" style="background: #f5f3ff; color: #6d28d9;">👥</div>
+          <div class="quick-tile-info">
+            <h4>Staff Directory</h4>
+            <p>Search cyber police personnel, branch rosters, and emergency contacts</p>
+          </div>
+        </div>
+      `}
     </div>
   `;
 
