@@ -773,9 +773,6 @@ function updateHeaderUserInfo() {
 
 // Navigation Tabs Handling
 function switchTab(tabId) {
-  if (tabId === "my_leaves") {
-    tabId = "dashboard";
-  }
   const user = AppState.currentUser;
   const isSPRole = user && (user.role === "sp_cyber");
   const isBranchIncharge = user && (user.role === "branch_incharge" || user.role === "admin");
@@ -848,7 +845,7 @@ function renderNavigationTabs() {
 
   const myLeavesTabBtn = document.getElementById("tabBtnMyLeaves");
   if (myLeavesTabBtn) {
-    myLeavesTabBtn.style.display = "none";
+    myLeavesTabBtn.style.display = isSPRole ? "none" : "flex";
   }
 
   // Calculate pending counts
@@ -873,7 +870,9 @@ function renderNavigationTabs() {
 
   const myLeavesBadge = document.getElementById("myLeavesBadge");
   if (myLeavesBadge) {
-    myLeavesBadge.style.display = "none";
+    const activeLeavesCount = AppState.leaves.filter(l => l.applicantId === (user ? user.id : "") && (l.status === "PENDING_INCHARGE" || l.status === "RECOMMENDED")).length;
+    myLeavesBadge.textContent = activeLeavesCount;
+    myLeavesBadge.style.display = activeLeavesCount > 0 ? "inline-block" : "none";
   }
 
   // Incharge Tab: Visible ONLY to Branch Incharges (HIDDEN from SP Cyber & normal members)
@@ -892,7 +891,7 @@ function renderNavigationTabs() {
   const mobileApplyBtn = document.getElementById("mobileNavApply");
   const mobileMyLeavesBtn = document.getElementById("mobileNavMyLeaves");
   if (mobileApplyBtn) mobileApplyBtn.style.display = isSPRole ? "none" : "flex";
-  if (mobileMyLeavesBtn) mobileMyLeavesBtn.style.display = "none";
+  if (mobileMyLeavesBtn) mobileMyLeavesBtn.style.display = isSPRole ? "none" : "flex";
 
   const mobileDeskLabel = document.getElementById("mobileDeskLabel");
   const mobileDeskBadge = document.getElementById("mobileDeskBadge");
@@ -1240,7 +1239,7 @@ function renderDashboard(container) {
         <div class="stat-subtext">Accumulated Privilege Leave</div>
       </div>
 
-      <div class="stat-card gold">
+      <div class="stat-card gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view In-Process Leaves in My Leaves">
         <div class="stat-header">
           <span class="stat-title">In-Process Leaves</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
@@ -1251,7 +1250,7 @@ function renderDashboard(container) {
         <div class="stat-subtext">${pendingLeaves.length > 0 ? 'Awaiting Sanction' : 'No Active Applications'}</div>
       </div>
 
-      <div class="stat-card purple">
+      <div class="stat-card purple" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view Approved Leaves in My Leaves">
         <div class="stat-header">
           <span class="stat-title">Sanctioned Leaves</span>
           <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
@@ -1426,7 +1425,7 @@ function renderApplyLeave(container) {
         <p>State Cyber Crime, Panchkula</p>
       </div>
       <div>
-        <button class="btn btn-outline btn-sm" onclick="switchTab('dashboard')">&larr; Back to Dashboard</button>
+        <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">My Applications</button>
       </div>
     </div>
 
@@ -2314,14 +2313,69 @@ function handleApplyLeaveSubmit(e) {
   broadcastLiveAction({ action: "NEW_LEAVE", leave: newLeave });
 
   showToast(`Leave Application ${newId} (${totalDays} Days) submitted successfully and forwarded to Branch Incharge.`, "success");
-  switchTab("dashboard");
+  switchTab("my_leaves");
 }
 
 // ==========================================
-// VIEW 3: MY APPLICATIONS (REMOVED / REDIRECTS TO DASHBOARD)
+// VIEW 3: MY APPLICATIONS
 // ==========================================
 function renderMyLeaves(container) {
-  renderDashboard(container);
+  const user = AppState.currentUser;
+  const userLeaves = AppState.leaves.filter(l => l.applicantId === user.id);
+
+  let html = `
+    <div class="page-header">
+      <div class="page-title-group">
+        <h2>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          My Leave Applications
+        </h2>
+        <p>Current status, recommendation trail, and official sanction slips of all your submitted leave applications</p>
+      </div>
+      <div>
+        <button class="btn btn-gold" onclick="switchTab('apply_leave')">+ Apply New Leave</button>
+      </div>
+    </div>
+
+    ${userLeaves.length === 0 ? `
+      <div class="card-table-wrap" style="padding: 44px 20px; text-align: center; background: #ffffff; border-radius: 12px; border: 1.5px dashed #cbd5e1; margin-top: 14px;">
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: #f8fafc; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 1.6rem;">
+          📋
+        </div>
+        <h3 style="font-size: 1.15rem; color: #0f274c; margin-bottom: 6px; font-weight: 700;">No Leave Applications Found</h3>
+        <p style="color: #64748b; font-size: 0.9rem; max-width: 480px; margin: 0 auto 20px; line-height: 1.5;">
+          You have not submitted any leave applications yet. Once you apply, your application status, recommendation trail, and official sanction slips will appear here.
+        </p>
+        <button class="btn btn-gold" onclick="switchTab('apply_leave')" style="padding: 10px 22px; font-weight: 600; font-size: 0.92rem;">
+          + Apply New Leave Now
+        </button>
+      </div>
+    ` : `
+      <div class="card-table-wrap">
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Application ID</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Station Leave</th>
+                <th>Current Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${userLeaves.map(leave => renderLeaveTableRow(leave)).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `}
+  `;
+
+  container.innerHTML = html;
 }
 
 // ==========================================
