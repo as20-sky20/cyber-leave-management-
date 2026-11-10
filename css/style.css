@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * Haryana Cyber Police - Leave Management Portal
  * Professional Police UI Design System
  */
@@ -204,42 +204,206 @@ body {
   outline: none;
 }
 
-/* NAVIGATION TABS */
-.nav-bar {
-  background: #ffffff;
-  border-bottom: 1px solid var(--border-color);
-  padding: 0 24px;
+/* ==========================================================================
+   MAIN PORTAL BODY & LEFT SIDEBAR NAVIGATION
+   ========================================================================== */
+
+.portal-body-layout {
   display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  box-shadow: var(--shadow-sm);
+  flex-direction: row;
+  min-height: calc(100vh - 110px);
+  width: 100%;
+  position: relative;
+  align-items: stretch;
+  background: var(--bg-light);
 }
 
+/* Sidebar Backdrop (for Mobile Drawer mode) */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 39, 76, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1040;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.sidebar-open-lock {
+  overflow: hidden !important;
+}
+
+/* LEFT NAVIGATION BAR (SIDEBAR) */
+.sidebar-nav.nav-bar {
+  width: 260px;
+  min-width: 260px;
+  background: #ffffff;
+  border-right: 1px solid var(--border-color);
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 10px;
+  gap: 4px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 105px);
+  overflow-y: auto;
+  z-index: 100;
+  flex-shrink: 0;
+  transition: width 0.25s ease, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar Header (Mobile & Brand) */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sidebar-brand-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand-main {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f274c;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sidebar-brand-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: #f1f5f9;
+  border: none;
+  font-size: 1.4rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #475569;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile Role Select inside Sidebar */
+.sidebar-role-select-box {
+  display: none;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.sidebar-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Sidebar Links Wrap */
+.sidebar-links-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Apply Leave Quick Action inside Sidebar */
+.sidebar-apply-btn {
+  background: linear-gradient(135deg, #0f274c 0%, #1e3a8a 100%) !important;
+  color: #ffd700 !important;
+  border: 1px solid #ffd700 !important;
+  border-radius: 8px !important;
+  margin-bottom: 6px !important;
+  font-weight: 700 !important;
+  justify-content: center !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 2px 8px rgba(15, 39, 76, 0.2) !important;
+}
+
+.sidebar-apply-btn:hover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f274c 100%) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.sidebar-apply-btn svg {
+  color: #ffd700 !important;
+  stroke: #ffd700 !important;
+}
+
+/* Vertical Tab Buttons in Left Sidebar */
 .nav-tab-btn {
   background: transparent;
   border: none;
-  border-bottom: 3px solid transparent;
-  padding: 14px 18px;
-  font-size: 0.9rem;
+  border-left: 4px solid transparent;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #334155;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
+  position: relative;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-tab-btn svg {
+  flex-shrink: 0;
+  color: #64748b;
+  transition: color 0.18s ease;
 }
 
 .nav-tab-btn:hover {
-  color: var(--police-blue);
-  background: #f8fafc;
+  color: #0f274c;
+  background: #f1f5f9;
+}
+
+.nav-tab-btn:hover svg {
+  color: #0f274c;
 }
 
 .nav-tab-btn.active {
-  color: var(--police-blue);
-  border-bottom-color: var(--police-gold);
-  background: #f8fafc;
+  color: #0f274c;
+  border-left-color: var(--police-gold);
+  background: #eff6ff;
+  font-weight: 700;
+}
+
+.nav-tab-btn.active svg {
+  color: #0f274c;
 }
 
 .tab-badge {
@@ -249,18 +413,133 @@ body {
   padding: 1px 7px;
   border-radius: 10px;
   font-weight: 700;
+  margin-left: auto;
 }
 
 .tab-badge.blue {
   background: var(--police-accent);
 }
 
+/* Sidebar Footer */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-user-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar-user-avatar {
+  font-size: 1.25rem;
+}
+
+.sidebar-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f274c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font-size: 0.72rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-sync-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.sidebar-sync-btn:hover {
+  background: #f1f5f9;
+}
+
+/* HAMBURGER TOGGLE BUTTON IN HEADER */
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+/* FLOATING LEFT ACTION BUTTON FOR MOBILE */
+.mobile-floating-left-nav-btn {
+  display: none;
+  position: fixed;
+  left: 14px;
+  bottom: 22px;
+  z-index: 1030;
+  background: #0f274c;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  border-radius: 30px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  box-shadow: 0 4px 16px rgba(15, 39, 76, 0.4);
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.mobile-floating-left-nav-btn:hover {
+  transform: scale(1.05);
+}
+
 /* MAIN CONTENT CONTAINER */
 .app-container {
-  max-width: 1380px;
-  margin: 20px auto;
-  padding: 0 20px;
   flex: 1;
+  min-width: 0;
+  padding: 20px 24px;
+  margin: 0;
   width: 100%;
 }
 
@@ -1345,8 +1624,9 @@ table.data-table tr:hover {
    MOBILE APP COMPONENTS (Bottom Nav, Drawer, Profile Pill, View Switcher)
    ========================================================================== */
 
-/* FIXED MOBILE BOTTOM NAVIGATION BAR */
+/* FIXED MOBILE BOTTOM NAVIGATION BAR (HIDDEN: Navigation moved to Left Sidebar) */
 .mobile-bottom-nav {
+  display: none !important;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -1684,17 +1964,45 @@ table.data-table tr:hover {
    ========================================================================== */
 @media (max-width: 768px) {
   body:not(.force-desktop-view) {
-    padding-bottom: 74px !important;
+    padding-bottom: 0 !important;
   }
 
   /* Hide top desktop navigation on mobile */
-  body:not(.force-desktop-view) .nav-bar {
-    display: none !important;
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 285px !important;
+    max-width: 84vw !important;
+    height: 100vh !important;
+    z-index: 1200 !important;
+    background: #ffffff !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar.mobile-open {
+    transform: translateX(0) !important;
+  }
+  body:not(.force-desktop-view) .sidebar-close-btn {
+    display: flex !important;
+  }
+  body:not(.force-desktop-view) .sidebar-role-select-box {
+    display: block !important;
+  }
+  body:not(.force-desktop-view) .sidebar-backdrop {
+    display: block !important;
+  }
+  body:not(.force-desktop-view) .mobile-floating-left-nav-btn {
+    display: flex !important;
   }
 
   /* Display mobile thumb bottom bar */
   body:not(.force-desktop-view) .mobile-bottom-nav {
-    display: flex !important;
+    display: none !important;
   }
 
   /* Mobile compact header */
@@ -2548,7 +2856,7 @@ body.force-mobile-view {
   box-shadow: 0 0 35px rgba(0, 0, 0, 0.25) !important;
   min-height: 100vh !important;
   position: relative !important;
-  padding-bottom: 74px !important;
+  padding-bottom: 0 !important;
 }
 /* Force Mobile View Notification Banner (At top of mobile container) */
 .force-mobile-top-banner {
@@ -2615,14 +2923,38 @@ body.force-mobile-view .force-mobile-top-banner .banner-btn {
     box-shadow: 0 8px 26px rgba(255, 215, 0, 0.4);
   }
 }
-body.force-mobile-view .nav-bar {
-  display: none !important;
+body.force-mobile-view .sidebar-nav.nav-bar {
+  display: flex !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 285px !important;
+  max-width: 84vw !important;
+  height: 100vh !important;
+  z-index: 1200 !important;
+  background: #ffffff !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+body.force-mobile-view .sidebar-nav.nav-bar.mobile-open {
+  transform: translateX(0) !important;
+}
+body.force-mobile-view .sidebar-close-btn {
+  display: flex !important;
+}
+body.force-mobile-view .sidebar-role-select-box {
+  display: block !important;
+}
+body.force-mobile-view .sidebar-backdrop {
+  display: block !important;
+}
+body.force-mobile-view .mobile-floating-left-nav-btn {
+  display: flex !important;
 }
 body.force-mobile-view .mobile-bottom-nav {
-  display: flex !important;
-  max-width: 460px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  display: none !important;
 }
 body.force-mobile-view .mobile-drawer-overlay {
   display: flex !important;
@@ -3197,3 +3529,62 @@ body.force-mobile-view .mobile-card-actions .btn {
 }
 
 
+
+/* ==========================================================================
+   DESKTOP VIEW LEFT SIDEBAR (STICKY & COLLAPSIBLE)
+   ========================================================================== */
+@media (min-width: 992px) {
+  body:not(.force-mobile-view) .portal-body-layout {
+    flex-direction: row !important;
+  }
+
+  body:not(.force-mobile-view) .sidebar-nav.nav-bar {
+    display: flex !important;
+    transform: none !important;
+    position: sticky !important;
+    top: 0 !important;
+    height: calc(100vh - 105px) !important;
+  }
+
+  body:not(.force-mobile-view) .sidebar-close-btn {
+    display: none !important;
+  }
+
+  body:not(.force-mobile-view) .sidebar-role-select-box {
+    display: none !important;
+  }
+
+  body:not(.force-mobile-view) .sidebar-backdrop {
+    display: none !important;
+  }
+
+  body:not(.force-mobile-view) .mobile-floating-left-nav-btn {
+    display: none !important;
+  }
+
+  /* Desktop collapsed sidebar mode */
+  body.sidebar-collapsed .sidebar-nav.nav-bar {
+    width: 68px !important;
+    min-width: 68px !important;
+    padding: 14px 6px !important;
+  }
+
+  body.sidebar-collapsed .sidebar-brand-title,
+  body.sidebar-collapsed .sidebar-apply-btn span,
+  body.sidebar-collapsed .nav-tab-btn span,
+  body.sidebar-collapsed .sidebar-user-details,
+  body.sidebar-collapsed .sidebar-sync-btn span {
+    display: none !important;
+  }
+
+  body.sidebar-collapsed .nav-tab-btn {
+    justify-content: center !important;
+    padding: 12px !important;
+  }
+
+  body.sidebar-collapsed .nav-tab-btn .tab-badge {
+    position: absolute !important;
+    top: 4px !important;
+    right: 4px !important;
+  }
+}

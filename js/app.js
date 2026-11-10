@@ -1,3 +1,42 @@
+
+// ==========================================
+// LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP & MOBILE)
+// ==========================================
+
+function toggleSidebarNav() {
+  const sidebar = document.getElementById("portalSidebarNav");
+  const isMobile = window.innerWidth < 992 || document.body.classList.contains("force-mobile-view");
+
+  if (isMobile) {
+    if (sidebar && sidebar.classList.contains("mobile-open")) {
+      closeSidebarNav();
+    } else {
+      openSidebarNav();
+    }
+  } else {
+    document.body.classList.toggle("sidebar-collapsed");
+  }
+}
+
+function openSidebarNav() {
+  const sidebar = document.getElementById("portalSidebarNav");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if (sidebar) sidebar.classList.add("mobile-open");
+  if (backdrop) backdrop.classList.add("active");
+  document.body.classList.add("sidebar-open-lock");
+}
+
+function closeSidebarNav() {
+  const sidebar = document.getElementById("portalSidebarNav");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if (sidebar) sidebar.classList.remove("mobile-open");
+  if (backdrop) backdrop.classList.remove("active");
+  document.body.classList.remove("sidebar-open-lock");
+}
+
+function openSidebarOfficerProfile() {
+  openMobileDrawer();
+}
 ﻿/**
  * Haryana Cyber Police - Leave Management Portal
  * Core Application Engine & Workflow Controller
@@ -183,6 +222,7 @@ async function syncWithOfficeDatabase() {
   await broadcastLiveAction({ action: "REQUEST_SYNC" });
   updateSyncIndicator(true, "Live Cloud Sync Online");
   showToast(`Cloud Sync Active: ${AppState.leaves.length} applications synced across all devices`, "success");
+  closeSidebarNav();
   renderApp();
 }
 
@@ -416,6 +456,8 @@ function quickSwitchUser(userId) {
     localStorage.setItem("cyber_police_current_user_id", target.id);
     const sel = document.getElementById("userSwitchSelect");
     if (sel) sel.value = target.id;
+    const sideSel = document.getElementById("sidebarUserSwitchSelect");
+    if (sideSel) sideSel.value = target.id;
     const mobSel = document.getElementById("mobileUserSwitchSelect");
     if (mobSel) mobSel.value = target.id;
     updateUserBadge();
@@ -693,6 +735,12 @@ function populateUserSwitcher() {
   }
 
   // Also sync mobile drawer switcher
+  const sidebarSelect = document.getElementById("sidebarUserSwitchSelect");
+  if (sidebarSelect) {
+    sidebarSelect.innerHTML = select.innerHTML;
+    if (AppState.currentUser) sidebarSelect.value = AppState.currentUser.id;
+  }
+
   const mobileSelect = document.getElementById("mobileUserSwitchSelect");
   if (mobileSelect) {
     mobileSelect.innerHTML = select.innerHTML;
@@ -753,6 +801,11 @@ function updateHeaderUserInfo() {
   if (roleEl) roleEl.textContent = `${user.rank} | ${branchName} | ${getRoleDisplay(user.role)}`;
 
   // Update mobile header & drawer info
+  const sidebarName = document.getElementById("sidebarUserName");
+  const sidebarRole = document.getElementById("sidebarUserRole");
+  if (sidebarName) sidebarName.textContent = `${user.name} (${user.beltNo})`;
+  if (sidebarRole) sidebarRole.textContent = `${user.rank} | ${branchName}`;
+
   const mobileName = document.getElementById("mobileHeaderUserName");
   if (mobileName) {
     if (user.role === "sp_cyber") mobileName.textContent = "SP Cyber";
@@ -768,6 +821,11 @@ function updateHeaderUserInfo() {
   const mobileSelect = document.getElementById("mobileUserSwitchSelect");
   if (mobileSelect && mobileSelect.value !== user.id) {
     mobileSelect.value = user.id;
+  }
+
+  const sidebarSelect = document.getElementById("sidebarUserSwitchSelect");
+  if (sidebarSelect && sidebarSelect.value !== user.id) {
+    sidebarSelect.value = user.id;
   }
 }
 
