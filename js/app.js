@@ -157,11 +157,13 @@ function loadFromLocalStorage() {
     // Always recalculate exact non-duplicative leave balances
     recalculateAllUserLeaveBalances();
 
-    const savedUserId = localStorage.getItem("cyber_police_current_user_id");
-    if (savedUserId) {
-      AppState.currentUser = AppState.users.find(u => u.id === savedUserId) || null;
+    // Use sessionStorage so every fresh browser visit lands on the Police Login Page
+    const sessionUserId = sessionStorage.getItem("cyber_police_current_user_id");
+    if (sessionUserId) {
+      AppState.currentUser = AppState.users.find(u => u.id === sessionUserId) || null;
     } else {
       AppState.currentUser = null;
+      localStorage.removeItem("cyber_police_current_user_id");
     }
   } catch (e) {
     console.error("Error loading data from localStorage, reverting to defaults", e);
@@ -5100,6 +5102,7 @@ function quickLoginUser(userId) {
   }
 
   AppState.currentUser = target;
+  sessionStorage.setItem("cyber_police_current_user_id", target.id);
   localStorage.setItem("cyber_police_current_user_id", target.id);
   recalculateAllUserLeaveBalances();
 
@@ -5118,6 +5121,7 @@ function quickLoginUser(userId) {
 
 function handleLogout() {
   AppState.currentUser = null;
+  sessionStorage.removeItem("cyber_police_current_user_id");
   localStorage.removeItem("cyber_police_current_user_id");
   renderApp();
   showToast("Logged out successfully. Please select an officer to sign in.", "info");

@@ -4224,3 +4224,13 @@ body.force-mobile-view {
     justify-content: center;
   }
 }
+/* Forced Logout and Login Screen Display Guard */
+body.portal-logged-out #portalMainHeader,
+body.portal-logged-out #portalBodyLayout,
+body.portal-logged-out .mobile-bottom-nav,
+body.portal-logged-out .mobile-floating-actions {
+  display: none !important;
+}
+body.portal-logged-out #loginScreen {
+  display: flex !important;
+}
