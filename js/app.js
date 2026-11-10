@@ -61,6 +61,7 @@ let lanSyncPollingId = null;
 // Initialize Application
 function initApp() {
   loadFromLocalStorage();
+  recalculateAllUserLeaveBalances();
   initViewMode();
   populateUserSwitcher();
   setupEventListeners();
@@ -118,6 +119,23 @@ function loadFromLocalStorage() {
         spUser.name = "Mayank Gupta, IPS";
       }
 
+      // Repair and validate user leave balances against seed defaults
+      if (!AppState.users || !Array.isArray(AppState.users) || AppState.users.length === 0) {
+        AppState.users = DEFAULT_USERS;
+      } else {
+        AppState.users.forEach(u => {
+          const def = (typeof DEFAULT_USERS !== "undefined") ? DEFAULT_USERS.find(du => du.id === u.id) : null;
+          if (def && def.leaveBalances) {
+            if (!u.initialLeaveBalances) {
+              u.initialLeaveBalances = { ...def.leaveBalances };
+            }
+            if (!u.leaveBalances || typeof u.leaveBalances.CL !== "number") {
+              u.leaveBalances = { ...def.leaveBalances };
+            }
+          }
+        });
+      }
+
       if (rawLeaves) {
         AppState.leaves = JSON.parse(rawLeaves);
         AppState.leaves.forEach(l => {
@@ -136,6 +154,9 @@ function loadFromLocalStorage() {
       }
     }
 
+    // Always recalculate exact non-duplicative leave balances
+    recalculateAllUserLeaveBalances();
+
     const savedUserId = localStorage.getItem("cyber_police_current_user_id");
     if (savedUserId) {
       AppState.currentUser = AppState.users.find(u => u.id === savedUserId) || AppState.users[0];
@@ -150,7 +171,41 @@ function loadFromLocalStorage() {
     AppState.leaves = DEFAULT_LEAVES;
     AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
     AppState.currentUser = DEFAULT_USERS[0];
+    recalculateAllUserLeaveBalances();
   }
+}
+
+// Calculate accurate, non-duplicative leave balances for all users based on approved applications
+function recalculateAllUserLeaveBalances() {
+  if (!AppState.users || !Array.isArray(AppState.users)) return;
+
+  AppState.users.forEach(user => {
+    const defaultUser = (typeof DEFAULT_USERS !== "undefined") ? DEFAULT_USERS.find(du => du.id === user.id) : null;
+    const baseBalances = defaultUser && defaultUser.leaveBalances
+      ? { ...defaultUser.leaveBalances }
+      : (user.initialLeaveBalances ? { ...user.initialLeaveBalances } : { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 2 });
+
+    user.initialLeaveBalances = { ...baseBalances };
+
+    // Sum up only APPROVED leave days for this applicant in 2026
+    const approvedLeaves = (AppState.leaves || []).filter(l => l.applicantId === user.id && l.status === "APPROVED");
+
+    const deductions = {};
+    approvedLeaves.forEach(l => {
+      const type = l.leaveType;
+      const days = Number(l.totalDays) || 0;
+      deductions[type] = (deductions[type] || 0) + days;
+    });
+
+    const computedBalances = {};
+    Object.keys(baseBalances).forEach(code => {
+      const base = Number(baseBalances[code]) || 0;
+      const used = deductions[code] || 0;
+      computedBalances[code] = Math.max(0, base - used);
+    });
+
+    user.leaveBalances = computedBalances;
+  });
 }
 
 // ============================================================================
@@ -158,9 +213,9 @@ function loadFromLocalStorage() {
 // Works 100% across multiple computers, laptops, and mobile phones simultaneously
 // Zero CORS preflight issues, zero API keys, instant cross-device updates (< 100ms)
 // ============================================================================
-const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync";
-const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync/sse";
-const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-sync/json?poll=1&since=all";
+const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v2";
+const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v2/sse";
+const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v2/json?poll=1&since=all";
 
 let isCloudConnected = false;
 let liveSseSource = null;
@@ -374,13 +429,8 @@ function handleLiveSyncAction(payload) {
       if (payload.curtailedBy) leave.curtailedBy = payload.curtailedBy;
       if (payload.curtailReason) leave.curtailReason = payload.curtailReason;
 
-      // If approved, update user leave balance if present
-      if (payload.status === "APPROVED") {
-        const applicant = AppState.users.find(u => u.id === leave.applicantId);
-        if (applicant && applicant.leaveBalances && applicant.leaveBalances[leave.leaveType] !== undefined) {
-          applicant.leaveBalances[leave.leaveType] = Math.max(0, applicant.leaveBalances[leave.leaveType] - leave.totalDays);
-        }
-      }
+      // Recalculate deterministic leave balances accurately
+      recalculateAllUserLeaveBalances();
 
       hasChanged = true;
       const statusLabel = payload.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
@@ -440,6 +490,7 @@ function handleLiveSyncAction(payload) {
   }
 
   if (hasChanged) {
+    recalculateAllUserLeaveBalances();
     saveData();
     renderNavigationTabs();
     if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves"].includes(AppState.activeTab)) {
@@ -453,6 +504,7 @@ function quickSwitchUser(userId) {
   const target = AppState.users.find(u => u.id === userId);
   if (target) {
     AppState.currentUser = target;
+    recalculateAllUserLeaveBalances();
     localStorage.setItem("cyber_police_current_user_id", target.id);
     const sel = document.getElementById("userSwitchSelect");
     if (sel) sel.value = target.id;
@@ -755,6 +807,7 @@ function handleUserSwitch(userId) {
   const user = AppState.users.find(u => u.id === userId);
   if (!user) return;
   AppState.currentUser = user;
+  recalculateAllUserLeaveBalances();
   saveData();
 
   // Automatic smart tab redirection based on switched role
@@ -4626,17 +4679,15 @@ function submitSPDecision(action) {
     leave.spActionAt = now;
     leave.status = "APPROVED";
 
-    // Deduct only final sanctioned leave balance from applicant
-    const applicant = AppState.users.find(u => u.id === leave.applicantId);
-    if (applicant && applicant.leaveBalances && applicant.leaveBalances[leave.leaveType] !== undefined) {
-      applicant.leaveBalances[leave.leaveType] = Math.max(0, applicant.leaveBalances[leave.leaveType] - leave.totalDays);
-    }
+    // Recalculate deterministic leave balances accurately
+    recalculateAllUserLeaveBalances();
 
     showToast(`Leave Sanctioned! Official Order Dispatch No. ${leave.sanctionNo} issued (${leave.totalDays} Days).`, "success");
   } else {
     leave.spRemarks = remarks;
     leave.spActionAt = now;
     leave.status = "REJECTED";
+    recalculateAllUserLeaveBalances();
     showToast(`Application ${leave.id} rejected.`, "error");
   }
 
