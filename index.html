@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Haryana Cyber Police - Leave Management & Sanction Portal | Panchkula</title>
-  <link rel="stylesheet" href="css/style.css?v=20261110.clfix">
+  <link rel="stylesheet" href="css/style.css?v=20261110.login">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -22,7 +22,13 @@
   </div>
 
   <!-- MAIN POLICE HEADER -->
-  <header class="main-header">
+    <!-- DEDICATED OFFICER LOGIN SCREEN -->
+  <div id="loginScreen" class="login-page-wrapper" style="display: none;">
+    <!-- Populated dynamically by renderLoginScreen() in app.js -->
+  </div>
+
+  <!-- MAIN POLICE HEADER -->
+  <header class="main-header" id="portalMainHeader">
     <div class="header-brand">
       <!-- HAMBURGER MENU BUTTON FOR LEFT SIDEBAR (MOBILE & DESKTOP TOGGLE) -->
       <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarNav()" title="Toggle Navigation Bar (Left Menu)" aria-label="Toggle Navigation">
@@ -73,6 +79,12 @@
         </div>
       </div>
 
+            <!-- LOGOUT BUTTON IN HEADER -->
+      <button class="btn btn-outline btn-sm logout-btn" id="headerLogoutBtn" onclick="handleLogout()" title="Logout Officer Session" style="color: #fca5a5; border-color: rgba(252, 165, 165, 0.4); display: inline-flex; align-items: center; gap: 5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>Logout</span>
+      </button>
+
       <button class="btn btn-outline btn-sm desktop-view-toggle-btn" onclick="toggleDesktopMobileMode()" title="Toggle between Mobile App View and Desktop Layout" style="color: #fff; border-color: rgba(255,255,255,0.3);">
         <span id="desktopToggleIcon">📱</span> <span id="desktopToggleText">Mobile View</span>
       </button>
@@ -85,7 +97,7 @@
   </header>
 
   <!-- MAIN PORTAL BODY WITH LEFT SIDEBAR NAVIGATION -->
-  <div class="portal-body-layout">
+  <div class="portal-body-layout" id="portalBodyLayout">
     <!-- MOBILE BACKDROP -->
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebarNav()"></div>
 
@@ -163,6 +175,12 @@
         <button class="nav-tab-btn" data-tab="branches" id="tabBtnBranches">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"></path></svg>
           <span>13 Cyber Wings</span>
+        </button>
+
+        <!-- LOGOUT LINK IN SIDEBAR -->
+        <button class="nav-tab-btn sidebar-logout-btn" onclick="handleLogout()" style="color: #ef4444; margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span>Sign Out / Logout</span>
         </button>
       </div>
 
@@ -651,6 +669,11 @@
           <span class="mobile-menu-text">Data Backup</span>
         </button>
 
+                <button class="mobile-menu-item" onclick="handleLogout(); closeMobileDrawer();" style="color: #dc2626; border-top: 1px solid #fee2e2; margin-top: 10px; padding-top: 12px;">
+          <span class="mobile-menu-icon" style="background: #fef2f2; color: #dc2626;">ðŸšª</span>
+          <span class="mobile-menu-text">Sign Out (Logout)</span>
+        </button>
+
         <button class="mobile-menu-item" onclick="syncWithOfficeDatabase(); closeMobileDrawer();">
           <span class="mobile-menu-icon" style="background: #f0fdf4; color: #16a34a;">🔄</span>
           <span class="mobile-menu-text">Sync Devices</span>
@@ -672,7 +695,7 @@
 
 
   <!-- SCRIPTS -->
-  <script src="js/data.js?v=20261110.clfix"></script>
-  <script src="js/app.js?v=20261110.clfix"></script>
+  <script src="js/data.js?v=20261110.login"></script>
+  <script src="js/app.js?v=20261110.login"></script>
 </body>
 </html>
