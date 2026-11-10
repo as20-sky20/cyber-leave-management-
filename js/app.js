@@ -1368,65 +1368,98 @@ function renderDashboard(container) {
       </div>
     ` : ''}
 
-    <!-- STATS CARDS -->
-    <div class="stats-grid" style="margin-top: 8px;">
-      <div class="stat-card blue">
-        <div class="stat-header">
-          <span class="stat-title">Casual Leave (CL Balance)</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
-        </div>
-        <div class="stat-number">${user.leaveBalances?.CL ?? 0} <span style="font-size: 1rem; font-weight: normal; color: #64748b;">Days</span></div>
-        <div class="stat-subtext">Annual Quota: 20 Days</div>
+    <!-- OFFICER WELCOME BANNER -->
+    <div class="officer-hero-banner">
+      <div class="officer-hero-details">
+        <div class="officer-hero-rank-tag">${user.rank}</div>
+        <h2 class="officer-hero-name">${user.name}</h2>
+        <p class="officer-hero-sub">Belt No: <strong>${user.beltNo}</strong> &bull; ${branchName}</p>
       </div>
-
-      <div class="stat-card green">
-        <div class="stat-header">
-          <span class="stat-title">Earned Leave (EL Balance)</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
-        </div>
-        <div class="stat-number">${user.leaveBalances?.EL ?? 0} <span style="font-size: 1rem; font-weight: normal; color: #64748b;">Days</span></div>
-        <div class="stat-subtext">Accumulated Privilege Leave</div>
-      </div>
-
-      <div class="stat-card gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view In-Process Leaves in My Leaves">
-        <div class="stat-header">
-          <span class="stat-title">In-Process Leaves</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
-        </div>
-        <div class="stat-number" style="color: ${pendingLeaves.length > 0 ? '#dc2626' : '#15803d'};">
-          ${pendingLeaves.length}
-        </div>
-        <div class="stat-subtext">${pendingLeaves.length > 0 ? 'Awaiting Sanction' : 'No Active Applications'}</div>
-      </div>
-
-      <div class="stat-card purple" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="Click to view Approved Leaves in My Leaves">
-        <div class="stat-header">
-          <span class="stat-title">Sanctioned Leaves</span>
-          <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-        </div>
-        <div class="stat-number" style="color: #15803d;">${approvedLeaves.length}</div>
-        <div class="stat-subtext">Official Sanctions Issued</div>
+      <div class="officer-hero-action">
+        <button class="btn btn-primary btn-sm hero-apply-btn" onclick="switchTab('apply_leave')">
+          + Apply Leave
+        </button>
       </div>
     </div>
 
-    <!-- LEAVE BALANCES OVERVIEW -->
-    <div class="leave-quota-card">
-      <div class="leave-quota-title">
-        <span>Leave Quota Summary for ${user.name}</span>
-        <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Calendar Year 2026</span>
+    <!-- 4 PRIMARY KPI CARDS -->
+    <div class="dashboard-kpi-grid">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-card-head">
+          <span class="kpi-title">Casual Leave (CL)</span>
+          <span class="kpi-tag cl-tag">Year 2026</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num">${user.leaveBalances?.CL ?? 0}</span>
+          <span class="kpi-unit">Days Left</span>
+        </div>
+        <div class="kpi-card-footer">
+          Quota: 20 Days &bull; ${Math.max(0, 20 - (user.leaveBalances?.CL ?? 0))} Availed
+        </div>
       </div>
-      <div class="leave-pills-row">
-        ${LEAVE_TYPES.map(lt => {
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-card-head">
+          <span class="kpi-title">Earned Leave (EL)</span>
+          <span class="kpi-tag el-tag">Accumulated</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num">${user.leaveBalances?.EL ?? 0}</span>
+          <span class="kpi-unit">Days Left</span>
+        </div>
+        <div class="kpi-card-footer">
+          Privilege Leave Account
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="View In-Process Applications">
+        <div class="kpi-card-head">
+          <span class="kpi-title">In-Process</span>
+          <span class="kpi-tag pending-tag">Active</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num" style="color: ${pendingLeaves.length > 0 ? '#b45309' : '#15803d'};">${pendingLeaves.length}</span>
+          <span class="kpi-unit">Requests</span>
+        </div>
+        <div class="kpi-card-footer">
+          ${pendingLeaves.length > 0 ? 'Awaiting Sanction' : 'No Active Applications'}
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-purple" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="View Sanctioned Leaves">
+        <div class="kpi-card-head">
+          <span class="kpi-title">Sanctioned</span>
+          <span class="kpi-tag approved-tag">Approved</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num" style="color: #15803d;">${approvedLeaves.length}</span>
+          <span class="kpi-unit">Orders</span>
+        </div>
+        <div class="kpi-card-footer">
+          Official Sanctions Issued
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER LEAVE QUOTAS (NO DUPLICATION OF CL / EL) -->
+    <div class="other-leaves-card">
+      <div class="other-leaves-header">
+        <span class="other-leaves-title">Other Official Leave Balances</span>
+        <span class="other-leaves-sub">Medical, Special &amp; Compensatory</span>
+      </div>
+      <div class="other-leaves-grid">
+        ${LEAVE_TYPES.filter(lt => lt.code !== 'CL' && lt.code !== 'EL').map(lt => {
           const bal = user.leaveBalances ? (user.leaveBalances[lt.code] ?? 0) : 0;
           return `
-            <div class="leave-pill-item">
-              <div class="type-code">${lt.code}</div>
-              <div class="type-name">${lt.name}</div>
-              <div class="days-count">${bal}</div>
-              <div class="days-label">Balance Days</div>
+            <div class="other-leave-pill">
+              <div class="other-leave-top">
+                <span class="other-leave-code">${lt.code}</span>
+                <span class="other-leave-count">${bal} Days</span>
+              </div>
+              <div class="other-leave-name">${lt.name.split('(')[0].trim()}</div>
             </div>
           `;
-        }).join("")}
+        }).join('')}
       </div>
     </div>
   `;

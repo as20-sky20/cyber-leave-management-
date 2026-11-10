@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261110.1655">
+  <link rel="stylesheet" href="css/style.css?v=20261110.1700">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -48,9 +48,10 @@
         </svg>
       </div>
       <div class="brand-text">
-        <h1>
-          <span class="haryana-text">HARYANA POLICE</span> | STATE CYBER CRIME
-          <span class="brand-badge">Panchkula HQ</span>
+        <h1 class="portal-main-brand">
+          <span class="haryana-text">HARYANA POLICE</span>
+          <span class="desktop-only-brand"> | STATE CYBER CRIME</span>
+          <span class="brand-badge desktop-only-brand">Panchkula HQ</span>
         </h1>
       </div>
     </div>
@@ -67,6 +68,11 @@
       <button class="mobile-header-user-btn" id="mobileHeaderUserBtn" onclick="toggleSidebarNav()" title="Active Officer Profile / Open Navigation">
         <span class="mobile-header-avatar">👮</span>
         <span id="mobileHeaderUserName">SP Cyber</span>
+      </button>
+
+      <!-- MOBILE LOGOUT BUTTON -->
+      <button class="mobile-header-logout-btn" onclick="handleLogout()" title="Logout Officer Session">
+        <span>Logout</span>
       </button>
 
       <div class="role-switcher-card" title="Logged in Police Personnel Profile">
@@ -679,7 +685,7 @@
 
 
   <!-- SCRIPTS -->
-  <script src="js/data.js?v=20261110.1655"></script>
-  <script src="js/app.js?v=20261110.1655"></script>
+  <script src="js/data.js?v=20261110.1700"></script>
+  <script src="js/app.js?v=20261110.1700"></script>
 </body>
 </html>

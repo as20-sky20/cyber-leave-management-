@@ -2449,9 +2449,9 @@ table.data-table tr:hover {
   }
   body:not(.force-desktop-view) .brand-text h1 {
     font-size: 0.86rem !important;
-    max-width: 170px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     white-space: nowrap !important;
   }
   body:not(.force-desktop-view) .brand-badge {
@@ -2492,8 +2492,11 @@ table.data-table tr:hover {
    ========================================================================== */
 @media (max-width: 380px) {
   body:not(.force-desktop-view) .brand-text h1 {
-    font-size: 0.78rem !important;
-    max-width: 125px !important;
+    font-size: 0.82rem !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
   }
   body:not(.force-desktop-view) .mobile-header-user-btn {
     max-width: 85px !important;
@@ -3964,5 +3967,328 @@ body.portal-logged-out #loginScreen {
   }
   .quick-officer-btn {
     padding: 8px 6px;
+  }
+}
+
+
+/* ==========================================================================
+   MOBILE & DESKTOP DASHBOARD CLEAN TYPOGRAPHY & CARD SYSTEM
+   ========================================================================== */
+
+/* Brand Header text responsive sizing */
+.portal-main-brand {
+  margin: 0 !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+}
+
+.portal-main-brand .haryana-text {
+  color: var(--police-gold, #ffd700) !important;
+  font-weight: 800 !important;
+}
+
+/* Officer Hero Welcome Banner */
+.officer-hero-banner {
+  background: linear-gradient(135deg, #09172e 0%, #0f274c 100%);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(9, 23, 46, 0.15);
+  border-left: 4px solid var(--police-gold, #cba135);
+}
+
+.officer-hero-rank-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--police-gold, #ffd700);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+.officer-hero-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 2px;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.officer-hero-sub {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.hero-apply-btn {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  border: none !important;
+  font-weight: 700 !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3) !important;
+  white-space: nowrap !important;
+}
+
+/* Dashboard KPI Grid (4 Cards) */
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+
+.kpi-card.kpi-blue::before { background: #2563eb; }
+.kpi-card.kpi-green::before { background: #16a34a; }
+.kpi-card.kpi-gold::before { background: #d97706; }
+.kpi-card.kpi-purple::before { background: #7c3aed; }
+
+.kpi-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kpi-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.3px;
+}
+
+.kpi-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.kpi-tag.cl-tag { background: #dbeafe; color: #1e40af; }
+.kpi-tag.el-tag { background: #dcfce7; color: #15803d; }
+.kpi-tag.pending-tag { background: #fef3c7; color: #b45309; }
+.kpi-tag.approved-tag { background: #ede9fe; color: #6d28d9; }
+
+.kpi-card-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.kpi-num {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.kpi-unit {
+  font-size: 0.84rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.kpi-card-footer {
+  font-size: 0.74rem;
+  color: #64748b;
+  border-top: 1px dashed #f1f5f9;
+  padding-top: 6px;
+  margin-top: auto;
+}
+
+/* Other Leaves Card */
+.other-leaves-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 20px;
+}
+
+.other-leaves-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.other-leaves-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f274c;
+}
+
+.other-leaves-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.other-leaves-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.other-leave-pill {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.15s ease;
+}
+
+.other-leave-pill:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.other-leave-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.other-leave-code {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #1e40af;
+}
+
+.other-leave-count {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.other-leave-name {
+  font-size: 0.72rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mobile Logout Button in Header */
+.mobile-header-logout-btn {
+  display: none;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.mobile-header-logout-btn:active {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 600px) {
+  .desktop-only-brand {
+    display: none !important;
+  }
+  
+  .portal-main-brand {
+    font-size: 1.05rem !important;
+    max-width: none !important;
+  }
+
+  body:not(.force-desktop-view) .brand-text h1 {
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+
+  .mobile-header-logout-btn {
+    display: inline-flex !important;
+  }
+
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .kpi-card {
+    padding: 10px 12px !important;
+  }
+
+  .kpi-num {
+    font-size: 1.55rem !important;
+  }
+
+  .other-leaves-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .other-leave-pill {
+    padding: 8px 6px !important;
+    text-align: center !important;
+  }
+
+  .other-leave-top {
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+
+  .officer-hero-banner {
+    padding: 12px 14px !important;
+  }
+
+  .officer-hero-name {
+    font-size: 1.1rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .other-leaves-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
