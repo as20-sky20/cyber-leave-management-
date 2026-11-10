@@ -922,6 +922,12 @@ function switchTab(tabId) {
     return;
   }
 
+  const isSPCommand = user && (user.role === "sp_cyber" || user.id === "SP-001");
+  if (tabId === "branches" && !isSPCommand) {
+    showToast("13 Cyber Wings deployment is restricted to the Superintendent of Police (SP Cyber).", "error");
+    return;
+  }
+
   AppState.activeTab = tabId;
   document.querySelectorAll(".nav-tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tabId);
@@ -1057,6 +1063,17 @@ function renderNavigationTabs() {
   const registerTabBtn = document.getElementById("tabBtnRegister");
   if (registerTabBtn) {
     registerTabBtn.style.display = canViewRegister ? "flex" : "none";
+  }
+
+  // 13 Cyber Wings Tab: Visible ONLY to SP Cyber (SP-001)
+  const branchesTabBtn = document.getElementById("tabBtnBranches");
+  if (branchesTabBtn) {
+    branchesTabBtn.style.display = isSPRole ? "flex" : "none";
+  }
+
+  const drawerBranchesBtn = document.getElementById("mobileDrawerBranchesBtn");
+  if (drawerBranchesBtn) {
+    drawerBranchesBtn.style.display = isSPRole ? "flex" : "none";
   }
 
   // Staff Directory visible only to Branch Incharge & SP Cyber
@@ -2882,6 +2899,22 @@ function renderSPDesk(container) {
 // VIEW 6: ALL 13 BRANCHES VIEW
 // ==========================================
 function renderBranchesView(container) {
+  const user = AppState.currentUser;
+  const isSPRole = user && (user.role === "sp_cyber" || user.id === "SP-001");
+  if (!isSPRole) {
+    container.innerHTML = `
+      <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 520px; margin: 40px auto; box-shadow: var(--shadow-sm);">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
+        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Restricted Access</h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
+          13 Cyber Wings deployment is restricted strictly to the <strong>Superintendent of Police (SP Cyber)</strong>.
+        </p>
+        <button class="btn btn-primary" onclick="switchTab(\'dashboard\')">Return to Dashboard</button>
+      </div>
+    `;
+    return;
+  }
+
   let html = `
     <div class="page-header">
       <div class="page-title-group">
