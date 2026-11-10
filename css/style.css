@@ -3616,3 +3616,22 @@ body.force-mobile-view .mobile-card-actions .btn {
   justify-content: center !important;
   margin: 0 auto !important;
 }
+
+/* PERMANENTLY REMOVE BOTTOM MENU & FLOATING BUTTON ON MOBILE */
+.mobile-bottom-nav,
+.mobile-floating-left-nav-btn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+}
+
+body,
+body:not(.force-desktop-view),
+body.force-mobile-view {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
