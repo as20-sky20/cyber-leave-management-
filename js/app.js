@@ -1389,7 +1389,7 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
         ` : ''}
       </td>
       <td data-label="Station Leave">
-        ${leave.stationLeave ? '<span style="color: #15803d; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
+        ${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
       </td>
       <td data-label="Status">${statusBadge}</td>
       <td data-label="Actions" class="mobile-card-actions">
@@ -2160,7 +2160,7 @@ function openApplicationPreviewModal() {
                 <span style="color: #dc2626; font-weight: 700;">Yes, Hearing Scheduled:</span> ${courtCaseDetails}<br>
                 Case Diary Handed Over To: <strong>${courtOfficerHandover}</strong>
               ` : `
-                <span style="color: #16a34a; font-weight: 600;">✓ No court evidence or summons scheduled during this period.</span>
+                <span style="color: #0f274c; font-weight: 600;">✓ No court evidence or summons scheduled during this period.</span>
               `}
             </td>
           </tr>
@@ -2182,7 +2182,7 @@ function openApplicationPreviewModal() {
                 • Family Contact: <strong>${stationFamilyContact}</strong><br>
                 • Address during leave: ${stationLeaveAddress}
               ` : `
-                <span style="color: #16a34a;">Station leave not required (Stationed at Headquarters).</span>
+                <span style="color: #64748b;">Station leave not required (Stationed at Headquarters).</span>
               `}
             </td>
           </tr>
@@ -2517,7 +2517,7 @@ function renderInchargeDesk(container) {
       ${branchPendingLeaves.length === 0 ? `
         <div style="padding: 32px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
           <div style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">All Clear - No Pending Applications</div>
-          <div style="font-size: 0.88rem; color: #15803d;">No pending leave applications for ${branchName}. All applications from your branch personnel have been reviewed and disposed.</div>
+          <div style="font-size: 0.88rem; color: #64748b;">No pending leave applications for ${branchName}. All applications from your branch personnel have been reviewed and disposed.</div>
         </div>
       ` : `
         <div class="responsive-table">
@@ -2690,7 +2690,7 @@ function renderSPDesk(container) {
       ${recommendedLeaves.length === 0 ? `
         <div style="padding: 28px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
           <div style="font-size: 1.02rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
-          <div style="font-size: 0.86rem; color: #15803d;">No leave applications currently pending for SP sanction.</div>
+          <div style="font-size: 0.86rem; color: #64748b;">No leave applications currently pending for SP sanction.</div>
         </div>
       ` : `
         <div class="responsive-table">
@@ -2724,7 +2724,7 @@ function renderSPDesk(container) {
                   <td data-label="Incharge Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
                     "${leave.inchargeRemarks || 'Recommended'}"
                   </td>
-                  <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #15803d; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
+                  <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
                   <td data-label="SP Action" class="mobile-card-actions">
                     <div style="display: flex; gap: 6px; align-items: center;">
                       <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
@@ -2755,7 +2755,7 @@ function renderSPDesk(container) {
       ${initialPendingLeaves.length === 0 ? `
         <div style="padding: 24px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
           <div style="font-size: 0.98rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
-          <div style="font-size: 0.85rem; color: #15803d;">No fresh applications awaiting branch review.</div>
+          <div style="font-size: 0.85rem; color: #64748b;">No fresh applications awaiting branch review.</div>
         </div>
       ` : `
         <div class="responsive-table">
@@ -3977,7 +3977,7 @@ function renderDailySitrep(container) {
       ${onLeaveLeaves.length === 0 ? `
         <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 6px; padding: 22px; text-align: center; color: #166534; margin-bottom: 20px;">
           <div style="font-size: 1.1rem; font-weight: 700;">✓ No police personnel on leave on the selected date.</div>
-          <div style="font-size: 0.85rem; margin-top: 4px; color: #15803d;">Entire force strength of ${totalForce} personnel across all 13 branches is present on duty.</div>
+          <div style="font-size: 0.85rem; margin-top: 4px; color: #0f274c;">Entire force strength of ${totalForce} personnel across all 13 branches is present on duty.</div>
         </div>
       ` : `
         <div class="responsive-table">

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Haryana Cyber Police - Leave Management & Sanction Portal | Panchkula</title>
-  <link rel="stylesheet" href="css/style.css?v=20261110.leftnav">
+  <link rel="stylesheet" href="css/style.css?v=20261110.nogreentext">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -51,7 +51,7 @@
       <!-- LIVE CLOUD / LAN SYNC PILL -->
       <div id="lanSyncIndicator" class="lan-sync-pill" onclick="syncWithOfficeDatabase()" style="cursor: pointer;" title="Click to synchronize data across devices">
         <span class="sync-dot"></span>
-        <span id="syncStatusText">Live Sync Online</span>
+        <span id="syncStatusText" style="display: none;"></span>
       </div>
 
       <!-- MOBILE OFFICER PROFILE & MENU TRIGGER (Visible on Mobile) -->
@@ -177,7 +177,7 @@
         </div>
         <button class="sidebar-sync-btn" onclick="syncWithOfficeDatabase()" title="Synchronize Database Across Devices">
           <span class="sync-dot"></span>
-          <span id="sidebarSyncText">Live Cloud Sync</span>
+          <span id="sidebarSyncText" style="display: none;"></span>
         </button>
       </div>
     </aside>
@@ -721,7 +721,7 @@
 
 
   <!-- SCRIPTS -->
-  <script src="js/data.js?v=20261110.leftnav"></script>
-  <script src="js/app.js?v=20261110.leftnav"></script>
+  <script src="js/data.js?v=20261110.nogreentext"></script>
+  <script src="js/app.js?v=20261110.nogreentext"></script>
 </body>
 </html>

@@ -3588,3 +3588,31 @@ body.force-mobile-view .mobile-card-actions .btn {
     right: 4px !important;
   }
 }
+
+/* HIDE GREEN WRITTEN TEXT ON SYNC INDICATORS */
+#syncStatusText, #sidebarSyncText {
+  display: none !important;
+}
+
+.lan-sync-pill {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.sidebar-sync-btn {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
