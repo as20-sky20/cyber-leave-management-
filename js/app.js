@@ -1,4 +1,4 @@
-
+﻿
 // ==========================================
 // LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP & MOBILE)
 // ==========================================
@@ -5132,7 +5132,7 @@ function renderLoginScreen(container) {
 
   const allUsers = [...(AppState.users || [])];
 
-  container.innerHTML = 
+  container.innerHTML = `
     <div class="login-page-card">
       <!-- BRAND HEADER -->
       <div class="login-brand-header">
@@ -5155,18 +5155,18 @@ function renderLoginScreen(container) {
 
       <!-- TAB SELECTOR: FORM VS DIRECTORY -->
       <div class="login-nav-tabs">
-        <button class="login-nav-btn  + (currentLoginTab === 'form' ? 'active' : '') + " onclick="setLoginTab('form')">
+        <button class="login-nav-btn ${currentLoginTab === 'form' ? 'active' : ''}" onclick="setLoginTab('form')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           <span>Officer ID / Belt Login</span>
         </button>
-        <button class="login-nav-btn  + (currentLoginTab === 'directory' ? 'active' : '') + " onclick="setLoginTab('directory')">
+        <button class="login-nav-btn ${currentLoginTab === 'directory' ? 'active' : ''}" onclick="setLoginTab('directory')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span>1-Click Fast Directory ( + allUsers.length +  IDs)</span>
+          <span>1-Click Fast Directory (${allUsers.length} IDs)</span>
         </button>
       </div>
 
       <!-- TAB 1: FORM LOGIN -->
-       + (currentLoginTab === 'form' ? 
+      ${currentLoginTab === 'form' ? `
         <div class="login-form-pane">
           <form id="officerLoginForm" onsubmit="event.preventDefault(); submitOfficerLoginForm();">
             <div class="form-group">
@@ -5183,21 +5183,21 @@ function renderLoginScreen(container) {
               <select id="loginOfficerSelect" class="form-control" onchange="onLoginRosterSelect(this.value)">
                 <option value="">-- Choose Officer / Role --</option>
                 <optgroup label="--- Superintendent of Police (SP Cyber) ---">
-                   + allUsers.filter(u => u.role === 'sp_cyber').map(u => 
-                    <option value=" + u.id + "> + u.name +  ( + u.beltNo + ) -  + u.rank + </option>
-                  ).join('') + 
+                  ${allUsers.filter(u => u.role === 'sp_cyber').map(u => `
+                    <option value="${u.id}">${u.name} (${u.beltNo}) - ${u.rank}</option>
+                  `).join('')}
                 </optgroup>
                 <optgroup label="--- Branch Incharges (13 Wings) ---">
-                   + allUsers.filter(u => u.role === 'branch_incharge').map(u => {
+                  ${allUsers.filter(u => u.role === 'branch_incharge').map(u => {
                     const br = AppState.branches.find(b => b.id === u.branchId);
-                    return '<option value="' + u.id + '">' + u.name + ' (' + u.beltNo + ') - ' + (br ? br.name : u.branchId) + '</option>';
-                  }).join('') + 
+                    return `<option value="${u.id}">${u.name} (${u.beltNo}) - ${br ? br.name : u.branchId}</option>`;
+                  }).join('')}
                 </optgroup>
                 <optgroup label="--- Police Personnel / Staff ---">
-                   + allUsers.filter(u => u.role === 'member').map(u => {
+                  ${allUsers.filter(u => u.role === 'member').map(u => {
                     const br = AppState.branches.find(b => b.id === u.branchId);
-                    return '<option value="' + u.id + '">' + u.name + ' (' + u.beltNo + ') - ' + u.rank + ' [' + (br ? br.name : u.branchId) + ']</option>';
-                  }).join('') + 
+                    return `<option value="${u.id}">${u.name} (${u.beltNo}) - ${u.rank} [${br ? br.name : u.branchId}]</option>`;
+                  }).join('')}
                 </optgroup>
               </select>
             </div>
@@ -5240,27 +5240,27 @@ function renderLoginScreen(container) {
             </div>
           </form>
         </div>
-       : 
+      ` : `
         <!-- TAB 2: 1-CLICK OFFICER DIRECTORY -->
         <div class="login-directory-pane">
           <div class="directory-filter-bar">
             <div class="category-pills">
-              <button class="cat-pill  + (loginCategoryFilter === 'ALL' ? 'active' : '') + " onclick="setLoginCategoryFilter('ALL')">
-                All Officers ( + allUsers.length + )
+              <button class="cat-pill ${loginCategoryFilter === 'ALL' ? 'active' : ''}" onclick="setLoginCategoryFilter('ALL')">
+                All Officers (${allUsers.length})
               </button>
-              <button class="cat-pill  + (loginCategoryFilter === 'SP' ? 'active' : '') + " onclick="setLoginCategoryFilter('SP')">
+              <button class="cat-pill ${loginCategoryFilter === 'SP' ? 'active' : ''}" onclick="setLoginCategoryFilter('SP')">
                 SP Command (1)
               </button>
-              <button class="cat-pill  + (loginCategoryFilter === 'INCHARGE' ? 'active' : '') + " onclick="setLoginCategoryFilter('INCHARGE')">
+              <button class="cat-pill ${loginCategoryFilter === 'INCHARGE' ? 'active' : ''}" onclick="setLoginCategoryFilter('INCHARGE')">
                 Branch Incharges (13)
               </button>
-              <button class="cat-pill  + (loginCategoryFilter === 'STAFF' ? 'active' : '') + " onclick="setLoginCategoryFilter('STAFF')">
+              <button class="cat-pill ${loginCategoryFilter === 'STAFF' ? 'active' : ''}" onclick="setLoginCategoryFilter('STAFF')">
                 Staff Members (7)
               </button>
             </div>
             <div class="directory-search-box">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" id="loginOfficerSearchInput" class="form-control" placeholder="Search officer by name, belt no, branch, or rank..." value=" + loginSearchQuery + " oninput="onLoginSearchInput(this.value)">
+              <input type="text" id="loginOfficerSearchInput" class="form-control" placeholder="Search officer by name, belt no, branch, or rank..." value="${loginSearchQuery}" oninput="onLoginSearchInput(this.value)">
             </div>
           </div>
 
@@ -5268,13 +5268,13 @@ function renderLoginScreen(container) {
             <!-- Rendered by renderLoginOfficerCardsList() -->
           </div>
         </div>
-      ) + 
+      `}
 
       <!-- LOGIN FOOTER -->
       <div class="login-card-footer">
         <div class="gov-helpline-row">
           <span>National Cyber Helpline: <strong>1930</strong></span>
-          <span>*</span>
+          <span>&bull;</span>
           <span>Police Control Room: <strong>112</strong></span>
         </div>
         <div class="gov-copy-text">
@@ -5282,7 +5282,7 @@ function renderLoginScreen(container) {
         </div>
       </div>
     </div>
-  ;
+  `;
 
   if (currentLoginTab === 'directory') {
     renderLoginOfficerCardsList();
@@ -5312,13 +5312,13 @@ function renderLoginOfficerCardsList() {
   }
 
   if (filtered.length === 0) {
-    grid.innerHTML = 
+    grid.innerHTML = `
       <div class="no-officer-match">
-        <span style="font-size: 2rem;">Search:</span>
+        <span style="font-size: 2rem;">🔍</span>
         <h4>No Police Officer Found</h4>
-        <p>No personnel records match " + loginSearchQuery + ". Please try another search term.</p>
+        <p>No personnel records match "${loginSearchQuery}". Please try another search term.</p>
       </div>
-    ;
+    `;
     return;
   }
 
@@ -5333,29 +5333,29 @@ function renderLoginOfficerCardsList() {
     const cl = u.leaveBalances ? (u.leaveBalances.CL ?? 0) : 0;
     const el = u.leaveBalances ? (u.leaveBalances.EL ?? 0) : 0;
 
-    return 
-      <div class="officer-login-card  + roleClass + " onclick="quickLoginUser(' + u.id + ')">
+    return `
+      <div class="officer-login-card ${roleClass}" onclick="quickLoginUser('${u.id}')">
         <div class="officer-card-header">
-          <div class="officer-avatar-box">[ + avatar + ]</div>
+          <div class="officer-avatar-box">[${avatar}]</div>
           <div class="officer-header-meta">
-            <span class="officer-role-tag  + roleClass + "> + roleBadge + </span>
-            <span class="officer-belt-tag"> + u.beltNo + </span>
+            <span class="officer-role-tag ${roleClass}">${roleBadge}</span>
+            <span class="officer-belt-tag">${u.beltNo}</span>
           </div>
         </div>
         <div class="officer-card-body">
-          <h4 class="officer-card-name"> + u.name + </h4>
-          <div class="officer-card-rank"> + u.rank + </div>
-          <div class="officer-card-branch"> + bName + </div>
+          <h4 class="officer-card-name">${u.name}</h4>
+          <div class="officer-card-rank">${u.rank}</div>
+          <div class="officer-card-branch">${bName}</div>
         </div>
         <div class="officer-card-balance">
-          <span class="balance-tag cl-tag">CL: <strong> + cl +  Days</strong></span>
-          <span class="balance-tag el-tag">EL: <strong> + el +  Days</strong></span>
+          <span class="balance-tag cl-tag">CL: <strong>${cl} Days</strong></span>
+          <span class="balance-tag el-tag">EL: <strong>${el} Days</strong></span>
         </div>
         <button class="btn btn-block btn-sm officer-login-btn">
-          <span>Login As  + u.name.split(' ')[0] + </span>
+          <span>Login As ${u.name.split(' ')[0]}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
-    ;
+    `;
   }).join('');
 }
