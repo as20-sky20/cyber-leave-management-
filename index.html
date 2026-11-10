@@ -61,21 +61,16 @@
       </div>
 
       <!-- MOBILE OFFICER PROFILE & MENU TRIGGER (Visible on Mobile) -->
-      <button class="mobile-header-user-btn" id="mobileHeaderUserBtn" onclick="toggleSidebarNav()" title="Switch Officer / Open Portal Menu">
+      <button class="mobile-header-user-btn" id="mobileHeaderUserBtn" onclick="toggleSidebarNav()" title="Active Officer Profile / Open Navigation">
         <span class="mobile-header-avatar">👮</span>
         <span id="mobileHeaderUserName">SP Cyber</span>
-        <span style="font-size: 0.65rem; opacity: 0.85;">▼</span>
       </button>
 
-      <div class="role-switcher-card">
-        <div class="user-info-box">
+      <div class="role-switcher-card" title="Logged in Police Personnel Profile">
+        <span style="font-size: 1.25rem; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 50%;">👮</span>
+        <div class="user-info-box" style="text-align: left;">
           <span class="user-name-title" id="headerUserName">Mayank Gupta, IPS</span>
           <span class="user-role-badge" id="headerUserRole">SP Cyber Crime, Panchkula</span>
-        </div>
-        <div>
-          <select id="userSwitchSelect" class="role-dropdown-select" title="Switch User / Role">
-            <!-- Populated dynamically by app.js -->
-          </select>
         </div>
       </div>
 
@@ -112,13 +107,6 @@
         <button class="sidebar-close-btn" onclick="closeSidebarNav()" aria-label="Close Navigation Menu">&times;</button>
       </div>
 
-      <!-- MOBILE ROLE SWITCHER IN SIDEBAR -->
-      <div class="sidebar-role-select-box">
-        <label class="sidebar-label">Active Officer / Role:</label>
-        <select id="sidebarUserSwitchSelect" class="role-dropdown-select" onchange="handleUserSwitch(this.value); closeSidebarNav();">
-          <!-- Populated dynamically by app.js -->
-        </select>
-      </div>
 
       <!-- SIDEBAR NAVIGATION LINKS -->
       <div class="sidebar-links-wrap">
@@ -628,13 +616,6 @@
         <button class="mobile-drawer-close" onclick="closeMobileDrawer()" aria-label="Close Menu">&times;</button>
       </div>
 
-      <!-- Quick Officer Switcher inside Drawer -->
-      <div class="mobile-drawer-section">
-        <label class="mobile-drawer-label">Switch Active Officer / Role:</label>
-        <select id="mobileUserSwitchSelect" class="form-control" onchange="handleUserSwitch(this.value); closeMobileDrawer();">
-          <!-- Populated dynamically by app.js -->
-        </select>
-      </div>
 
       <!-- Quick Navigation Grid -->
       <div class="mobile-menu-grid">

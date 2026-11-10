@@ -2520,14 +2520,11 @@ function renderInchargeDesk(container) {
         <h3 style="color: #991b1b; font-size: 1.15rem; margin-bottom: 6px;">Branch Incharge Access Required</h3>
         <p style="color: #64748b; font-size: 0.88rem; margin-bottom: 16px;">
           You are currently logged in as <strong>${user ? user.name : 'Police Personnel'} (${user ? user.rank : 'Member'})</strong>.
-          <br>Switch officer to verify and recommend leave applications:
+          <br>Authorized Branch Incharge login is required to verify and recommend leave applications.
         </p>
         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary btn-sm" onclick="quickSwitchUser('INCH-1930')">
-            Switch to 1930 Incharge (Insp. Rajesh Kumar)
-          </button>
-          <button class="btn btn-gold btn-sm" onclick="quickSwitchUser('SP-001')">
-            Switch to SP Cyber (Mayank Gupta, IPS)
+          <button class="btn btn-outline btn-sm" onclick="handleLogout()" style="color: #dc2626; border-color: #dc2626;">
+            Sign Out & Login As Incharge
           </button>
         </div>
       </div>
