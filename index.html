@@ -4,22 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Haryana Cyber Police - Leave Management & Sanction Portal | Panchkula</title>
-  <link rel="stylesheet" href="css/style.css?v=20261110.allmobilefit">
+  <link rel="stylesheet" href="css/style.css?v=20261110.clean">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
-
-  <!-- TOP BANNER FOR FORCED MOBILE VIEW (Provides immediate 1-click switch back to desktop) -->
-  <div class="force-mobile-top-banner" onclick="toggleDesktopMobileMode()" title="Click to exit Mobile View and return to Full Desktop View">
-    <span>📱 Mobile Preview Active</span>
-    <span class="banner-btn">💻 Switch to Desktop View ↺</span>
-  </div>
-
-  <!-- FLOATING DESKTOP RETURN BUTTON FOR PC MONITORS -->
-  <button class="desktop-floating-return-btn" onclick="toggleDesktopMobileMode()" title="Click to exit Mobile View and return to Full Desktop View">
-    <span>💻</span> Switch to Desktop View
-  </button>
-
   <!-- TOP GOV RIBBON -->
   <div class="gov-top-ribbon">
     <div class="gov-branding-left">
@@ -84,11 +72,6 @@
       <button class="btn btn-outline btn-sm" id="headerBackupBtn" onclick="openBackupModal()" title="Data Backup & Security Center" style="color: #fff; border-color: rgba(255,255,255,0.3); display: none;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         Data Backup
-      </button>
-
-      <button class="btn btn-outline btn-sm" onclick="resetDemoData()" title="Reset to Default Demo State" style="color: #fff; border-color: rgba(255,255,255,0.3);">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-        Reset Data
       </button>
     </div>
   </header>
@@ -658,10 +641,6 @@
         <button class="btn btn-block" onclick="toggleDesktopMobileMode()" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0f274c; color: #ffd700; border: 2px solid #ffd700; font-weight: 700;">
           <span id="viewModeToggleIcon">💻</span> <span id="viewModeToggleText">Switch to Desktop View</span>
         </button>
-        <button class="btn btn-outline btn-block" onclick="resetDemoData(); closeMobileDrawer();" style="color: #dc2626; border-color: #fecaca; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          Reset Demo State
-        </button>
         <div style="text-align: center; margin-top: 12px; font-size: 0.72rem; color: #64748b;">
           Haryana Cyber Helpline: <strong>1930</strong> | Emergency: <strong>112</strong>
         </div>
@@ -672,7 +651,7 @@
 
 
   <!-- SCRIPTS -->
-  <script src="js/data.js?v=20261110.allmobilefit"></script>
-  <script src="js/app.js?v=20261110.allmobilefit"></script>
+  <script src="js/data.js?v=20261110.clean"></script>
+  <script src="js/app.js?v=20261110.clean"></script>
 </body>
 </html>
