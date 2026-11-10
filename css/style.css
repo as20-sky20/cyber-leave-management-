@@ -1,4 +1,4 @@
-/* 
+﻿/* 
  * Haryana Cyber Police - Leave Management Portal
  * Professional Police UI Design System
  */
@@ -1882,18 +1882,101 @@ table.data-table tr:hover {
   }
 
   /* TABLE TOOLBAR & FILTERS */
+  body:not(.force-desktop-view) .card-table-wrap {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
   body:not(.force-desktop-view) .table-toolbar {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    margin-bottom: 10px !important;
+    padding: 12px 14px !important;
+  }
+  body:not(.force-desktop-view) .table-title {
+    font-size: 0.95rem !important;
   }
   body:not(.force-desktop-view) .table-filters {
     flex-direction: column !important;
     width: 100% !important;
     gap: 8px !important;
   }
-  body:not(.force-desktop-view) .table-filters .form-control {
+  body:not(.force-desktop-view) .table-filters .form-control,
+  body:not(.force-desktop-view) .select-filter,
+  body:not(.force-desktop-view) .search-input {
     width: 100% !important;
+    min-height: 42px !important;
+    font-size: 15px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* INNER FORM & MODAL GRIDS COLLAPSE ON MOBILE */
+  body:not(.force-desktop-view) .form-grid-inner,
+  body:not(.force-desktop-view) .modal-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* QUICK SHORTCUTS & NOTICE BOARD ON MOBILE */
+  body:not(.force-desktop-view) .dashboard-quick-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-top: 14px !important;
+  }
+  body:not(.force-desktop-view) .leave-pills-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  body:not(.force-desktop-view) .notices-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* DAILY SITREP & OFFICIAL SANCTION SLIP ON MOBILE */
+  body:not(.force-desktop-view) .sitrep-official-sheet {
+    padding: 12px 10px !important;
+    border-width: 1px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  body:not(.force-desktop-view) .sitrep-table {
+    min-width: 600px !important;
+    font-size: 0.78rem !important;
+  }
+  body:not(.force-desktop-view) .sitrep-summary-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  body:not(.force-desktop-view) .official-sanction-slip {
+    padding: 14px 10px !important;
+    font-size: 0.85rem !important;
+  }
+  body:not(.force-desktop-view) .sanction-meta-row {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  /* TOAST NOTIFICATION POSITIONING ON MOBILE */
+  body:not(.force-desktop-view) .toast-container {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 12px !important;
+    right: 12px !important;
+    align-items: center !important;
+  }
+  body:not(.force-desktop-view) .toast {
+    width: 100% !important;
+    max-width: 400px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   /* =====================================================================
@@ -1902,6 +1985,7 @@ table.data-table tr:hover {
      ===================================================================== */
   body:not(.force-desktop-view) .responsive-table {
     overflow-x: visible !important;
+    width: 100% !important;
   }
 
   body:not(.force-desktop-view) .data-table,
@@ -1927,23 +2011,26 @@ table.data-table tr:hover {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    padding: 14px 16px !important;
+    padding: 12px 14px !important;
     margin-bottom: 12px !important;
     box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05) !important;
     position: relative !important;
     box-sizing: border-box !important;
+    width: 100% !important;
   }
 
   body:not(.force-desktop-view) .data-table tbody td {
     padding: 7px 0 !important;
     border: none !important;
     border-bottom: 1px dashed #f1f5f9 !important;
-    font-size: 0.88rem !important;
+    font-size: 0.86rem !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     text-align: right !important;
     box-sizing: border-box !important;
+    gap: 8px !important;
+    word-break: break-word !important;
   }
 
   /* Field Title Label (Generated via data-label) */
@@ -1951,12 +2038,13 @@ table.data-table tr:hover {
     content: attr(data-label);
     font-weight: 700;
     color: #475569;
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
     text-align: left;
-    margin-right: 12px;
+    margin-right: 8px;
     flex-shrink: 0;
+    max-width: 44%;
   }
 
   body:not(.force-desktop-view) .data-table tbody td:not([data-label]):before,
@@ -1970,9 +2058,12 @@ table.data-table tr:hover {
   body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel & Branch"],
   body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Remarks"],
   body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Recommendation / Remarks"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"] {
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Leave Period"],
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Contact Details"] {
     display: block !important;
     text-align: left !important;
+    max-width: 100% !important;
   }
 
   body:not(.force-desktop-view) .data-table tbody td[data-label="Ground / Reason"]:before,
@@ -1980,9 +2071,12 @@ table.data-table tr:hover {
   body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel & Branch"]:before,
   body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Remarks"]:before,
   body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Recommendation / Remarks"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"]:before {
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Leave Period"]:before,
+  body:not(.force-desktop-view) .data-table tbody td[data-label="Contact Details"]:before {
     display: block !important;
     margin-bottom: 3px !important;
+    max-width: 100% !important;
   }
 
   /* Card Action Buttons: Full Width and Touch Friendly */
@@ -2005,18 +2099,20 @@ table.data-table tr:hover {
     width: 100% !important;
     display: flex !important;
     gap: 8px !important;
+    flex-wrap: wrap !important;
   }
 
   body:not(.force-desktop-view) .mobile-action-btn,
   body:not(.force-desktop-view) .mobile-card-actions .btn {
     flex: 1 1 auto !important;
-    padding: 10px 12px !important;
-    font-size: 0.88rem !important;
+    padding: 9px 12px !important;
+    font-size: 0.86rem !important;
     font-weight: 600 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-height: 44px !important;
+    min-height: 42px !important;
+    border-radius: 8px !important;
   }
 
   /* Empty state rows */
@@ -2027,6 +2123,155 @@ table.data-table tr:hover {
   }
   body:not(.force-desktop-view) .data-table tbody td[colspan]:before {
     display: none !important;
+  }
+}
+
+/* ==========================================================================
+   STANDARD SMARTPHONE VIEWPORT OVERRIDE (max-width: 480px)
+   iPhone 12/13/14/15, Galaxy S21/S22/S23/S24, Pixel, OnePlus, etc.
+   ========================================================================== */
+@media (max-width: 480px) {
+  body:not(.force-desktop-view) .main-header {
+    padding: 8px 10px !important;
+  }
+  body:not(.force-desktop-view) .police-badge-logo {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+  body:not(.force-desktop-view) .brand-text h1 {
+    font-size: 0.86rem !important;
+    max-width: 170px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  body:not(.force-desktop-view) .brand-badge {
+    font-size: 0.58rem !important;
+    padding: 1px 4px !important;
+  }
+  body:not(.force-desktop-view) .lan-sync-pill {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+  body:not(.force-desktop-view) .mobile-header-user-btn {
+    max-width: 110px !important;
+    padding: 4px 7px !important;
+    font-size: 0.74rem !important;
+  }
+  body:not(.force-desktop-view) .modal-content {
+    width: 96% !important;
+    margin: 8px auto !important;
+    border-radius: 12px !important;
+  }
+  body:not(.force-desktop-view) .modal-header {
+    padding: 10px 12px !important;
+  }
+  body:not(.force-desktop-view) .modal-body {
+    padding: 12px !important;
+  }
+  body:not(.force-desktop-view) .modal-footer {
+    padding: 10px 12px !important;
+  }
+  body:not(.force-desktop-view) .mobile-drawer-content {
+    padding: 12px 12px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ==========================================================================
+   COMPACT & SMALL SMARTPHONE VIEWPORT OVERRIDE (max-width: 380px)
+   iPhone SE 1st/2nd Gen, Galaxy A-series, Older Android (320px - 360px)
+   ========================================================================== */
+@media (max-width: 380px) {
+  body:not(.force-desktop-view) .brand-text h1 {
+    font-size: 0.78rem !important;
+    max-width: 125px !important;
+  }
+  body:not(.force-desktop-view) .mobile-header-user-btn {
+    max-width: 85px !important;
+    font-size: 0.7rem !important;
+    padding: 3px 5px !important;
+  }
+  body:not(.force-desktop-view) #syncStatusText {
+    display: none !important;
+  }
+  body:not(.force-desktop-view) .mobile-bottom-nav {
+    height: calc(54px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  body:not(.force-desktop-view) .mobile-nav-btn {
+    padding: 2px 0 !important;
+  }
+  body:not(.force-desktop-view) .mobile-nav-label {
+    font-size: 0.62rem !important;
+    letter-spacing: -0.2px;
+  }
+  body:not(.force-desktop-view) .mobile-nav-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+  body:not(.force-desktop-view) .mobile-nav-plus-icon {
+    width: 30px !important;
+    height: 30px !important;
+    margin-top: -6px !important;
+  }
+  body:not(.force-desktop-view) .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  body:not(.force-desktop-view) .stat-card {
+    padding: 8px 6px !important;
+  }
+  body:not(.force-desktop-view) .stat-card .stat-val {
+    font-size: 1.15rem !important;
+  }
+  body:not(.force-desktop-view) .stat-card .stat-label {
+    font-size: 0.65rem !important;
+  }
+  body:not(.force-desktop-view) .mobile-card-actions > div {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+  body:not(.force-desktop-view) .mobile-action-btn,
+  body:not(.force-desktop-view) .mobile-card-actions .btn {
+    width: 100% !important;
+    min-height: 40px !important;
+    font-size: 0.82rem !important;
+    padding: 6px 10px !important;
+  }
+  body:not(.force-desktop-view) .mobile-menu-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  body:not(.force-desktop-view) .leave-pills-row {
+    grid-template-columns: 1fr !important;
+  }
+  body:not(.force-desktop-view) .sitrep-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* REAL PHONE EXPANSION OVERRIDE FOR FORCE-MOBILE-VIEW CLASS */
+@media (max-width: 768px) {
+  body.force-mobile-view {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  body.force-mobile-view .mobile-bottom-nav {
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+  }
+  body.force-mobile-view .mobile-drawer-content {
+    max-width: 100% !important;
+  }
+  body.force-mobile-view .app-container {
+    padding: 12px 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 

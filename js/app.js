@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Haryana Cyber Police - Leave Management Portal
  * Core Application Engine & Workflow Controller
  */
@@ -40,7 +40,7 @@ function updateSyncIndicator(isConnected, statusText) {
 
   if (isConnected) {
     indicator.classList.remove("offline");
-    if (textEl) textEl.textContent = statusText || "Office LAN Sync ✓";
+    if (textEl) textEl.textContent = statusText || "Office LAN Sync âœ“";
   } else {
     indicator.classList.add("offline");
     if (textEl) textEl.textContent = statusText || "Local Mode (Offline)";
@@ -164,7 +164,7 @@ async function syncWithOfficeDatabase() {
         if (!jsonStr.includes("????")) {
           mergeIncomingData(data);
           isLanServerConnected = true;
-          updateSyncIndicator(true, "Office LAN Sync ✓");
+          updateSyncIndicator(true, "Office LAN Sync âœ“");
           saveData();
           populateUserSwitcher();
           renderNavigationTabs();
@@ -181,7 +181,7 @@ async function syncWithOfficeDatabase() {
   // 2. Poll Cloud Live Sync History & Request Peer Sync
   await pollLiveSyncHistory();
   await broadcastLiveAction({ action: "REQUEST_SYNC" });
-  updateSyncIndicator(true, "Live Cloud Sync Active ✓");
+  updateSyncIndicator(true, "Live Cloud Sync Active âœ“");
   showToast(`Cloud Sync Active: ${AppState.leaves.length} applications synced across all devices`, "success");
   renderApp();
 }
@@ -214,7 +214,7 @@ function connectLiveSSE() {
     liveSseSource = new EventSource(LIVE_SYNC_SUB_URL);
     liveSseSource.onopen = () => {
       isCloudConnected = true;
-      updateSyncIndicator(true, "Live Cloud Sync Active ✓");
+      updateSyncIndicator(true, "Live Cloud Sync Active âœ“");
     };
     liveSseSource.onmessage = (event) => {
       try {
@@ -265,7 +265,7 @@ async function pollLiveSyncHistory() {
         } catch (e) {}
       });
       isCloudConnected = true;
-      updateSyncIndicator(true, "Live Cloud Sync Active ✓");
+      updateSyncIndicator(true, "Live Cloud Sync Active âœ“");
     }
   } catch (e) {
     console.warn("Live sync history poll error", e);
@@ -293,7 +293,7 @@ async function broadcastLiveAction(actionPayload) {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
       body: bodyText
     });
-    updateSyncIndicator(true, "Live Cloud Sync Active ✓");
+    updateSyncIndicator(true, "Live Cloud Sync Active âœ“");
   } catch (err) {
     console.warn("Could not broadcast live action", err);
   }
@@ -316,7 +316,7 @@ function handleLiveSyncAction(payload) {
     if (existingIndex === -1) {
       AppState.leaves.unshift(payload.leave);
       hasChanged = true;
-      showToast(`🔔 New Leave Application: ${payload.leave.applicantName} (${payload.leave.totalDays} Days)`, "info");
+      showToast(`ðŸ”” New Leave Application: ${payload.leave.applicantName} (${payload.leave.totalDays} Days)`, "info");
     }
   }
 
@@ -344,8 +344,8 @@ function handleLiveSyncAction(payload) {
 
       hasChanged = true;
       const statusLabel = payload.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
-                          (payload.status === "APPROVED" ? "Sanctioned by SP Cyber ✓" : "Rejected ✗");
-      showToast(`📢 Application ${leave.id} Status Updated: ${statusLabel}`, "info");
+                          (payload.status === "APPROVED" ? "Sanctioned by SP Cyber âœ“" : "Rejected âœ—");
+      showToast(`ðŸ“¢ Application ${leave.id} Status Updated: ${statusLabel}`, "info");
     }
   }
 
@@ -355,7 +355,7 @@ function handleLiveSyncAction(payload) {
     if (!AppState.notices.some(n => n.id === payload.notice.id)) {
       AppState.notices.unshift(payload.notice);
       hasChanged = true;
-      showToast(`📌 New Office Order / Notice: ${payload.notice.title}`, "info");
+      showToast(`ðŸ“Œ New Office Order / Notice: ${payload.notice.title}`, "info");
     }
   }
 
@@ -465,7 +465,7 @@ async function pushDataToOfficeServer() {
     });
     if (res.ok) {
       isLanServerConnected = true;
-      updateSyncIndicator(true, "Office LAN Sync ✓");
+      updateSyncIndicator(true, "Office LAN Sync âœ“");
     }
   } catch (e) {
     isLanServerConnected = false;
@@ -599,11 +599,11 @@ function toggleDesktopMobileMode() {
   if (isCurrentlyMobile) {
     localStorage.setItem("cyber_preferred_view", "desktop");
     applyViewMode("desktop");
-    showToast("Switched to Full Desktop View 💻", "info");
+    showToast("Switched to Full Desktop View ðŸ’»", "info");
   } else {
     localStorage.setItem("cyber_preferred_view", "mobile");
     applyViewMode("mobile");
-    showToast("Switched to Dedicated Mobile View 📱", "info");
+    showToast("Switched to Dedicated Mobile View ðŸ“±", "info");
   }
 }
 
@@ -614,14 +614,14 @@ function updateToggleButtons(isMobile) {
   const desktopText = document.getElementById("desktopToggleText");
 
   if (isMobile) {
-    if (drawerIcon) drawerIcon.textContent = "💻";
+    if (drawerIcon) drawerIcon.textContent = "ðŸ’»";
     if (drawerText) drawerText.textContent = "Switch to Desktop View";
-    if (desktopIcon) desktopIcon.textContent = "💻";
+    if (desktopIcon) desktopIcon.textContent = "ðŸ’»";
     if (desktopText) desktopText.textContent = "Desktop View";
   } else {
-    if (drawerIcon) drawerIcon.textContent = "📱";
+    if (drawerIcon) drawerIcon.textContent = "ðŸ“±";
     if (drawerText) drawerText.textContent = "Switch to Mobile View";
-    if (desktopIcon) desktopIcon.textContent = "📱";
+    if (desktopIcon) desktopIcon.textContent = "ðŸ“±";
     if (desktopText) desktopText.textContent = "Mobile View";
   }
 }
@@ -1091,10 +1091,10 @@ function renderDashboard(container) {
             Open SP Desk (${spPendingLeaves.length})
           </button>
           <button class="btn btn-outline btn-sm" onclick="switchTab('notices')" title="Official Notice Board">
-            📢 Notice Board
+            ðŸ“¢ Notice Board
           </button>
           <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" title="Daily Attendance">
-            📊 SITREP
+            ðŸ“Š SITREP
           </button>
           <button class="btn btn-outline btn-sm" onclick="openBackupModal()" title="Data Backup">
             Data Backup
@@ -1205,7 +1205,7 @@ function renderDashboard(container) {
     ${isBranchInchargeUser && branchPendingLeaves.length > 0 ? `
       <div class="clean-pending-alert" onclick="switchTab('incharge_desk')">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 1.4rem;">🚨</span>
+          <span style="font-size: 1.4rem;">ðŸš¨</span>
           <div>
             <strong style="color: #1e3a8a; font-size: 0.95rem;">Branch Incharge Action Required</strong>
             <div style="font-size: 0.82rem; color: #475569;">
@@ -1314,7 +1314,7 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
         <span style="font-weight: 700; font-size: 1.05rem;">${leave.totalDays}</span> Days
         ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
           <br><span class="curtailed-badge" title="Original Application: ${leave.originalDays} Days (${formatDate(leave.fromDate)} - ${formatDate(leave.originalToDate)})">
-            ✂️ Curtailed: ${leave.originalDays}➔${leave.totalDays} Days
+            âœ‚ï¸ Curtailed: ${leave.originalDays}âž”${leave.totalDays} Days
           </span>
         ` : ''}
       </td>
@@ -1325,13 +1325,13 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
         ${leave.attachment ? `
           <div style="margin-top: 4px;">
             <a href="javascript:void(0)" onclick="viewAttachment('${leave.id}')" style="font-size: 0.72rem; color: #2563eb; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
-              📎 ${leave.attachment.name}
+              ðŸ“Ž ${leave.attachment.name}
             </a>
           </div>
         ` : ''}
       </td>
       <td data-label="Station Leave">
-        ${leave.stationLeave ? '<span style="color: #15803d; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
+        ${leave.stationLeave ? '<span style="color: #15803d; font-weight: 600;">âœ“ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
       </td>
       <td data-label="Status">${statusBadge}</td>
       <td data-label="Actions" class="mobile-card-actions">
@@ -1339,7 +1339,7 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
           <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">Details</button>
           ${leave.attachment ? `
             <button class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" title="View Attachment" style="color: #2563eb; padding: 4px 7px;">
-              📎
+              ðŸ“Ž
             </button>
           ` : ''}
           ${leave.status === "APPROVED" ? `
@@ -1398,7 +1398,7 @@ function renderApplyLeave(container) {
   const lastLeaveHtml = lastLeave ? `
     <div class="last-leave-banner">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-        <span style="font-weight: 700; color: #0f274c;">📋 Previous Leave History:</span>
+        <span style="font-weight: 700; color: #0f274c;">ðŸ“‹ Previous Leave History:</span>
         <span class="status-badge ${lastLeave.status.toLowerCase()}">${getStatusBadge(lastLeave.status)}</span>
       </div>
       <div style="font-size: 0.84rem; color: #334155;">
@@ -1410,7 +1410,7 @@ function renderApplyLeave(container) {
     </div>
   ` : `
     <div class="last-leave-banner">
-      <span style="font-weight: 700; color: #0f274c;">📋 Previous Leave Record:</span>
+      <span style="font-weight: 700; color: #0f274c;">ðŸ“‹ Previous Leave Record:</span>
       This is your <strong>First Leave Application</strong> for session 2026.
     </div>
   `;
@@ -1439,7 +1439,7 @@ function renderApplyLeave(container) {
         <!-- SLEEK APPLICANT CARD -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 1.25rem;">👮</span>
+            <span style="font-size: 1.25rem;">ðŸ‘®</span>
             <div>
               <strong style="color: #0f274c; font-size: 0.95rem;">${user.name}</strong> (${user.rank})
               <div style="font-size: 0.78rem; color: #64748b;">Belt: <strong>${user.beltNo}</strong> | Ph: ${user.mobile}</div>
@@ -1478,7 +1478,7 @@ function renderApplyLeave(container) {
 
             <!-- FEATURE 5: MANDATORY MEDICAL NOTICE ALERT -->
             <div id="medicalNoticeAlert" style="display: none; margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
-              🏥 <strong>Mandatory Medical Certificate:</strong> Medical Leave (ML) or Child Care Leave (CCL) requires an official medical prescription / fitness certificate.
+              ðŸ¥ <strong>Mandatory Medical Certificate:</strong> Medical Leave (ML) or Child Care Leave (CCL) requires an official medical prescription / fitness certificate.
             </div>
           </div>
 
@@ -1500,13 +1500,13 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
                   <input type="checkbox" id="halfDayCheck" onchange="handleHalfDayToggle(this)">
-                  🕒 Apply for Half Day Casual Leave? (0.5 Day CL)
+                  ðŸ•’ Apply for Half Day Casual Leave? (0.5 Day CL)
                 </label>
                 <span style="font-size: 0.8rem; background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600;">0.5 Day Quota</span>
               </div>
               <div id="halfDayShiftBox" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
                 <label style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Select Duty Shift:</label>
-                <div style="display: flex; gap: 20px; font-size: 0.88rem;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.88rem;">
                   <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                     <input type="radio" name="halfDayShift" value="Morning Shift (09:00 AM to 02:00 PM)" checked onchange="calculateLeaveDays()">
                     Morning Shift (09:00 AM to 02:00 PM)
@@ -1526,12 +1526,12 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
                   <input type="checkbox" id="prefixSuffixCheck" onchange="togglePrefixSuffix(this)">
-                  📅 Add Prefix / Suffix Holidays (Optional)
+                  ðŸ“… Add Prefix / Suffix Holidays (Optional)
                 </label>
                 <span style="font-size: 0.78rem; color: #64748b;">(Holidays / C-OFF)</span>
               </div>
               <div id="prefixSuffixFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="form-grid-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                   <div>
                     <label for="prefixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
                       Prefix Days (Preceding start)
@@ -1573,11 +1573,11 @@ function renderApplyLeave(container) {
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #854d0e; margin: 0;">
                   <input type="checkbox" id="courtEvidenceCheck" onchange="toggleCourtCaseFields(this)">
-                  ⚖️ Is any Court Evidence / Summons scheduled during this leave period?
+                  âš–ï¸ Is any Court Evidence / Summons scheduled during this leave period?
                 </label>
               </div>
               <div id="courtCaseFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #fef08a;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="form-grid-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                   <div>
                     <label for="courtCaseDetails" style="font-size: 0.82rem; font-weight: 600; color: #713f12;">
                       Court & Case Details (Court Name, FIR No., Hearing Date)
@@ -1629,7 +1629,7 @@ function renderApplyLeave(container) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 Out-of-Headquarters Travel & Destination Details
               </h4>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-grid-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div>
                   <label for="stationDestination" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
                     Destination City & State
@@ -1688,7 +1688,7 @@ function renderApplyLeave(container) {
               </div>
               <div id="attachmentPreviewBox" style="display: none;" class="attachment-preview-card" onclick="event.stopPropagation()">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <div class="attachment-icon">📎</div>
+                  <div class="attachment-icon">ðŸ“Ž</div>
                   <div style="text-align: left;">
                     <strong id="attachmentFileName" style="font-size: 0.85rem; color: #0f274c;"></strong>
                     <div id="attachmentFileSize" style="font-size: 0.72rem; color: #64748b;"></div>
@@ -1892,7 +1892,7 @@ function calculateLeaveDays() {
   // CL max 10 days policy advice
   let policyWarning = "";
   if (leaveCode === "CL" && diffDays > 10) {
-    policyWarning = `<br><span style="color: #b45309; font-weight: normal; font-size: 0.8rem;">⚠ Police Service Rules: Casual Leave (CL) is generally capped at 10 consecutive days. For longer periods, apply for Earned Leave (EL).</span>`;
+    policyWarning = `<br><span style="color: #b45309; font-weight: normal; font-size: 0.8rem;">âš  Police Service Rules: Casual Leave (CL) is generally capped at 10 consecutive days. For longer periods, apply for Earned Leave (EL).</span>`;
   }
 
   if (diffDays > balance) {
@@ -1935,7 +1935,7 @@ function checkBranchOverlap(branchId, fromVal, toVal) {
     overlapBox.className = "branch-overlap-box clear";
     overlapBox.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 1.1rem;">✓</span>
+        <span style="font-size: 1.1rem;">âœ“</span>
         <div>
           <strong>Branch Duty Strength Status:</strong>
           No other personnel from your branch are on leave during this period. Full strength of ${totalBranchStaff} personnel is available on duty.
@@ -1948,7 +1948,7 @@ function checkBranchOverlap(branchId, fromVal, toVal) {
     const remainingOnDuty = Math.max(0, totalBranchStaff - overlappingLeaves.length - 1);
     overlapBox.innerHTML = `
       <div style="display: flex; align-items: flex-start; gap: 8px;">
-        <span style="font-size: 1.2rem;">👥</span>
+        <span style="font-size: 1.2rem;">ðŸ‘¥</span>
         <div>
           <strong>Branch Concurrent Leave Alert:</strong><br>
           During this period, <strong>${overlappingLeaves.length} personnel</strong> from your branch are already on leave / pending: ${names}.<br>
@@ -2101,10 +2101,10 @@ function openApplicationPreviewModal() {
             <th>Court Evidence / Summons Status</th>
             <td>
               ${courtDuty ? `
-                <span style="color: #dc2626; font-weight: 700;">⚠ Yes, Hearing Scheduled:</span> ${courtCaseDetails}<br>
+                <span style="color: #dc2626; font-weight: 700;">âš  Yes, Hearing Scheduled:</span> ${courtCaseDetails}<br>
                 Case Diary Handed Over To: <strong>${courtOfficerHandover}</strong>
               ` : `
-                <span style="color: #16a34a; font-weight: 600;">✓ No court evidence or summons scheduled during this period.</span>
+                <span style="color: #16a34a; font-weight: 600;">âœ“ No court evidence or summons scheduled during this period.</span>
               `}
             </td>
           </tr>
@@ -2120,11 +2120,11 @@ function openApplicationPreviewModal() {
             <th>Station Leave (Out-of-HQ Details)</th>
             <td>
               ${stationLeave ? `
-                <span style="color: #b45309; font-weight: 700;">★ Station Leave Permission Requested:</span><br>
-                • Destination: <strong>${stationDestination}</strong> (Nearest Local PS: <strong>${stationLocalPS}</strong>)<br>
-                • Mode of Travel: <strong>${stationTravelMode}</strong><br>
-                • Family Contact: <strong>${stationFamilyContact}</strong><br>
-                • Address during leave: ${stationLeaveAddress}
+                <span style="color: #b45309; font-weight: 700;">â˜… Station Leave Permission Requested:</span><br>
+                â€¢ Destination: <strong>${stationDestination}</strong> (Nearest Local PS: <strong>${stationLocalPS}</strong>)<br>
+                â€¢ Mode of Travel: <strong>${stationTravelMode}</strong><br>
+                â€¢ Family Contact: <strong>${stationFamilyContact}</strong><br>
+                â€¢ Address during leave: ${stationLeaveAddress}
               ` : `
                 <span style="color: #16a34a;">Station leave not required (Stationed at Headquarters).</span>
               `}
@@ -2134,7 +2134,7 @@ function openApplicationPreviewModal() {
             <th>Attachment</th>
             <td>
               ${AppState.currentAttachment ? `
-                <span style="color: #1e40af; font-weight: 600;">📎 ${AppState.currentAttachment.name}</span> (${AppState.currentAttachment.size})
+                <span style="color: #1e40af; font-weight: 600;">ðŸ“Ž ${AppState.currentAttachment.name}</span> (${AppState.currentAttachment.size})
               ` : `
                 <span style="color: #64748b;">No document attached.</span>
               `}
@@ -2340,7 +2340,7 @@ function renderMyLeaves(container) {
     ${userLeaves.length === 0 ? `
       <div class="card-table-wrap" style="padding: 44px 20px; text-align: center; background: #ffffff; border-radius: 12px; border: 1.5px dashed #cbd5e1; margin-top: 14px;">
         <div style="width: 58px; height: 58px; border-radius: 50%; background: #f8fafc; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 1.6rem;">
-          📋
+          ðŸ“‹
         </div>
         <h3 style="font-size: 1.15rem; color: #0f274c; margin-bottom: 6px; font-weight: 700;">No Leave Applications Found</h3>
         <p style="color: #64748b; font-size: 0.9rem; max-width: 480px; margin: 0 auto 20px; line-height: 1.5;">
@@ -2390,7 +2390,7 @@ function renderInchargeDesk(container) {
   if (!isBranchIncharge) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 28px 20px; text-align: center; max-width: 520px; margin: 30px auto; box-shadow: var(--shadow-sm);">
-        <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem;">🔒</div>
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem;">ðŸ”’</div>
         <h3 style="color: #991b1b; font-size: 1.15rem; margin-bottom: 6px;">Branch Incharge Access Required</h3>
         <p style="color: #64748b; font-size: 0.88rem; margin-bottom: 16px;">
           You are currently logged in as <strong>${user ? user.name : 'Police Personnel'} (${user ? user.rank : 'Member'})</strong>.
@@ -2398,10 +2398,10 @@ function renderInchargeDesk(container) {
         </p>
         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
           <button class="btn btn-primary btn-sm" onclick="quickSwitchUser('INCH-1930')">
-            👮 Switch to 1930 Incharge (Insp. Rajesh Kumar)
+            ðŸ‘® Switch to 1930 Incharge (Insp. Rajesh Kumar)
           </button>
           <button class="btn btn-gold btn-sm" onclick="quickSwitchUser('SP-001')">
-            🛡️ Switch to SP Cyber (Mayank Gupta, IPS)
+            ðŸ›¡ï¸ Switch to SP Cyber (Mayank Gupta, IPS)
           </button>
         </div>
       </div>
@@ -2635,7 +2635,7 @@ function renderSPDesk(container) {
       </div>
       ${recommendedLeaves.length === 0 ? `
         <div style="padding: 28px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 1.02rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
+          <div style="font-size: 1.02rem; font-weight: 700; margin-bottom: 2px;">âœ“ All Clear</div>
           <div style="font-size: 0.86rem; color: #15803d;">No leave applications currently pending for SP sanction.</div>
         </div>
       ` : `
@@ -2700,7 +2700,7 @@ function renderSPDesk(container) {
       </div>
       ${initialPendingLeaves.length === 0 ? `
         <div style="padding: 24px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 0.98rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
+          <div style="font-size: 0.98rem; font-weight: 700; margin-bottom: 2px;">âœ“ All Clear</div>
           <div style="font-size: 0.85rem; color: #15803d;">No fresh applications awaiting branch review.</div>
         </div>
       ` : `
@@ -2734,7 +2734,7 @@ function renderSPDesk(container) {
                   <td data-label="SP Direct Action" class="mobile-card-actions">
                     <div style="display: flex; gap: 6px; align-items: center;">
                       <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
-                        ⚡ Direct Sanction
+                        âš¡ Direct Sanction
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
                         Details
@@ -2834,7 +2834,7 @@ function renderMasterRegister(container) {
   if (!canViewRegister) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">ðŸ”’</div>
         <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
           Master Leave Register and CSV export are strictly restricted to <strong>Superintendent of Police (SP Cyber)</strong> and the <strong>Supervisory Reader Desk</strong>.
@@ -3188,7 +3188,7 @@ function handleRestoreBackupSubmit() {
       const noticesCount = (data.notices || []).length;
       const exportDate = data.backupDateReadable || data.backupTimestamp || "Unknown";
 
-      const confirmMsg = `File Verification Details:\n\n• Total Police Strength (Users): ${usersCount}\n• Total Leave Records: ${leavesCount}\n• Official Notices/Orders: ${noticesCount}\n• Backup Timestamp: ${exportDate}\n\nWARNING: Are you sure you want to restore and replace the current database with this backup file?`;
+      const confirmMsg = `File Verification Details:\n\nâ€¢ Total Police Strength (Users): ${usersCount}\nâ€¢ Total Leave Records: ${leavesCount}\nâ€¢ Official Notices/Orders: ${noticesCount}\nâ€¢ Backup Timestamp: ${exportDate}\n\nWARNING: Are you sure you want to restore and replace the current database with this backup file?`;
 
       if (confirm(confirmMsg)) {
         AppState.branches = data.branches;
@@ -3219,11 +3219,11 @@ function handleRestoreBackupSubmit() {
 
 function getNoticeCategoryHindi(category) {
   switch (category) {
-    case "ORDER": return "📋 Office Order";
-    case "MEETING": return "📅 Review Meeting";
-    case "DIRECTIVE": return "⚡ Urgent Directive";
-    case "GENERAL": return "ℹ️ General Notice";
-    default: return "📢 Official Notice";
+    case "ORDER": return "ðŸ“‹ Office Order";
+    case "MEETING": return "ðŸ“… Review Meeting";
+    case "DIRECTIVE": return "âš¡ Urgent Directive";
+    case "GENERAL": return "â„¹ï¸ General Notice";
+    default: return "ðŸ“¢ Official Notice";
   }
 }
 
@@ -3280,11 +3280,11 @@ function renderDashboardNoticesWidget() {
           <div class="notice-item-row ${n.priority === 'URGENT' ? 'urgent' : ''} ${n.pinned ? 'pinned' : ''}">
             <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1;">
               <span class="notice-badge ${n.priority === 'URGENT' ? 'urgent' : (n.category ? n.category.toLowerCase() : 'general')}">
-                ${n.priority === 'URGENT' ? '🚨 URGENT' : getNoticeCategoryHindi(n.category)}
+                ${n.priority === 'URGENT' ? 'ðŸš¨ URGENT' : getNoticeCategoryHindi(n.category)}
               </span>
               <div>
                 <strong style="color: #0f274c; font-size: 0.95rem; cursor: pointer;" onclick="openViewNoticeModal('${n.id}')">
-                  ${n.pinned ? '📌 ' : ''}${n.title}
+                  ${n.pinned ? 'ðŸ“Œ ' : ''}${n.title}
                 </strong>
                 <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">
                   <span>Issued By: <strong>${n.postedBy}</strong></span> | 
@@ -3384,7 +3384,7 @@ function renderNoticesGridCards(noticesList) {
   if (!noticesList || noticesList.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b; background: #fff; border-radius: 8px;">
-        <div style="font-size: 2rem; margin-bottom: 8px;">📭</div>
+        <div style="font-size: 2rem; margin-bottom: 8px;">ðŸ“­</div>
         <h4 style="color: #0f274c; margin-bottom: 6px;">No Notices or Orders Available</h4>
         <p style="font-size: 0.85rem;">No records found matching the selected filter.</p>
       </div>
@@ -3404,9 +3404,9 @@ function renderNoticesGridCards(noticesList) {
       <div class="notice-card-header">
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
           <span class="notice-badge ${n.priority === 'URGENT' ? 'urgent' : (n.category ? n.category.toLowerCase() : 'general')}">
-            ${n.priority === 'URGENT' ? '🚨 URGENT' : getNoticeCategoryHindi(n.category)}
+            ${n.priority === 'URGENT' ? 'ðŸš¨ URGENT' : getNoticeCategoryHindi(n.category)}
           </span>
-          ${n.pinned ? `<span class="notice-badge pinned">📌 PINNED</span>` : ''}
+          ${n.pinned ? `<span class="notice-badge pinned">ðŸ“Œ PINNED</span>` : ''}
         </div>
         <span class="branch-tag" style="font-size: 0.72rem;">${n.targetBranchName || 'All Branches'}</span>
       </div>
@@ -3427,7 +3427,7 @@ function renderNoticesGridCards(noticesList) {
           </button>
           ${isAuthorizedToPost ? `
             <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n.id}')" title="Delete Notice" style="padding: 4px 8px; font-size: 0.78rem;">
-              🗑️
+              ðŸ—‘ï¸
             </button>
           ` : ''}
         </div>
@@ -3540,7 +3540,7 @@ function openViewNoticeModal(noticeId) {
 
       <div style="margin-bottom: 16px;">
         <span class="notice-badge ${notice.priority === 'URGENT' ? 'urgent' : (notice.category ? notice.category.toLowerCase() : 'general')}" style="font-size: 0.8rem; padding: 4px 10px;">
-          ${notice.priority === 'URGENT' ? '🚨 URGENT' : getNoticeCategoryHindi(notice.category)}
+          ${notice.priority === 'URGENT' ? 'ðŸš¨ URGENT' : getNoticeCategoryHindi(notice.category)}
         </span>
         <span class="branch-tag" style="margin-left: 8px;">Target: ${notice.targetBranchName || 'All Branches'}</span>
       </div>
@@ -3589,7 +3589,7 @@ function renderPersonnelDirectory(container) {
   if (!isAuthorized) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">ðŸ”’</div>
         <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
           Personnel Staff Directory is restricted to authorized <strong>Branch Incharges</strong> and the <strong>Superintendent of Police (SP Cyber)</strong>.
@@ -3796,7 +3796,7 @@ function renderDailySitrep(container) {
   if (!canViewSitrep) {
     container.innerHTML = `
       <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">ðŸ”’</div>
         <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
           Daily Force & Leave Sitrep Roznamcha is restricted to <strong>Superintendent of Police (SP Cyber)</strong> and the <strong>Reader Desk</strong>.
@@ -3922,11 +3922,13 @@ function renderDailySitrep(container) {
 
       ${onLeaveLeaves.length === 0 ? `
         <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 6px; padding: 22px; text-align: center; color: #166534; margin-bottom: 20px;">
-          <div style="font-size: 1.1rem; font-weight: 700;">✓ No police personnel on leave on the selected date.</div>
+          <div style="font-size: 1.1rem; font-weight: 700;">âœ“ No police personnel on leave on the selected date.</div>
           <div style="font-size: 0.85rem; margin-top: 4px; color: #15803d;">Entire force strength of ${totalForce} personnel across all 13 branches is present on duty.</div>
         </div>
       ` : `
-        <table class="sitrep-table">
+        <div class="responsive-table">
+          <div class="responsive-table">
+      <table class="sitrep-table">
           <thead>
             <tr>
               <th style="width: 40px; text-align: center;">S.No.</th>
@@ -3968,7 +3970,7 @@ function renderDailySitrep(container) {
                   <td style="text-align: center; font-weight: 700; color: #0f172a;">${l.totalDays} Days</td>
                   <td>
                     ${l.stationLeave ? `
-                      <span style="color: #b45309; font-weight: 700;">★ Station Leave</span><br>
+                      <span style="color: #b45309; font-weight: 700;">â˜… Station Leave</span><br>
                       <small style="color: #475569;">${l.stationDestination || l.stationLeaveAddress || 'At Sanctioned Address'}</small>
                     ` : `
                       <span style="color: #166534; font-weight: 600;">At Station HQ</span>
@@ -3981,6 +3983,7 @@ function renderDailySitrep(container) {
             }).join("")}
           </tbody>
         </table>
+        </div>
       `}
 
       <!-- SECTION 2: 13 BRANCHES FORCE STRENGTH MATRIX -->
@@ -3989,6 +3992,7 @@ function renderDailySitrep(container) {
         <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">Total Units: 13 | Headquarters Panchkula</span>
       </div>
 
+      <div class="responsive-table">
       <table class="sitrep-table">
         <thead>
           <tr>
@@ -4040,6 +4044,7 @@ function renderDailySitrep(container) {
           }).join("")}
         </tbody>
       </table>
+      </div>
 
       <!-- OFFICIAL VERIFICATION & SIGNATURES BLOCK -->
       <div class="sitrep-signature-block">
@@ -4107,20 +4112,20 @@ function openLeaveDetailsModal(leaveId) {
         <div class="step-label">Applied</div>
       </div>
       <div class="step-node ${isRecommended || isApproved ? 'completed' : (isPendingIncharge ? 'active' : '')}">
-        <div class="step-circle">${isRecommended || isApproved ? '✓' : '2'}</div>
+        <div class="step-circle">${isRecommended || isApproved ? 'âœ“' : '2'}</div>
         <div class="step-label">Branch Recommendation</div>
       </div>
       <div class="step-node ${isApproved ? 'completed' : (isRecommended ? 'active' : '')}">
-        <div class="step-circle">${isApproved ? '✓' : '3'}</div>
+        <div class="step-circle">${isApproved ? 'âœ“' : '3'}</div>
         <div class="step-label">SP Cyber Sanction</div>
       </div>
       <div class="step-node ${isApproved ? 'completed' : ''}">
-        <div class="step-circle">${isApproved ? '★' : '4'}</div>
+        <div class="step-circle">${isApproved ? 'â˜…' : '4'}</div>
         <div class="step-label">Order Dispatched</div>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.88rem;">
+    <div class="modal-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.88rem;">
       <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
         <span style="color: #64748b; font-size: 0.78rem;">Applicant:</span><br>
         <strong>${leave.applicantName}</strong> (${leave.rank})<br>
@@ -4140,9 +4145,9 @@ function openLeaveDetailsModal(leaveId) {
       <!-- CURTAILMENT / REDUCTION NOTICE IF APPLICABLE -->
       ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
         <div style="grid-column: 1 / -1; background: #fffbeb; border: 1px solid #fef08a; padding: 12px 16px; border-radius: 8px;">
-          <span style="color: #92400e; font-weight: 700;">✂️ Leave Curtailment / Modification Record:</span>
+          <span style="color: #92400e; font-weight: 700;">âœ‚ï¸ Leave Curtailment / Modification Record:</span>
           <div style="color: #78350f; font-size: 0.82rem; margin-top: 4px;">
-            Originally Applied: <strong>${leave.originalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.originalToDate)}) ➔ 
+            Originally Applied: <strong>${leave.originalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.originalToDate)}) âž” 
             Modified / Sanctioned: <strong>${leave.totalDays} Days</strong> (${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)})<br>
             Curtailing Authority: <strong>${leave.curtailedBy || 'Competent Authority'}</strong>
             ${leave.curtailReason ? `<br>Ground: <em>"${leave.curtailReason}"</em>` : ''}
@@ -4158,7 +4163,7 @@ function openLeaveDetailsModal(leaveId) {
       <!-- COURT EVIDENCE / DUTY HANDOVER IF APPLICABLE -->
       ${leave.courtDuty ? `
         <div style="grid-column: 1 / -1; background: #fefce8; border: 1px solid #fef08a; padding: 12px; border-radius: 8px; font-size: 0.84rem;">
-          <span style="color: #854d0e; font-weight: 700;">⚖️ Court Evidence & Appearance Details:</span>
+          <span style="color: #854d0e; font-weight: 700;">âš–ï¸ Court Evidence & Appearance Details:</span>
           <div style="color: #713f12; margin-top: 4px;">
             Case / Court: <strong>${leave.courtCaseDetails || 'Declared'}</strong><br>
             Case Diary / Pairvi Handover: <strong>${leave.courtHandoverOfficer || 'Nominated Colleague'}</strong>
@@ -4193,8 +4198,8 @@ function openLeaveDetailsModal(leaveId) {
 
       ${leave.stationLeave ? `
         <div style="grid-column: 1 / -1; background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 8px;">
-          <span style="color: #92400e; font-weight: 700; font-size: 0.82rem;">★ Station Leave (Out-of-Headquarters) Itinerary:</span>
-          <div style="margin-top: 6px; font-size: 0.84rem; color: #78350f; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <span style="color: #92400e; font-weight: 700; font-size: 0.82rem;">â˜… Station Leave (Out-of-Headquarters) Itinerary:</span>
+          <div class="modal-grid-2col" style="margin-top: 6px; font-size: 0.84rem; color: #78350f; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div>Destination: <strong>${leave.stationDestination || 'Not specified'}</strong></div>
             <div>Local Police Station: <strong>${leave.stationLocalPS || '-'}</strong></div>
             <div>Mode of Travel: <strong>${leave.stationTravelMode || '-'}</strong></div>
@@ -4236,7 +4241,7 @@ function openLeaveDetailsModal(leaveId) {
       ${canActAsIncharge && isPendingIncharge ? `
         <div style="grid-column: 1 / -1; margin-top: 10px; background: #eff6ff; border: 2px solid #2563eb; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <strong style="color: #1e3a8a; font-size: 0.95rem;">👮‍♂️ Action Required: Awaiting Your Recommendation</strong>
+            <strong style="color: #1e3a8a; font-size: 0.95rem;">ðŸ‘®â€â™‚ï¸ Action Required: Awaiting Your Recommendation</strong>
             <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">You may examine the duty arrangements and recommend to SP Cyber or record rejection.</div>
           </div>
           <button type="button" class="btn btn-primary" onclick="closeModals(); openInchargeActionModal('${leave.id}')">
@@ -4249,7 +4254,7 @@ function openLeaveDetailsModal(leaveId) {
       ${user && user.role === "sp_cyber" && isRecommended ? `
         <div style="grid-column: 1 / -1; margin-top: 10px; background: #fefce8; border: 2px solid #ca8a04; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <strong style="color: #854d0e; font-size: 0.95rem;">★ Recommended for SP Cyber Final Sanction</strong>
+            <strong style="color: #854d0e; font-size: 0.95rem;">â˜… Recommended for SP Cyber Final Sanction</strong>
             <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">Recommended by Branch Incharge. Click below to issue final sanction order.</div>
           </div>
           <button type="button" class="btn btn-gold" onclick="closeModals(); openSPActionModal('${leave.id}')">
@@ -4288,25 +4293,25 @@ function openInchargeActionModal(leaveId) {
       <!-- ATTACHMENT CARD IF PRESENT -->
       ${leave.attachment ? `
         <div style="margin-top: 10px; padding: 8px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 0.82rem; color: #1e40af;">📎 Supporting Attachment: <strong>${leave.attachment.name}</strong></span>
+          <span style="font-size: 0.82rem; color: #1e40af;">ðŸ“Ž Supporting Attachment: <strong>${leave.attachment.name}</strong></span>
           <button type="button" class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" style="background: #fff;">View Document</button>
         </div>
       ` : ''}
 
-      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 600; margin-top: 6px;">⚠ Station Leave Permission Requested (${leave.stationLeaveAddress})</div>` : ''}
+      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 600; margin-top: 6px;">âš  Station Leave Permission Requested (${leave.stationLeaveAddress})</div>` : ''}
     </div>
 
     <!-- CURTAIL / REDUCE LEAVE DAYS CONTROL -->
     <div class="curtail-control-box">
       <div class="curtail-header">
-        <span>✂️ Curtail / Reduce Leave Days?</span>
+        <span>âœ‚ï¸ Curtail / Reduce Leave Days?</span>
         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; font-weight: normal; color: #451a03;">
           <input type="checkbox" id="inchargeCurtailCheck" onchange="toggleInchargeCurtail(this)">
           Reduce Days
         </label>
       </div>
       <div id="inchargeCurtailFields" style="display: none; margin-top: 10px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="modal-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">From Date:</label>
             <input type="text" class="form-control" value="${formatDate(leave.fromDate)}" readonly>
@@ -4359,7 +4364,7 @@ function calculateInchargeCurtailDays() {
   } else if (cutDays === 0) {
     preview.innerHTML = `No curtailment applied (Total: <strong>${newDays} Days</strong>)`;
   } else {
-    preview.innerHTML = `✂️ Modified Period: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(newToVal)}</strong> (Total <strong>${newDays} Days</strong>) | Curtailed by <strong>${cutDays} Days</strong>.`;
+    preview.innerHTML = `âœ‚ï¸ Modified Period: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(newToVal)}</strong> (Total <strong>${newDays} Days</strong>) | Curtailed by <strong>${cutDays} Days</strong>.`;
   }
 }
 
@@ -4451,7 +4456,7 @@ function openSPActionModal(leaveId) {
       <!-- ATTACHMENT CARD IF PRESENT -->
       ${leave.attachment ? `
         <div style="margin-top: 10px; padding: 8px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 0.82rem; color: #1e40af;">📎 Supporting Attachment: <strong>${leave.attachment.name}</strong></span>
+          <span style="font-size: 0.82rem; color: #1e40af;">ðŸ“Ž Supporting Attachment: <strong>${leave.attachment.name}</strong></span>
           <button type="button" class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" style="background: #fff;">View Document</button>
         </div>
       ` : ''}
@@ -4462,23 +4467,23 @@ function openSPActionModal(leaveId) {
         </div>
       ` : `
         <div style="margin-top: 8px; padding: 8px 12px; background: #fef3c7; border-radius: 6px; color: #92400e;">
-          ⚡ <strong>Direct SP Sanction:</strong> Application is pending branch review. As SP Cyber, you may directly sanction or modify this application.
+          âš¡ <strong>Direct SP Sanction:</strong> Application is pending branch review. As SP Cyber, you may directly sanction or modify this application.
         </div>
       `}
-      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 700; margin-top: 6px;">★ Station Leave Permission Requested: ${leave.stationLeaveAddress}</div>` : ''}
+      ${leave.stationLeave ? `<div style="color: #b45309; font-weight: 700; margin-top: 6px;">â˜… Station Leave Permission Requested: ${leave.stationLeaveAddress}</div>` : ''}
     </div>
 
     <!-- SP CURTAIL / REDUCE DAYS CONTROL -->
     <div class="curtail-control-box">
       <div class="curtail-header">
-        <span>✂️ Curtail / Modify Leave Days by SP Cyber</span>
+        <span>âœ‚ï¸ Curtail / Modify Leave Days by SP Cyber</span>
         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; font-weight: normal; color: #451a03;">
           <input type="checkbox" id="spCurtailCheck" onchange="toggleSPCurtail(this)">
           Curtail Sanctioned Days
         </label>
       </div>
       <div id="spCurtailFields" style="display: none; margin-top: 10px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="modal-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">Sanctioned From Date:</label>
             <input type="text" class="form-control" value="${formatDate(leave.fromDate)}" readonly>
@@ -4531,7 +4536,7 @@ function calculateSPCurtailDays() {
   } else if (cutDays === 0) {
     preview.innerHTML = `No curtailment applied (Sanctioned: <strong>${newDays} Days</strong>)`;
   } else {
-    preview.innerHTML = `★ Modified by SP Cyber: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(newToVal)}</strong> (Total <strong>${newDays} Days Sanctioned</strong>) | Curtailed by <strong>${cutDays} Days</strong>.`;
+    preview.innerHTML = `â˜… Modified by SP Cyber: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(newToVal)}</strong> (Total <strong>${newDays} Days Sanctioned</strong>) | Curtailed by <strong>${cutDays} Days</strong>.`;
   }
 }
 
