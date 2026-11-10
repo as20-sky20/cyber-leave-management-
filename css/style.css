@@ -4234,3 +4234,32 @@ body.portal-logged-out .mobile-floating-actions {
 body.portal-logged-out #loginScreen {
   display: flex !important;
 }
+
+/* Simple Login Card Styles */
+.simple-login-card {
+  max-width: 440px !important;
+  margin: 20px auto !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+}
+.simple-brand-header {
+  padding: 22px 16px 18px !important;
+}
+.simple-brand-header .login-badge-wrap {
+  width: 48px !important;
+  height: 48px !important;
+  margin: 0 auto 10px !important;
+}
+.simple-brand-header .login-badge-wrap svg {
+  width: 26px !important;
+  height: 26px !important;
+}
+.simple-brand-header .login-title {
+  font-size: 1.35rem !important;
+  margin-bottom: 2px !important;
+  letter-spacing: 0.5px !important;
+}
+.simple-brand-header .login-subtitle {
+  font-size: 0.88rem !important;
+  color: #93c5fd !important;
+  margin-bottom: 0 !important;
+}

@@ -5036,58 +5036,45 @@ window.addEventListener("DOMContentLoaded", initApp);
 
 
 // ==========================================
-// OFFICER LOGIN SCREEN CONTROLLER & RENDERER
+// SIMPLE POLICE OFFICER LOGIN CONTROLLER
 // ==========================================
-let currentLoginTab = "form"; // "form" or "directory"
-let loginCategoryFilter = "ALL"; // "ALL", "SP", "INCHARGE", "STAFF"
-let loginSearchQuery = "";
-
-function setLoginTab(tab) {
-  currentLoginTab = tab;
-  const loginScreen = document.getElementById("loginScreen");
-  if (loginScreen) renderLoginScreen(loginScreen);
-}
-
-function setLoginCategoryFilter(cat) {
-  loginCategoryFilter = cat;
-  const loginScreen = document.getElementById("loginScreen");
-  if (loginScreen) renderLoginScreen(loginScreen);
-}
-
-function onLoginSearchInput(query) {
-  loginSearchQuery = (query || "").toLowerCase().trim();
-  renderLoginOfficerCardsList();
-}
 
 function onLoginRosterSelect(userId) {
-  if (!userId) return;
   const input = document.getElementById("loginOfficerInput");
-  if (input) input.value = userId;
-}
-
-function toggleLoginPinVisibility() {
-  const pinInput = document.getElementById("loginPinInput");
-  if (!pinInput) return;
-  pinInput.type = (pinInput.type === "password") ? "text" : "password";
+  if (!input) return;
+  if (!userId) {
+    input.value = "";
+    return;
+  }
+  const target = (AppState.users || []).find(u => u.id === userId);
+  if (target) {
+    input.value = target.beltNo || target.id;
+  }
 }
 
 function submitOfficerLoginForm() {
+  const select = document.getElementById("loginOfficerSelect");
   const input = document.getElementById("loginOfficerInput");
-  const query = (input ? input.value : "").trim();
+
+  let query = (input ? input.value : "").trim();
+  if (!query && select && select.value) {
+    query = select.value;
+  }
+
   if (!query) {
-    showToast("Please enter your Officer ID or Belt Number.", "error");
-    if (input) input.focus();
+    showToast("Please select your name from dropdown or enter Belt No.", "error");
+    if (select) select.focus();
     return;
   }
 
-  const target = AppState.users.find(u => {
+  const target = (AppState.users || []).find(u => {
     return u.id.toLowerCase() === query.toLowerCase() ||
            u.beltNo.toLowerCase() === query.toLowerCase() ||
            u.name.toLowerCase().includes(query.toLowerCase());
   });
 
   if (!target) {
-    showToast("Invalid Officer ID or Belt No. (" + query + "). Please check and try again.", "error");
+    showToast("Officer or Belt No. not found (" + query + ")", "error");
     return;
   }
 
@@ -5095,7 +5082,7 @@ function submitOfficerLoginForm() {
 }
 
 function quickLoginUser(userId) {
-  const target = AppState.users.find(u => u.id === userId);
+  const target = (AppState.users || []).find(u => u.id === userId);
   if (!target) {
     showToast("Officer record not found.", "error");
     return;
@@ -5116,7 +5103,7 @@ function quickLoginUser(userId) {
   }
 
   renderApp();
-  showToast("Welcome, " + target.name + " (" + target.rank + ") - Login Successful!", "success");
+  showToast("Welcome, " + target.name + " (" + target.rank + ")", "success");
 }
 
 function handleLogout() {
@@ -5124,7 +5111,7 @@ function handleLogout() {
   sessionStorage.removeItem("cyber_police_current_user_id");
   localStorage.removeItem("cyber_police_current_user_id");
   renderApp();
-  showToast("Logged out successfully. Please select an officer to sign in.", "info");
+  showToast("Logged out successfully.", "info");
 }
 
 function renderLoginScreen(container) {
@@ -5134,229 +5121,88 @@ function renderLoginScreen(container) {
   const allUsers = [...(AppState.users || [])];
 
   container.innerHTML = `
-    <div class="login-page-card">
+    <div class="login-page-card simple-login-card">
       <!-- BRAND HEADER -->
-      <div class="login-brand-header">
+      <div class="login-brand-header simple-brand-header">
         <div class="login-badge-wrap">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.54-3.15 8.79-7 9.88-3.85-1.09-7-5.34-7-9.88V6.3l7-3.12z"/>
             <path d="M12 7c-1.66 0-3 1.34-3 3 0 .79.31 1.51.81 2.04L8 16h8l-1.81-3.96c.5-.53.81-1.25.81-2.04 0-1.66-1.34-3-3-3z"/>
           </svg>
         </div>
-        <div class="login-title-box">
-          <div class="login-org-tag">POLICE DEPARTMENT - GOVERNMENT OF HARYANA</div>
-          <h2 class="login-title">HARYANA POLICE</h2>
-          <h3 class="login-subtitle">STATE CYBER CRIME HEADQUARTERS, PANCHKULA</h3>
-          <p class="login-desc">Official Personnel Leave Management & Duty Sanction Portal</p>
-        </div>
-        <div class="login-security-tag">
-          <span>Authorized Police Personnel Access Only</span>
-        </div>
+        <h2 class="login-title">HARYANA POLICE</h2>
+        <h3 class="login-subtitle">State Cyber Crime Leave Portal</h3>
       </div>
 
-      <!-- TAB SELECTOR: FORM VS DIRECTORY -->
-      <div class="login-nav-tabs">
-        <button class="login-nav-btn ${currentLoginTab === 'form' ? 'active' : ''}" onclick="setLoginTab('form')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span>Officer ID / Belt Login</span>
-        </button>
-        <button class="login-nav-btn ${currentLoginTab === 'directory' ? 'active' : ''}" onclick="setLoginTab('directory')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span>1-Click Fast Directory (${allUsers.length} IDs)</span>
-        </button>
+      <!-- SIMPLE LOGIN FORM -->
+      <div class="login-form-pane" style="padding: 24px 22px;">
+        <form id="officerLoginForm" onsubmit="event.preventDefault(); submitOfficerLoginForm();">
+          
+          <!-- Option 1: Dropdown Select -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="loginOfficerSelect" style="font-weight: 700; color: #0f274c; font-size: 0.9rem;">
+              Select Officer / Name:
+            </label>
+            <select id="loginOfficerSelect" class="form-control" onchange="onLoginRosterSelect(this.value)" style="height: 44px; font-weight: 600; font-size: 0.9rem;">
+              <option value="">-- Choose Your Profile --</option>
+              <optgroup label="--- Superintendent of Police ---">
+                ${allUsers.filter(u => u.role === 'sp_cyber').map(u => `
+                  <option value="${u.id}">${u.name} (Belt: ${u.beltNo}) - ${u.rank}</option>
+                `).join('')}
+              </optgroup>
+              <optgroup label="--- Branch Incharges ---">
+                ${allUsers.filter(u => u.role === 'branch_incharge').map(u => {
+                  const br = AppState.branches.find(b => b.id === u.branchId);
+                  return `<option value="${u.id}">${u.name} (Belt: ${u.beltNo}) - ${br ? br.name : u.branchId}</option>`;
+                }).join('')}
+              </optgroup>
+              <optgroup label="--- Police Personnel / Staff ---">
+                ${allUsers.filter(u => u.role === 'member').map(u => {
+                  return `<option value="${u.id}">${u.name} (Belt: ${u.beltNo}) - ${u.rank}</option>`;
+                }).join('')}
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Option 2: Direct Input -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="loginOfficerInput" style="font-weight: 700; color: #0f274c; font-size: 0.9rem;">
+              Or Enter Belt No. / ID:
+            </label>
+            <input type="text" id="loginOfficerInput" class="form-control" placeholder="e.g. 1420/PKL or CYB-101" style="height: 42px;">
+          </div>
+
+          <!-- PIN -->
+          <div class="form-group" style="margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label class="form-label" for="loginPinInput" style="font-weight: 700; color: #0f274c; font-size: 0.9rem; margin-bottom: 0;">PIN Code:</label>
+              <span style="font-size: 0.78rem; color: #059669; font-weight: 700;">Default: 1234</span>
+            </div>
+            <input type="password" id="loginPinInput" class="form-control" value="1234" placeholder="Enter PIN" style="height: 42px;">
+          </div>
+
+          <!-- Login Button -->
+          <button type="submit" class="btn btn-primary btn-block btn-lg" style="height: 48px; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; border-radius: 8px;">
+            LOGIN
+          </button>
+
+          <!-- 1-Tap Fast Buttons -->
+          <div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center;">
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;">1-Tap Quick Login:</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+              <button type="button" class="btn btn-sm btn-outline" onclick="quickLoginUser('SP-001')" style="font-weight: 600; padding: 6px 10px;">SP Mayank Gupta</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="quickLoginUser('INCH-1930')" style="font-weight: 600; padding: 6px 10px;">Insp. Rajesh (1930)</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="quickLoginUser('CYB-101')" style="font-weight: 600; padding: 6px 10px;">CT Rahul (1420)</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="quickLoginUser('CYB-107')" style="font-weight: 600; padding: 6px 10px;">CT Naveen (1350)</button>
+            </div>
+          </div>
+        </form>
       </div>
 
-      <!-- TAB 1: FORM LOGIN -->
-      ${currentLoginTab === 'form' ? `
-        <div class="login-form-pane">
-          <form id="officerLoginForm" onsubmit="event.preventDefault(); submitOfficerLoginForm();">
-            <div class="form-group">
-              <label class="form-label" for="loginOfficerInput">Officer ID or Belt Number:</label>
-              <div class="input-with-icon">
-                <span class="input-icon">Officer:</span>
-                <input type="text" id="loginOfficerInput" class="form-control" placeholder="Enter ID (e.g. CYB-101, SP-001) or Belt No. (e.g. 1420/PKL)" required autocomplete="username">
-              </div>
-              <small class="form-text-hint">Enter your official Police ID (e.g. CYB-101, CYB-107, SP-001) or Belt No. (e.g. 1420/PKL, 1350/PKL).</small>
-            </div>
-
-            <div class="form-group" style="margin-top: 14px;">
-              <label class="form-label">Or Select Officer From Roster:</label>
-              <select id="loginOfficerSelect" class="form-control" onchange="onLoginRosterSelect(this.value)">
-                <option value="">-- Choose Officer / Role --</option>
-                <optgroup label="--- Superintendent of Police (SP Cyber) ---">
-                  ${allUsers.filter(u => u.role === 'sp_cyber').map(u => `
-                    <option value="${u.id}">${u.name} (${u.beltNo}) - ${u.rank}</option>
-                  `).join('')}
-                </optgroup>
-                <optgroup label="--- Branch Incharges (13 Wings) ---">
-                  ${allUsers.filter(u => u.role === 'branch_incharge').map(u => {
-                    const br = AppState.branches.find(b => b.id === u.branchId);
-                    return `<option value="${u.id}">${u.name} (${u.beltNo}) - ${br ? br.name : u.branchId}</option>`;
-                  }).join('')}
-                </optgroup>
-                <optgroup label="--- Police Personnel / Staff ---">
-                  ${allUsers.filter(u => u.role === 'member').map(u => {
-                    const br = AppState.branches.find(b => b.id === u.branchId);
-                    return `<option value="${u.id}">${u.name} (${u.beltNo}) - ${u.rank} [${br ? br.name : u.branchId}]</option>`;
-                  }).join('')}
-                </optgroup>
-              </select>
-            </div>
-
-            <div class="form-group" style="margin-top: 14px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <label class="form-label" for="loginPinInput" style="margin-bottom: 0;">Security PIN:</label>
-                <span class="pin-hint-tag">Default PIN: <strong>1234</strong></span>
-              </div>
-              <div class="input-with-icon">
-                <span class="input-icon">PIN:</span>
-                <input type="password" id="loginPinInput" class="form-control" placeholder="Enter 4-digit PIN (Default: 1234)" value="1234" autocomplete="current-password">
-                <button type="button" class="pin-toggle-btn" onclick="toggleLoginPinVisibility()" title="Show/Hide PIN">View</button>
-              </div>
-            </div>
-
-            <div class="login-action-box">
-              <button type="submit" class="btn btn-primary btn-block btn-lg login-submit-btn">
-                <span>Authorize & Login to Cyber Portal</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
-            </div>
-
-            <div class="fast-demo-row">
-              <span class="fast-demo-title">Quick 1-Click Login:</span>
-              <div class="fast-demo-pills">
-                <button type="button" class="fast-pill sp-pill" onclick="quickLoginUser('SP-001')">
-                  SP Mayank Gupta, IPS
-                </button>
-                <button type="button" class="fast-pill incharge-pill" onclick="quickLoginUser('INCH-1930')">
-                  Insp. Rajesh (1930)
-                </button>
-                <button type="button" class="fast-pill staff-pill" onclick="quickLoginUser('CYB-101')">
-                  CT Rahul Deswal (CL: 12)
-                </button>
-                <button type="button" class="fast-pill staff-pill" onclick="quickLoginUser('CYB-107')">
-                  CT Naveen Boora (CL: 11)
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      ` : `
-        <!-- TAB 2: 1-CLICK OFFICER DIRECTORY -->
-        <div class="login-directory-pane">
-          <div class="directory-filter-bar">
-            <div class="category-pills">
-              <button class="cat-pill ${loginCategoryFilter === 'ALL' ? 'active' : ''}" onclick="setLoginCategoryFilter('ALL')">
-                All Officers (${allUsers.length})
-              </button>
-              <button class="cat-pill ${loginCategoryFilter === 'SP' ? 'active' : ''}" onclick="setLoginCategoryFilter('SP')">
-                SP Command (1)
-              </button>
-              <button class="cat-pill ${loginCategoryFilter === 'INCHARGE' ? 'active' : ''}" onclick="setLoginCategoryFilter('INCHARGE')">
-                Branch Incharges (13)
-              </button>
-              <button class="cat-pill ${loginCategoryFilter === 'STAFF' ? 'active' : ''}" onclick="setLoginCategoryFilter('STAFF')">
-                Staff Members (7)
-              </button>
-            </div>
-            <div class="directory-search-box">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" id="loginOfficerSearchInput" class="form-control" placeholder="Search officer by name, belt no, branch, or rank..." value="${loginSearchQuery}" oninput="onLoginSearchInput(this.value)">
-            </div>
-          </div>
-
-          <div class="officer-cards-grid" id="loginOfficerCardsGrid">
-            <!-- Rendered by renderLoginOfficerCardsList() -->
-          </div>
-        </div>
-      `}
-
-      <!-- LOGIN FOOTER -->
-      <div class="login-card-footer">
-        <div class="gov-helpline-row">
-          <span>National Cyber Helpline: <strong>1930</strong></span>
-          <span>&bull;</span>
-          <span>Police Control Room: <strong>112</strong></span>
-        </div>
-        <div class="gov-copy-text">
-          Haryana State Cyber Crime Police Station, Panchkula - Leave Management System v2026.1
-        </div>
+      <!-- SIMPLE FOOTER -->
+      <div style="padding: 12px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 0.75rem; color: #64748b;">
+        Haryana Cyber Crime Police Station, Panchkula &bull; 1930 / 112
       </div>
     </div>
   `;
-
-  if (currentLoginTab === 'directory') {
-    renderLoginOfficerCardsList();
-  }
-}
-
-function renderLoginOfficerCardsList() {
-  const grid = document.getElementById("loginOfficerCardsGrid");
-  if (!grid) return;
-
-  let filtered = [...(AppState.users || [])];
-  if (loginCategoryFilter === 'SP') {
-    filtered = filtered.filter(u => u.role === 'sp_cyber');
-  } else if (loginCategoryFilter === 'INCHARGE') {
-    filtered = filtered.filter(u => u.role === 'branch_incharge');
-  } else if (loginCategoryFilter === 'STAFF') {
-    filtered = filtered.filter(u => u.role === 'member');
-  }
-
-  if (loginSearchQuery) {
-    filtered = filtered.filter(u => {
-      const b = AppState.branches.find(br => br.id === u.branchId);
-      const bName = b ? b.name : u.branchId;
-      const haystack = (u.name + " " + u.id + " " + u.beltNo + " " + u.rank + " " + bName + " " + u.role).toLowerCase();
-      return haystack.includes(loginSearchQuery);
-    });
-  }
-
-  if (filtered.length === 0) {
-    grid.innerHTML = `
-      <div class="no-officer-match">
-        <span style="font-size: 2rem;">🔍</span>
-        <h4>No Police Officer Found</h4>
-        <p>No personnel records match "${loginSearchQuery}". Please try another search term.</p>
-      </div>
-    `;
-    return;
-  }
-
-  grid.innerHTML = filtered.map(u => {
-    const b = AppState.branches.find(br => br.id === u.branchId);
-    const bName = b ? b.name : u.branchId;
-    const isSP = u.role === 'sp_cyber';
-    const isIncharge = u.role === 'branch_incharge';
-    const roleBadge = isSP ? "Sanctioning Authority" : (isIncharge ? "Branch Incharge" : "Police Personnel");
-    const roleClass = isSP ? "role-sp" : (isIncharge ? "role-incharge" : "role-staff");
-    const avatar = isSP ? "SP" : (isIncharge ? "INCH" : "CT");
-    const cl = u.leaveBalances ? (u.leaveBalances.CL ?? 0) : 0;
-    const el = u.leaveBalances ? (u.leaveBalances.EL ?? 0) : 0;
-
-    return `
-      <div class="officer-login-card ${roleClass}" onclick="quickLoginUser('${u.id}')">
-        <div class="officer-card-header">
-          <div class="officer-avatar-box">[${avatar}]</div>
-          <div class="officer-header-meta">
-            <span class="officer-role-tag ${roleClass}">${roleBadge}</span>
-            <span class="officer-belt-tag">${u.beltNo}</span>
-          </div>
-        </div>
-        <div class="officer-card-body">
-          <h4 class="officer-card-name">${u.name}</h4>
-          <div class="officer-card-rank">${u.rank}</div>
-          <div class="officer-card-branch">${bName}</div>
-        </div>
-        <div class="officer-card-balance">
-          <span class="balance-tag cl-tag">CL: <strong>${cl} Days</strong></span>
-          <span class="balance-tag el-tag">EL: <strong>${el} Days</strong></span>
-        </div>
-        <button class="btn btn-block btn-sm officer-login-btn">
-          <span>Login As ${u.name.split(' ')[0]}</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
-      </div>
-    `;
-  }).join('');
 }
