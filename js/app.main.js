@@ -71,6 +71,7 @@ function initApp() {
 
   closeSidebarNav();
   closeMobileDrawer();
+  clearAllToasts();
 
   renderApp();
 
@@ -271,7 +272,6 @@ async function syncWithOfficeDatabase() {
           populateUserSwitcher();
           renderNavigationTabs();
           renderApp();
-          showToast(`Synced with Office Server (${AppState.leaves.length} Applications)`, "success");
           return;
         }
       }
@@ -284,7 +284,6 @@ async function syncWithOfficeDatabase() {
   await pollLiveSyncHistory();
   await broadcastLiveAction({ action: "REQUEST_SYNC" });
   updateSyncIndicator(true, "Live Cloud Sync Online");
-  showToast(`Cloud Sync Active: ${AppState.leaves.length} applications synced across all devices`, "success");
   closeSidebarNav();
   renderApp();
 }
@@ -363,7 +362,7 @@ async function pollLiveSyncHistory() {
             if (!msgStr.startsWith("{")) return;
 
             const payload = JSON.parse(msgStr);
-            handleLiveSyncAction(payload);
+            handleLiveSyncAction(payload, true);
           }
         } catch (e) {}
       });
@@ -403,7 +402,7 @@ async function broadcastLiveAction(actionPayload) {
 }
 
 // Process actions received from other computers / devices in real time
-function handleLiveSyncAction(payload) {
+function handleLiveSyncAction(payload, isInitialSync = false) {
   if (!payload || !payload.action) return;
 
   // Do not process our own actions again
@@ -419,7 +418,9 @@ function handleLiveSyncAction(payload) {
     if (existingIndex === -1) {
       AppState.leaves.unshift(payload.leave);
       hasChanged = true;
-      showToast(`New Leave Application: ${payload.leave.applicantName} (${payload.leave.totalDays} Days)`, "info");
+      if (!isInitialSync) {
+        showToast(`New Leave Application: ${payload.leave.applicantName} (${payload.leave.totalDays} Days)`, "info");
+      }
     }
   }
 
@@ -443,7 +444,9 @@ function handleLiveSyncAction(payload) {
       hasChanged = true;
       const statusLabel = payload.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
                           (payload.status === "APPROVED" ? "Sanctioned by SP Cyber" : "Rejected");
-      showToast(`Application ${leave.id} Status Updated: ${statusLabel}`, "info");
+      if (!isInitialSync) {
+        showToast(`Application ${leave.id} Status Updated: ${statusLabel}`, "info");
+      }
     }
   }
 
@@ -453,7 +456,9 @@ function handleLiveSyncAction(payload) {
     if (!AppState.notices.some(n => n.id === payload.notice.id)) {
       AppState.notices.unshift(payload.notice);
       hasChanged = true;
-      showToast(`New Office Order / Notice: ${payload.notice.title}`, "info");
+      if (!isInitialSync) {
+        showToast(`New Office Order / Notice: ${payload.notice.title}`, "info");
+      }
     }
   }
 
@@ -511,6 +516,7 @@ function handleLiveSyncAction(payload) {
 function quickSwitchUser(userId) {
   closeSidebarNav();
   closeMobileDrawer();
+  clearAllToasts();
   const target = AppState.users.find(u => u.id === userId);
   if (target) {
     AppState.currentUser = target;
@@ -528,7 +534,7 @@ function quickSwitchUser(userId) {
     renderApp();
     closeSidebarNav();
     closeMobileDrawer();
-    showToast(`Switched account to ${target.name} (${target.rank})`, "info");
+    clearAllToasts();
   }
 }
 
@@ -819,6 +825,7 @@ function populateUserSwitcher() {
 function handleUserSwitch(userId) {
   closeSidebarNav();
   closeMobileDrawer();
+  clearAllToasts();
   const user = AppState.users.find(u => u.id === userId);
   if (!user) return;
   AppState.currentUser = user;
@@ -833,8 +840,7 @@ function handleUserSwitch(userId) {
   renderApp();
   closeSidebarNav();
   closeMobileDrawer();
-
-  showToast(`Logged in as: ${user.name} (${getRoleDisplay(user.role)})`, "info");
+  clearAllToasts();
 }
 
 function getRoleDisplay(role) {
@@ -5143,6 +5149,14 @@ function setupEventListeners() {
   });
 }
 
+// Clear All Active Toasts / Notifications
+function clearAllToasts() {
+  const container = document.getElementById("toastContainer");
+  if (container) {
+    container.innerHTML = "";
+  }
+}
+
 // Show Toast Alert
 function showToast(message, type = "info") {
   const container = document.getElementById("toastContainer");
@@ -5225,6 +5239,7 @@ function submitOfficerLoginForm() {
 function quickLoginUser(userId) {
   closeSidebarNav();
   closeMobileDrawer();
+  clearAllToasts();
   const target = (AppState.users || []).find(u => u.id === userId);
   if (!target) {
     showToast("Officer record not found.", "error");
@@ -5242,12 +5257,13 @@ function quickLoginUser(userId) {
   renderApp();
   closeSidebarNav();
   closeMobileDrawer();
-  showToast("Welcome, " + target.name + " (" + target.rank + ")", "success");
+  clearAllToasts();
 }
 
 function handleLogout() {
   closeSidebarNav();
   closeMobileDrawer();
+  clearAllToasts();
   AppState.currentUser = null;
   AppState.activeTab = "dashboard";
   sessionStorage.removeItem("cyber_police_current_user_id");
@@ -5255,7 +5271,7 @@ function handleLogout() {
   renderApp();
   closeSidebarNav();
   closeMobileDrawer();
-  showToast("Logged out successfully.", "info");
+  clearAllToasts();
 }
 
 function renderLoginScreen(container) {
