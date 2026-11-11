@@ -69,6 +69,9 @@ function initApp() {
   // Guarantee Dashboard as default active tab on initial load for all officers
   AppState.activeTab = "dashboard";
 
+  closeSidebarNav();
+  closeMobileDrawer();
+
   renderApp();
 
   // Connect to shared LAN office database and Real-time Cloud Stream
@@ -506,6 +509,8 @@ function handleLiveSyncAction(payload) {
 
 // 1-Click Role / User Switcher Helper
 function quickSwitchUser(userId) {
+  closeSidebarNav();
+  closeMobileDrawer();
   const target = AppState.users.find(u => u.id === userId);
   if (target) {
     AppState.currentUser = target;
@@ -521,6 +526,8 @@ function quickSwitchUser(userId) {
     updateUserBadge();
     renderNavigationTabs();
     renderApp();
+    closeSidebarNav();
+    closeMobileDrawer();
     showToast(`Switched account to ${target.name} (${target.rank})`, "info");
   }
 }
@@ -810,6 +817,8 @@ function populateUserSwitcher() {
 
 // Switch Active User / Role
 function handleUserSwitch(userId) {
+  closeSidebarNav();
+  closeMobileDrawer();
   const user = AppState.users.find(u => u.id === userId);
   if (!user) return;
   AppState.currentUser = user;
@@ -822,6 +831,8 @@ function handleUserSwitch(userId) {
   updateHeaderUserInfo();
   renderNavigationTabs();
   renderApp();
+  closeSidebarNav();
+  closeMobileDrawer();
 
   showToast(`Logged in as: ${user.name} (${getRoleDisplay(user.role)})`, "info");
 }
@@ -878,6 +889,8 @@ function updateHeaderUserInfo() {
 
 // Navigation Tabs Handling
 function switchTab(tabId) {
+  closeSidebarNav();
+  closeMobileDrawer();
   const user = AppState.currentUser;
   const isSPRole = user && (user.role === "sp_cyber");
   const isBranchIncharge = user && (user.role === "branch_incharge" || user.role === "admin");
@@ -1148,6 +1161,8 @@ function renderApp() {
 
   if (!AppState.currentUser) {
     document.body.classList.add("portal-logged-out");
+    closeSidebarNav();
+    closeMobileDrawer();
     if (loginScreen) {
       loginScreen.style.display = "flex";
       renderLoginScreen(loginScreen);
@@ -1158,6 +1173,8 @@ function renderApp() {
   }
 
   document.body.classList.remove("portal-logged-out");
+  closeSidebarNav();
+  closeMobileDrawer();
   if (loginScreen) loginScreen.style.display = "none";
   if (portalHeader) portalHeader.style.display = "";
   if (portalLayout) portalLayout.style.display = "";
@@ -5206,6 +5223,8 @@ function submitOfficerLoginForm() {
 }
 
 function quickLoginUser(userId) {
+  closeSidebarNav();
+  closeMobileDrawer();
   const target = (AppState.users || []).find(u => u.id === userId);
   if (!target) {
     showToast("Officer record not found.", "error");
@@ -5221,15 +5240,21 @@ function quickLoginUser(userId) {
   AppState.activeTab = "dashboard";
 
   renderApp();
+  closeSidebarNav();
+  closeMobileDrawer();
   showToast("Welcome, " + target.name + " (" + target.rank + ")", "success");
 }
 
 function handleLogout() {
+  closeSidebarNav();
+  closeMobileDrawer();
   AppState.currentUser = null;
   AppState.activeTab = "dashboard";
   sessionStorage.removeItem("cyber_police_current_user_id");
   localStorage.removeItem("cyber_police_current_user_id");
   renderApp();
+  closeSidebarNav();
+  closeMobileDrawer();
   showToast("Logged out successfully.", "info");
 }
 

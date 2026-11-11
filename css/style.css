@@ -1962,7 +1962,7 @@ table.data-table tr:hover {
 /* ==========================================================================
    RESPONSIVE MOBILE VIEW (@media max-width: 768px & Force Mobile Class)
    ========================================================================== */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   body:not(.force-desktop-view) {
     padding-bottom: 0 !important;
   }
@@ -1981,11 +1981,15 @@ table.data-table tr:hover {
     background: #ffffff !important;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
     transform: translateX(-100%) !important;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.28s !important;
     padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
   body:not(.force-desktop-view) .sidebar-nav.nav-bar.mobile-open {
     transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
   }
   body:not(.force-desktop-view) .sidebar-close-btn {
     display: flex !important;
@@ -1994,7 +1998,14 @@ table.data-table tr:hover {
     display: block !important;
   }
   body:not(.force-desktop-view) .sidebar-backdrop {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  body:not(.force-desktop-view) .sidebar-backdrop.active {
     display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
   body:not(.force-desktop-view) .mobile-floating-left-nav-btn {
     display: flex !important;
@@ -2173,11 +2184,18 @@ table.data-table tr:hover {
     bottom: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    display: flex !important;
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
     align-items: flex-end !important;
     justify-content: center !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+  body:not(.force-desktop-view) .mobile-drawer-overlay.active {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
   body:not(.force-desktop-view) .mobile-drawer-content {
     width: 100% !important;
@@ -2580,7 +2598,7 @@ table.data-table tr:hover {
 }
 
 /* REAL PHONE EXPANSION OVERRIDE FOR FORCE-MOBILE-VIEW CLASS */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   body.force-mobile-view {
     max-width: 100% !important;
     width: 100% !important;
@@ -2956,10 +2974,14 @@ body.force-mobile-view .sidebar-nav.nav-bar {
   background: #ffffff !important;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
   transform: translateX(-100%) !important;
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.28s !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 body.force-mobile-view .sidebar-nav.nav-bar.mobile-open {
   transform: translateX(0) !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 body.force-mobile-view .sidebar-close-btn {
   display: flex !important;
@@ -2968,7 +2990,14 @@ body.force-mobile-view .sidebar-role-select-box {
   display: block !important;
 }
 body.force-mobile-view .sidebar-backdrop {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.force-mobile-view .sidebar-backdrop.active {
   display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 body.force-mobile-view .mobile-floating-left-nav-btn {
   display: flex !important;
@@ -2977,9 +3006,16 @@ body.force-mobile-view .mobile-bottom-nav {
   display: none !important;
 }
 body.force-mobile-view .mobile-drawer-overlay {
-  display: flex !important;
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
   justify-content: center !important;
   align-items: flex-end !important;
+}
+body.force-mobile-view .mobile-drawer-overlay.active {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 body.force-mobile-view .mobile-drawer-content {
   width: 100% !important;
