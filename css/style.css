@@ -642,14 +642,26 @@ body.sidebar-open-lock {
 
 .stat-card {
   background: var(--bg-card);
-  border-radius: 10px;
-  padding: 18px;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
+  border-radius: 14px;
+  padding: 18px 16px;
+  border: 1.5px solid var(--border-light);
+  box-shadow: 0 2px 10px rgba(15, 39, 76, 0.05);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15, 39, 76, 0.12);
+}
+
+.stat-card:active {
+  transform: scale(0.98);
 }
 
 .stat-card::before {
@@ -657,7 +669,7 @@ body.sidebar-open-lock {
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 5px;
   height: 100%;
   background: var(--police-blue);
 }
@@ -667,6 +679,17 @@ body.sidebar-open-lock {
 .stat-card.red::before { background: #dc2626; }
 .stat-card.purple::before { background: #9333ea; }
 .stat-card.blue::before { background: #0284c7; }
+
+.stat-card.gold:hover { border-color: var(--police-gold); }
+.stat-card.green:hover { border-color: #16a34a; }
+.stat-card.red:hover { border-color: #dc2626; }
+.stat-card.purple:hover { border-color: #9333ea; }
+.stat-card.blue:hover { border-color: #0284c7; }
+
+.stat-card.gold .stat-icon { background: #fef3c7; color: #b45309; }
+.stat-card.blue .stat-icon { background: #e0f2fe; color: #0284c7; }
+.stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; }
+.stat-card.purple .stat-icon { background: #f3e8ff; color: #9333ea; }
 
 .stat-header {
   display: flex;
@@ -704,16 +727,22 @@ body.sidebar-open-lock {
 .stat-subtext {
   font-size: 0.78rem;
   color: var(--text-secondary);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
 /* LEAVE BALANCES PILLS */
 .leave-quota-card {
   background: var(--bg-card);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--border-light);
+  box-shadow: 0 2px 10px rgba(15, 39, 76, 0.05);
   margin-bottom: 24px;
 }
 
@@ -729,21 +758,28 @@ body.sidebar-open-lock {
 
 .leave-pills-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 12px;
 }
 
 .leave-pill-item {
   background: #f8fafc;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  padding: 12px;
+  border: 1.5px solid var(--border-light);
+  border-radius: 12px;
+  padding: 14px 10px;
   text-align: center;
-  transition: transform 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 .leave-pill-item:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--police-gold);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 39, 76, 0.1);
+}
+.leave-pill-item:active {
+  transform: scale(0.97);
 }
 
 .leave-pill-item .type-code {
@@ -2107,17 +2143,26 @@ table.data-table tr:hover {
 
   body:not(.force-desktop-view) .stats-grid {
     grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    margin-bottom: 14px !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
   }
   body:not(.force-desktop-view) .stat-card {
-    padding: 12px 10px !important;
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
   }
-  body:not(.force-desktop-view) .stat-card .stat-val {
-    font-size: 1.4rem !important;
+  body:not(.force-desktop-view) .stat-card .stat-number {
+    font-size: 1.55rem !important;
   }
-  body:not(.force-desktop-view) .stat-card .stat-label {
+  body:not(.force-desktop-view) .stat-card .stat-title {
     font-size: 0.72rem !important;
+  }
+  body:not(.force-desktop-view) .stat-card .stat-subtext {
+    font-size: 0.7rem !important;
+    line-height: 1.25 !important;
+  }
+  body:not(.force-desktop-view) .leave-pills-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 
   body:not(.force-desktop-view) .branches-grid {
@@ -2562,16 +2607,20 @@ table.data-table tr:hover {
   }
   body:not(.force-desktop-view) .stats-grid {
     grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
+    gap: 8px !important;
   }
   body:not(.force-desktop-view) .stat-card {
-    padding: 8px 6px !important;
+    padding: 10px 8px !important;
   }
-  body:not(.force-desktop-view) .stat-card .stat-val {
-    font-size: 1.15rem !important;
+  body:not(.force-desktop-view) .stat-card .stat-number {
+    font-size: 1.25rem !important;
   }
-  body:not(.force-desktop-view) .stat-card .stat-label {
-    font-size: 0.65rem !important;
+  body:not(.force-desktop-view) .stat-card .stat-title {
+    font-size: 0.68rem !important;
+  }
+  body:not(.force-desktop-view) .stat-card .stat-subtext {
+    font-size: 0.64rem !important;
+    line-height: 1.2 !important;
   }
   body:not(.force-desktop-view) .mobile-card-actions > div {
     flex-direction: column !important;
@@ -4557,7 +4606,7 @@ body.force-mobile-view .modal-grid-2col {
 }
 
 /* Specific Mobile Card Adaptations */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   body:not(.force-desktop-view) .leave-card-row {
     background: #ffffff !important;
     border: 1.5px solid #e2e8f0 !important;
@@ -4565,6 +4614,13 @@ body.force-mobile-view .modal-grid-2col {
     padding: 14px !important;
     margin-bottom: 14px !important;
     box-shadow: 0 2px 10px rgba(15, 39, 76, 0.05) !important;
+    cursor: pointer !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+  }
+  body:not(.force-desktop-view) .leave-card-row:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 4px 16px rgba(15, 39, 76, 0.1) !important;
+    transform: translateY(-2px) !important;
   }
   body:not(.force-desktop-view) .vdesk-reason-text,
   body:not(.force-desktop-view) .vdesk-incharge-note {
@@ -4579,6 +4635,16 @@ body.force-mobile-view .leave-card-row {
   border: 1.5px solid #e2e8f0 !important;
   border-radius: 14px !important;
   padding: 14px !important;
+  margin-bottom: 14px !important;
+  box-shadow: 0 2px 10px rgba(15, 39, 76, 0.05) !important;
+  cursor: pointer !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+}
+body.force-mobile-view .leave-card-row:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 16px rgba(15, 39, 76, 0.1) !important;
+  transform: translateY(-2px) !important;
+}
   margin-bottom: 14px !important;
   box-shadow: 0 2px 10px rgba(15, 39, 76, 0.05) !important;
 }

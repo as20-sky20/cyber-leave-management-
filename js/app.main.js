@@ -1292,25 +1292,25 @@ function renderDashboard(container) {
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
           </div>
           <div class="stat-number" style="color: ${spPendingLeaves.length > 0 ? '#dc2626' : '#15803d'};">${spPendingLeaves.length}</div>
-          <div class="stat-subtext">${spPendingLeaves.length > 0 ? 'Action Required (Click to review)' : 'All Applications Cleared'}</div>
+          <div class="stat-subtext">${spPendingLeaves.length > 0 ? 'Action Required &bull; Click to open &rarr;' : 'All Cleared &bull; Click to open &rarr;'}</div>
         </div>
 
-        <div class="stat-card blue">
+        <div class="stat-card blue" onclick="openSPDirectInitialDesk()" style="cursor: pointer;" title="Click to view Initial Applications Awaiting Branch Review">
           <div class="stat-header">
             <span class="stat-title">Initial Pending</span>
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
           </div>
           <div class="stat-number">${inchargePendingCount}</div>
-          <div class="stat-subtext">Awaiting Branch Review</div>
+          <div class="stat-subtext">Awaiting Branch &bull; Click to view &rarr;</div>
         </div>
 
-        <div class="stat-card green">
+        <div class="stat-card green" onclick="openMasterRegisterWithFilter('APPROVED')" style="cursor: pointer;" title="Click to view all Sanctioned Orders in Master Register">
           <div class="stat-header">
             <span class="stat-title">Sanctioned Orders</span>
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
           </div>
           <div class="stat-number">${unitApprovedCount}</div>
-          <div class="stat-subtext">Official Orders Issued</div>
+          <div class="stat-subtext">Official Orders Issued &bull; Click to view &rarr;</div>
         </div>
 
         <div class="stat-card purple" onclick="switchTab('daily_sitrep')" style="cursor: pointer;" title="Click to view SITREP Roll Call">
@@ -1319,7 +1319,7 @@ function renderDashboard(container) {
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
           </div>
           <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-          <div class="stat-subtext">${currentlyOnLeave} on Leave | ${onDutyCount} On-Duty</div>
+          <div class="stat-subtext">${currentlyOnLeave} on Leave &bull; Click for SITREP &rarr;</div>
         </div>
       </div>
 
@@ -1327,38 +1327,38 @@ function renderDashboard(container) {
       <div class="leave-quota-card">
         <div class="leave-quota-title">
           <span>Haryana Cyber Police - 13 Wings Strength Overview</span>
-          <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Panchkula Headquarters</span>
+          <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">(Tap any card to open)</span>
         </div>
         <div class="leave-pills-row">
-          <div class="leave-pill-item">
+          <div class="leave-pill-item" onclick="switchTab('branches')" title="Click to view all 13 Cyber Wings">
             <div class="type-code">13</div>
             <div class="type-name">Total Branches</div>
             <div class="days-count">100%</div>
-            <div class="days-label">Active Wings</div>
+            <div class="days-label">Active Wings &rarr;</div>
           </div>
-          <div class="leave-pill-item">
+          <div class="leave-pill-item" onclick="switchTab('directory')" title="Click to view Personnel Directory">
             <div class="type-code">FORCE</div>
             <div class="type-name">Total Strength</div>
             <div class="days-count">${totalForce}</div>
-            <div class="days-label">Enrolled Personnel</div>
+            <div class="days-label">Staff Directory &rarr;</div>
           </div>
-          <div class="leave-pill-item">
+          <div class="leave-pill-item" onclick="switchTab('daily_sitrep')" title="Click to view Daily SITREP & Roll Call">
             <div class="type-code">DUTY</div>
             <div class="type-name">On Duty</div>
             <div class="days-count" style="color: #15803d;">${onDutyCount}</div>
-            <div class="days-label">Present on Duty</div>
+            <div class="days-label">Daily SITREP &rarr;</div>
           </div>
-          <div class="leave-pill-item">
+          <div class="leave-pill-item" onclick="openMasterRegisterWithFilter('APPROVED')" title="Click to view Sanctioned Leaves in Register">
             <div class="type-code">LEAVE</div>
             <div class="type-name">On Leave Today</div>
             <div class="days-count" style="color: #b45309;">${currentlyOnLeave}</div>
-            <div class="days-label">Sanctioned Leaves</div>
+            <div class="days-label">Leave Register &rarr;</div>
           </div>
-          <div class="leave-pill-item">
+          <div class="leave-pill-item" onclick="switchTab('sp_desk')" title="Click to open SP Sanction Desk">
             <div class="type-code">SP-DESK</div>
             <div class="type-name">Pending Sanction</div>
             <div class="days-count" style="color: #dc2626;">${spPendingLeaves.length}</div>
-            <div class="days-label">Action Required</div>
+            <div class="days-label">Open Desk &rarr;</div>
           </div>
         </div>
       </div>
@@ -2796,45 +2796,45 @@ function renderSPDesk(container) {
 
     <!-- SP STATS BANNER -->
     <div class="stats-grid">
-      <div class="stat-card gold">
+      <div class="stat-card gold" onclick="scrollToSPSection('spRecommendedSection')" style="cursor: pointer;" title="Click to view Recommended Applications below">
         <div class="stat-header">
           <span class="stat-title">Pending Sanction</span>
           <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         </div>
-        <div class="stat-number">${recommendedLeaves.length}</div>
-        <div class="stat-subtext">Recommended by Incharges</div>
+        <div class="stat-number" style="color: ${recommendedLeaves.length > 0 ? '#dc2626' : '#15803d'};">${recommendedLeaves.length}</div>
+        <div class="stat-subtext">${recommendedLeaves.length > 0 ? 'Recommended by Incharges &bull; View &rarr;' : 'All Clear &bull; View &rarr;'}</div>
       </div>
 
-      <div class="stat-card blue">
+      <div class="stat-card blue" onclick="scrollToSPSection('spInitialPendingSection')" style="cursor: pointer;" title="Click to view Direct & Initial Applications below">
         <div class="stat-header">
           <span class="stat-title">Awaiting Branch</span>
           <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
         </div>
         <div class="stat-number">${initialPendingLeaves.length}</div>
-        <div class="stat-subtext">Direct Sanction Available</div>
+        <div class="stat-subtext">Direct Sanction Available &bull; View &rarr;</div>
       </div>
 
-      <div class="stat-card green">
+      <div class="stat-card green" onclick="openMasterRegisterWithFilter('APPROVED')" style="cursor: pointer;" title="Click to view all Sanctioned Orders in Master Register">
         <div class="stat-header">
           <span class="stat-title">Sanctioned Orders</span>
           <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         </div>
         <div class="stat-number">${approvedLeaves.length}</div>
-        <div class="stat-subtext">Official Orders Issued</div>
+        <div class="stat-subtext">Official Orders Issued &bull; Open Register &rarr;</div>
       </div>
 
-      <div class="stat-card purple">
+      <div class="stat-card purple" onclick="switchTab('branches')" style="cursor: pointer;" title="Click to view all 13 Cyber Wings">
         <div class="stat-header">
           <span class="stat-title">Cyber Wings</span>
           <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
         </div>
         <div class="stat-number">13</div>
-        <div class="stat-subtext">Units Operational</div>
+        <div class="stat-subtext">Units Operational &bull; View Wings &rarr;</div>
       </div>
     </div>
 
     <!-- SECTION 1: RECOMMENDED APPLICATIONS -->
-    <div class="card-table-wrap">
+    <div class="card-table-wrap" id="spRecommendedSection">
       <div class="table-toolbar">
         <div class="table-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
@@ -2865,7 +2865,7 @@ function renderSPDesk(container) {
             </thead>
             <tbody>
               ${recommendedLeaves.map(leave => `
-                <tr class="leave-card-row">
+                <tr class="leave-card-row" onclick="openLeaveDetailsModal('${leave.id}')" style="cursor: pointer;" title="Click card to open Leave Application Details">
                   <td data-label="Application ID">
                     <div class="vdesk-id-wrap">
                       <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
@@ -2884,7 +2884,7 @@ function renderSPDesk(container) {
                   <td data-label="Ground / Reason">
                     <div class="vdesk-reason-text">"${leave.reason}"</div>
                     ${leave.attachment ? `
-                      <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
+                      <span class="vdesk-chip chip-attachment" onclick="event.stopPropagation(); viewAttachment('${leave.id}')">
                         📎 Doc Attached: ${leave.attachment.name || 'View'}
                       </span>
                     ` : ''}
@@ -2902,11 +2902,11 @@ function renderSPDesk(container) {
                   <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
                   <td data-label="SP Action" class="mobile-card-actions">
                     <div class="vdesk-btn-group">
-                      <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
+                      <button class="btn btn-gold btn-sm mobile-action-btn" onclick="event.stopPropagation(); openSPActionModal('${leave.id}')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         Sanction Order
                       </button>
-                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="event.stopPropagation(); openLeaveDetailsModal('${leave.id}')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         Details
                       </button>
@@ -2921,7 +2921,7 @@ function renderSPDesk(container) {
     </div>
 
     <!-- SECTION 2: DIRECT / INITIAL APPLICATIONS (AWAITING BRANCH REVIEW) -->
-    <div class="card-table-wrap" style="margin-top: 20px;">
+    <div class="card-table-wrap" id="spInitialPendingSection" style="margin-top: 20px;">
       <div class="table-toolbar" style="background: #fffbeb; border-bottom: 1.5px solid #fde68a;">
         <div class="table-title" style="color: #92400e;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -2951,7 +2951,7 @@ function renderSPDesk(container) {
             </thead>
             <tbody>
               ${initialPendingLeaves.map(leave => `
-                <tr class="leave-card-row">
+                <tr class="leave-card-row" onclick="openLeaveDetailsModal('${leave.id}')" style="cursor: pointer;" title="Click card to open Leave Application Details">
                   <td data-label="Application ID">
                     <div class="vdesk-id-wrap">
                       <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
@@ -2970,7 +2970,7 @@ function renderSPDesk(container) {
                   <td data-label="Ground / Reason">
                     <div class="vdesk-reason-text">"${leave.reason}"</div>
                     ${leave.attachment ? `
-                      <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
+                      <span class="vdesk-chip chip-attachment" onclick="event.stopPropagation(); viewAttachment('${leave.id}')">
                         📎 Doc Attached: ${leave.attachment.name || 'View'}
                       </span>
                     ` : ''}
@@ -2983,11 +2983,11 @@ function renderSPDesk(container) {
                   <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
                   <td data-label="SP Direct Action" class="mobile-card-actions">
                     <div class="vdesk-btn-group">
-                      <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
+                      <button class="btn btn-gold btn-sm mobile-action-btn" onclick="event.stopPropagation(); openSPActionModal('${leave.id}')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         Direct Sanction
                       </button>
-                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="event.stopPropagation(); openLeaveDetailsModal('${leave.id}')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         Details
                       </button>
@@ -3003,6 +3003,34 @@ function renderSPDesk(container) {
   `;
 
   container.innerHTML = html;
+}
+
+// SP Navigation & Card Quick Action Helpers
+function scrollToSPSection(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function openSPDirectInitialDesk() {
+  switchTab('sp_desk');
+  setTimeout(() => {
+    scrollToSPSection('spInitialPendingSection');
+  }, 120);
+}
+
+function openMasterRegisterWithFilter(status) {
+  switchTab('master_register');
+  setTimeout(() => {
+    const sel = document.getElementById("registerStatusFilter");
+    if (sel) {
+      sel.value = status || "";
+      if (typeof filterRegisterTable === "function") {
+        filterRegisterTable();
+      }
+    }
+  }, 120);
 }
 
 // ==========================================
