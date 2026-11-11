@@ -4029,7 +4029,250 @@ function printSitrepReport() {
     showToast("Permission Denied", "error");
     return;
   }
-  window.print();
+  document.body.classList.add("printing-sitrep-only");
+  showToast("Opening Print / Save as PDF...", "info");
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove("printing-sitrep-only");
+    }, 1200);
+  }, 100);
+}
+
+function openSitrepInNewTab(targetDate) {
+  const dateStr = targetDate || currentSitrepDate;
+  const user = AppState.currentUser;
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canViewSitrep) {
+    showToast("Permission Denied", "error");
+    return;
+  }
+
+  const totalForce = AppState.users.length;
+  const onLeaveLeaves = AppState.leaves.filter(l => {
+    if (l.status !== "APPROVED") return false;
+    return l.fromDate <= dateStr && l.toDate >= dateStr;
+  });
+  const onLeaveCount = onLeaveLeaves.length;
+  const onDutyCount = Math.max(0, totalForce - onLeaveCount);
+  const helplineUsers = AppState.users.filter(u => u.branchId === "cyber_helpline_1930");
+  const helplineOnLeave = onLeaveLeaves.filter(l => l.branchId === "cyber_helpline_1930").length;
+  const helplineOnDuty = Math.max(0, helplineUsers.length - helplineOnLeave);
+  const stationLeaveCount = onLeaveLeaves.filter(l => l.stationLeave).length;
+  const displayDate = formatDate(dateStr);
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    showToast("Popup blocked! Please allow popups to view full A4 PDF sheet.", "error");
+    return;
+  }
+
+  const docHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Force & Leave Roznamcha Sitrep - ${dateStr}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Segoe UI", Arial, sans-serif; background: #525659; color: #111; padding: 20px 10px; }
+    .page-toolbar { max-width: 900px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .page-toolbar h1 { font-size: 1rem; font-weight: 600; }
+    .page-toolbar .btn-group { display: flex; gap: 8px; }
+    .page-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+    .btn-print { background: #d97706; color: #fff; }
+    .btn-print:hover { background: #b45309; }
+    .btn-close { background: #475569; color: #fff; }
+    .btn-close:hover { background: #334155; }
+    .a4-sheet { max-width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; padding: 15mm 15mm; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; }
+    .watermark { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 4.5rem; font-weight: 900; color: rgba(15, 39, 76, 0.04); pointer-events: none; white-space: nowrap; letter-spacing: 5px; }
+    .police-header { text-align: center; border-bottom: 2px solid #0f274c; padding-bottom: 12px; margin-bottom: 14px; }
+    .police-header .dept-name { font-size: 0.82rem; font-weight: 800; color: #64748b; letter-spacing: 1.5px; }
+    .police-header .report-title { font-size: 1.15rem; font-weight: 900; color: #0f274c; margin: 6px 0 2px; text-transform: uppercase; }
+    .police-header .hq-name { font-size: 0.84rem; color: #334155; font-weight: 600; }
+    .meta-bar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 0.82rem; font-weight: 600; margin-top: 10px; border-radius: 4px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 14px 0; }
+    .metric-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 6px; text-align: center; background: #f8fafc; }
+    .metric-box .label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #475569; }
+    .metric-box .val { font-size: 1.3rem; font-weight: 900; color: #0f274c; margin: 2px 0; }
+    .metric-box.green .val { color: #15803d; }
+    .metric-box.amber .val { color: #b45309; }
+    .metric-box.blue .val { color: #1d4ed8; }
+    .metric-box.purple .val { color: #6b21a8; }
+    .section-title { font-size: 0.88rem; font-weight: 800; color: #0f274c; background: #e2e8f0; padding: 6px 10px; margin: 16px 0 8px; border-left: 4px solid #0f274c; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-bottom: 12px; }
+    table th, table td { border: 1px solid #94a3b8; padding: 5px 7px; text-align: left; }
+    table th { background: #f1f5f9; color: #0f274c; font-weight: 700; }
+    table tr:nth-child(even) td { background: #f8fafc; }
+    .signatures-block { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 14px; border-top: 1px solid #94a3b8; }
+    .sig-box { width: 31%; text-align: center; font-size: 0.78rem; }
+    .sig-line { border-top: 1px dashed #475569; margin-top: 40px; padding-top: 4px; font-weight: 700; }
+    .footer-note { margin-top: 16px; font-size: 0.72rem; color: #64748b; text-align: center; border-top: 1px dotted #cbd5e1; padding-top: 6px; }
+    @media print {
+      body { background: #fff !important; padding: 0 !important; }
+      .page-toolbar { display: none !important; }
+      .a4-sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; }
+      @page { size: A4 portrait; margin: 10mm; }
+    }
+    @media (max-width: 768px) {
+      .a4-sheet { padding: 12px !important; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .metrics-grid .metric-box:last-child { grid-column: span 2; }
+      .meta-bar { flex-direction: column; align-items: flex-start; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-toolbar">
+    <h1>📄 Haryana Police - Daily SITREP A4 Sheet</h1>
+    <div class="btn-group">
+      <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <button class="btn-close" onclick="window.close()">✕ Close</button>
+    </div>
+  </div>
+
+  <div class="a4-sheet">
+    <div class="watermark">HARYANA POLICE</div>
+    <div class="police-header">
+      <div class="dept-name">HARYANA POLICE | STATE CYBER CRIME HEADQUARTERS</div>
+      <div class="report-title">DAILY FORCE STRENGTH & LEAVE ROZNAMCHA (DAILY SITREP)</div>
+      <div class="hq-name">Sector 20, Panchkula | Competent Authority: Mayank Gupta, IPS, SP Cyber Crime</div>
+      <div class="meta-bar">
+        <div>Date: <strong>${displayDate}</strong></div>
+        <div>GD Entry Dispatch No: <strong>CYB/PKL/ROZ/${dateStr.replace(/-/g, '')}/01</strong></div>
+        <div>Session: <strong>09:00 Hours Morning Roll Call</strong></div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-box">
+        <div class="label">Total Force</div>
+        <div class="val">${totalForce}</div>
+      </div>
+      <div class="metric-box green">
+        <div class="label">On Duty</div>
+        <div class="val">${onDutyCount}</div>
+      </div>
+      <div class="metric-box amber">
+        <div class="label">On Leave</div>
+        <div class="val">${onLeaveCount}</div>
+      </div>
+      <div class="metric-box blue">
+        <div class="label">1930 Helpline</div>
+        <div class="val">${helplineOnDuty}/${helplineUsers.length}</div>
+      </div>
+      <div class="metric-box purple">
+        <div class="label">Station Leave</div>
+        <div class="val">${stationLeaveCount}</div>
+      </div>
+    </div>
+
+    <div class="section-title">SECTION 1: PERSONNEL CURRENTLY ON SANCTIONED LEAVE (${onLeaveCount})</div>
+    ${onLeaveLeaves.length === 0 ? `
+      <div style="padding: 12px; text-align: center; background: #f0fdf4; border: 1px dashed #86efac; color: #166534; font-size: 0.85rem; font-weight: 700;">
+        ✓ Entire force strength of ${totalForce} personnel across all 13 branches is present on duty. No personnel on leave.
+      </div>
+    ` : `
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30px; text-align: center;">S.No.</th>
+            <th>Name, Rank & Belt No.</th>
+            <th>Branch</th>
+            <th>Leave Type</th>
+            <th>Period (From - To)</th>
+            <th style="text-align: center;">Days</th>
+            <th>Station Leave / Address</th>
+            <th>Contact</th>
+            <th>Resumption</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${onLeaveLeaves.map((l, idx) => {
+            let returnDateStr = "Next Working Day";
+            try {
+              const toD = new Date(l.toDate);
+              toD.setDate(toD.getDate() + 1);
+              returnDateStr = formatDate(toD.toISOString().split("T")[0]);
+            } catch(e) {}
+            return `
+              <tr>
+                <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                <td><strong>${l.applicantName}</strong><br><small>${l.rank} (${l.beltNo})</small></td>
+                <td>${l.branchName}</td>
+                <td><strong>${l.leaveType}</strong><br><small>${l.leaveTypeName || ''}</small></td>
+                <td>${formatDate(l.fromDate)} to ${formatDate(l.toDate)}</td>
+                <td style="text-align: center; font-weight: 700;">${l.totalDays}</td>
+                <td>${l.stationLeave ? `Out of HQ (${l.stationDestination || l.stationLeaveAddress || 'Declared'})` : 'Station HQ'}</td>
+                <td>${l.emergencyContact || '-'}</td>
+                <td><strong>${returnDateStr}</strong></td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `}
+
+    <div class="section-title">SECTION 2: 13 CYBER BRANCHES DEPLOYMENT & STRENGTH MATRIX</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 30px; text-align: center;">S.No.</th>
+          <th>Cyber Branch</th>
+          <th>Branch Incharge</th>
+          <th style="text-align: center;">Strength</th>
+          <th style="text-align: center;">On Duty</th>
+          <th style="text-align: center;">On Leave</th>
+          <th>Operational Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${AppState.branches.map((b, idx) => {
+          const branchUsers = AppState.users.filter(u => u.branchId === b.id);
+          const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
+          const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
+          const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
+          const isFullStrength = branchOnLeave === 0;
+          return `
+            <tr>
+              <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+              <td><strong>${b.name}</strong> (${b.id.toUpperCase()})</td>
+              <td>${incharge ? incharge.name + ' (' + incharge.rank + ')' : 'Nodal Officer'}</td>
+              <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
+              <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
+              <td style="text-align: center; font-weight: 700; color: ${branchOnLeave > 0 ? '#dc2626' : '#64748b'};">${branchOnLeave}</td>
+              <td>${isFullStrength ? '<span style="color: #15803d; font-weight: 700;">✓ 100% Present</span>' : '<span style="color: #b45309; font-weight: 700;">Active (' + branchOnDuty + ' Present, ' + branchOnLeave + ' Leave)</span>'}</td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+
+    <div class="signatures-block">
+      <div class="sig-box">
+        <div>Prepared & Verified By:</div>
+        <div class="sig-line">Reader to SP Cyber Crime<br><span style="font-weight: normal; font-size: 0.72rem;">State Cyber Crime, Panchkula</span></div>
+      </div>
+      <div class="sig-box">
+        <div>Supervisory Officer:</div>
+        <div class="sig-line">DSP Cyber Crime / Establishment<br><span style="font-weight: normal; font-size: 0.72rem;">State Cyber Crime, Panchkula</span></div>
+      </div>
+      <div class="sig-box">
+        <div>Sanctioning Authority:</div>
+        <div class="sig-line">Mayank Gupta, IPS<br><span style="font-weight: normal; font-size: 0.72rem;">Superintendent of Police, State Cyber Crime</span></div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Electronically generated & verified by Digital Leave Management System, State Cyber Crime Headquarters, Sector 20, Panchkula (Haryana).
+    </div>
+  </div>
+</body>
+</html>`;
+
+  printWindow.document.open();
+  printWindow.document.write(docHtml);
+  printWindow.document.close();
 }
 
 function exportSitrepCSV(targetDate) {
@@ -4131,34 +4374,47 @@ function renderDailySitrep(container) {
   let html = `
     <!-- SITREP TOP TOOLBAR (HIDDEN IN PRINT) -->
     <div class="page-header sitrep-toolbar-row">
-      <div class="page-title-group">
-        <h2>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          Daily Force & Leave Roznamcha (Daily Sitrep)
+      <div class="sitrep-header-main">
+        <div class="sitrep-badge-row">
+          <span class="sitrep-badge gold">STATE CYBER SITREP</span>
+          <span class="sitrep-badge green">13 WINGS MONITORED</span>
+        </div>
+        <h2 class="sitrep-heading">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Daily Force & Leave Roznamcha
         </h2>
-        <p>Daily SITREP Roznamcha & Duty Attendance Report</p>
+        <p class="sitrep-subheading">Haryana State Cyber Crime Headquarters Panchkula | Morning Roll Call & Duty Attendance</p>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-        <!-- Date Selector -->
-        <div style="display: flex; align-items: center; gap: 6px; background: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
-          <label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin: 0;">Date:</label>
-          <input type="date" value="${targetDate}" onchange="changeSitrepDate(this.value)" class="form-control" style="padding: 4px 8px; font-size: 0.84rem; border: none; width: auto; font-weight: 600;">
+      <div class="sitrep-toolbar-controls">
+        <!-- Date Selector Row -->
+        <div class="sitrep-date-control-group">
+          <div class="sitrep-date-input-wrap">
+            <span class="sitrep-date-label">Date:</span>
+            <input type="date" value="${targetDate}" onchange="changeSitrepDate(this.value)" class="sitrep-date-field" aria-label="Select SITREP Date">
+          </div>
+          <div class="sitrep-quick-date-group">
+            <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-outline'}" onclick="setSitrepQuickDate(0)" title="Today's Report">Today</button>
+            <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(1)" title="Tomorrow's Report">Tomorrow</button>
+            <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(-1)" title="Yesterday's Report">Yesterday</button>
+          </div>
         </div>
 
-        <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-outline'}" onclick="setSitrepQuickDate(0)" title="Today's Report">Today</button>
-        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(1)" title="Tomorrow's Report">Tomorrow</button>
-        <button class="btn btn-sm btn-outline" onclick="setSitrepQuickDate(-1)" title="Yesterday's Report">Yesterday</button>
-
-        <button class="btn btn-gold btn-sm" onclick="printSitrepReport()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          Print A4 Report
-        </button>
-
-        <button class="btn btn-outline btn-sm" onclick="exportSitrepCSV('${targetDate}')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          CSV / Excel
-        </button>
+        <!-- Action Buttons Row -->
+        <div class="sitrep-action-buttons-group">
+          <button class="btn btn-gold btn-sm sitrep-action-btn" onclick="printSitrepReport()" title="Print or Save A4 PDF Report">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print / Save A4 PDF
+          </button>
+          <button class="btn btn-primary btn-sm sitrep-action-btn" onclick="openSitrepInNewTab('${targetDate}')" title="Open Fullscreen Clean PDF View">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            Full PDF View
+          </button>
+          <button class="btn btn-outline btn-sm sitrep-action-btn" onclick="exportSitrepCSV('${targetDate}')" title="Export CSV Spreadsheet">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            CSV Export
+          </button>
+        </div>
       </div>
     </div>
 
@@ -4166,14 +4422,14 @@ function renderDailySitrep(container) {
     <div class="sitrep-official-sheet">
       <!-- Top Emblem / Watermark Header -->
       <div class="sitrep-official-header">
-        <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; letter-spacing: 1px;">HARYANA POLICE | STATE CYBER CRIME HEADQUARTERS</div>
+        <div class="sitrep-dept-header">HARYANA POLICE | STATE CYBER CRIME HEADQUARTERS</div>
         <div class="sitrep-title">DAILY STRENGTH & LEAVE ROZNAMCHA REPORT (DAILY SITREP / GD ENTRY)</div>
         <div class="sitrep-subtitle">State Cyber Crime Branch, Sector 20, Panchkula | Competent Authority: Mayank Gupta, IPS, SP Cyber Crime</div>
         
         <div class="sitrep-meta-bar">
-          <div>Report Date: <strong>${displayDate}</strong></div>
-          <div>GD Entry Dispatch No: <strong>CYB/PKL/ROZ/${targetDate.replace(/-/g, '')}/01</strong></div>
-          <div>Session / Time: <strong>09:00 Hours (Morning Roll Call & Departure Status)</strong></div>
+          <div class="sitrep-meta-item"><span>Report Date:</span> <strong>${displayDate}</strong></div>
+          <div class="sitrep-meta-item"><span>GD Dispatch No:</span> <strong>CYB/PKL/ROZ/${targetDate.replace(/-/g, '')}/01</strong></div>
+          <div class="sitrep-meta-item"><span>Session / Time:</span> <strong>09:00 Hours (Morning Roll Call)</strong></div>
         </div>
       </div>
 
@@ -4182,164 +4438,241 @@ function renderDailySitrep(container) {
         <div class="sitrep-metric-card navy">
           <div class="sitrep-metric-title">Total Force Strength</div>
           <div class="sitrep-metric-num">${totalForce}</div>
-          <small style="color: #64748b; font-size: 0.72rem;">Registered Cyber Police Strength</small>
+          <small class="sitrep-metric-sub">Registered Cyber Force</small>
         </div>
 
         <div class="sitrep-metric-card green">
           <div class="sitrep-metric-title">Personnel on Duty</div>
           <div class="sitrep-metric-num" style="color: #15803d;">${onDutyCount}</div>
-          <small style="color: #15803d; font-size: 0.72rem;">Deployed across wings & desks</small>
+          <small class="sitrep-metric-sub" style="color: #15803d;">Deployed across 13 branches</small>
         </div>
 
         <div class="sitrep-metric-card amber">
           <div class="sitrep-metric-title">Sanctioned on Leave</div>
           <div class="sitrep-metric-num" style="color: #b45309;">${onLeaveCount}</div>
-          <small style="color: #b45309; font-size: 0.72rem;">Sanctioned by Competent Authority</small>
+          <small class="sitrep-metric-sub" style="color: #b45309;">By Competent Authority</small>
         </div>
 
         <div class="sitrep-metric-card blue">
-          <div class="sitrep-metric-title">1930 Helpline Operations</div>
+          <div class="sitrep-metric-title">1930 Helpline Duty</div>
           <div class="sitrep-metric-num" style="color: #1d4ed8;">${helplineOnDuty} / ${helplineUsers.length}</div>
-          <small style="color: #1d4ed8; font-size: 0.72rem;">24x7 Call Center Duty Staff</small>
+          <small class="sitrep-metric-sub" style="color: #1d4ed8;">24x7 Call Center</small>
         </div>
 
-        <div class="sitrep-metric-card navy">
+        <div class="sitrep-metric-card purple">
           <div class="sitrep-metric-title">Station Leave (Out of HQ)</div>
           <div class="sitrep-metric-num" style="color: #6b21a8;">${stationLeaveCount}</div>
-          <small style="color: #6b21a8; font-size: 0.72rem;">Permission to leave HQ granted</small>
+          <small class="sitrep-metric-sub" style="color: #6b21a8;">Permission granted</small>
         </div>
       </div>
 
       <!-- SECTION 1: PERSONNEL CURRENTLY ON LEAVE -->
       <div class="sitrep-section-header">
-        <span>SECTION 1: PERSONNEL CURRENTLY ON SANCTIONED LEAVE</span>
-        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">Date: ${displayDate}</span>
+        <span>SECTION 1: PERSONNEL CURRENTLY ON SANCTIONED LEAVE (${onLeaveCount})</span>
+        <span class="sitrep-section-date">Date: ${displayDate}</span>
       </div>
 
       ${onLeaveLeaves.length === 0 ? `
-        <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 6px; padding: 22px; text-align: center; color: #166534; margin-bottom: 20px;">
-          <div style="font-size: 1.1rem; font-weight: 700;">✓ No police personnel on leave on the selected date.</div>
+        <div class="sitrep-empty-leave-notice">
+          <div style="font-size: 1.05rem; font-weight: 700;">✓ No police personnel on leave on the selected date.</div>
           <div style="font-size: 0.85rem; margin-top: 4px; color: #0f274c;">Entire force strength of ${totalForce} personnel across all 13 branches is present on duty.</div>
         </div>
       ` : `
-        <div class="responsive-table">
-          <div class="responsive-table">
-      <table class="sitrep-table">
-          <thead>
-            <tr>
-              <th style="width: 40px; text-align: center;">S.No.</th>
-              <th>Name, Rank & Belt No.</th>
-              <th>Branch</th>
-              <th>Leave Type</th>
-              <th>Leave Period (From - To)</th>
-              <th style="text-align: center;">Days</th>
-              <th>Station Leave / Destination</th>
-              <th>Emergency Contact</th>
-              <th>Expected Resumption</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${onLeaveLeaves.map((l, idx) => {
-              let returnDateStr = "Next Working Day";
-              try {
-                const toD = new Date(l.toDate);
-                toD.setDate(toD.getDate() + 1);
-                returnDateStr = formatDate(toD.toISOString().split("T")[0]);
-              } catch(e) {}
+        <!-- DESKTOP / PRINT TABLE VIEW -->
+        <div class="sitrep-table-wrap">
+          <table class="sitrep-table">
+            <thead>
+              <tr>
+                <th style="width: 35px; text-align: center;">S.No.</th>
+                <th>Name, Rank & Belt No.</th>
+                <th>Branch</th>
+                <th>Leave Type</th>
+                <th>Leave Period (From - To)</th>
+                <th style="text-align: center;">Days</th>
+                <th>Station Leave / Destination</th>
+                <th>Emergency Contact</th>
+                <th>Expected Resumption</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${onLeaveLeaves.map((l, idx) => {
+                let returnDateStr = "Next Working Day";
+                try {
+                  const toD = new Date(l.toDate);
+                  toD.setDate(toD.getDate() + 1);
+                  returnDateStr = formatDate(toD.toISOString().split("T")[0]);
+                } catch(e) {}
 
-              return `
-                <tr>
-                  <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
-                  <td>
-                    <strong>${l.applicantName}</strong><br>
-                    <small style="color: #475569;">${l.rank} (${l.beltNo})</small>
-                  </td>
-                  <td><span class="branch-tag">${l.branchName}</span></td>
-                  <td>
-                    <strong style="color: #1e3a8a;">${l.leaveType}</strong><br>
-                    <small style="color: #64748b;">${l.leaveTypeName || ''}</small>
-                  </td>
-                  <td>
-                    <strong>${formatDate(l.fromDate)}</strong> to<br>
-                    <strong>${formatDate(l.toDate)}</strong>
-                  </td>
-                  <td style="text-align: center; font-weight: 700; color: #0f172a;">${l.totalDays} Days</td>
-                  <td>
-                    ${l.stationLeave ? `
-                      <span style="color: #b45309; font-weight: 700;">Station Leave</span><br>
-                      <small style="color: #475569;">${l.stationDestination || l.stationLeaveAddress || 'At Sanctioned Address'}</small>
-                    ` : `
-                      <span style="color: #166534; font-weight: 600;">At Station HQ</span>
-                    `}
-                  </td>
-                  <td><strong>${l.emergencyContact || '-'}</strong></td>
-                  <td><strong style="color: #15803d;">${returnDateStr}</strong></td>
-                </tr>
-              `;
-            }).join("")}
-          </tbody>
-        </table>
+                return `
+                  <tr>
+                    <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                    <td>
+                      <strong>${l.applicantName}</strong><br>
+                      <small style="color: #475569;">${l.rank} (${l.beltNo})</small>
+                    </td>
+                    <td><span class="branch-tag">${l.branchName}</span></td>
+                    <td>
+                      <strong style="color: #1e3a8a;">${l.leaveType}</strong><br>
+                      <small style="color: #64748b;">${l.leaveTypeName || ''}</small>
+                    </td>
+                    <td>
+                      <strong>${formatDate(l.fromDate)}</strong> to<br>
+                      <strong>${formatDate(l.toDate)}</strong>
+                    </td>
+                    <td style="text-align: center; font-weight: 700; color: #0f172a;">${l.totalDays} Days</td>
+                    <td>
+                      ${l.stationLeave ? `
+                        <span style="color: #b45309; font-weight: 700;">Station Leave</span><br>
+                        <small style="color: #475569;">${l.stationDestination || l.stationLeaveAddress || 'At Sanctioned Address'}</small>
+                      ` : `
+                        <span style="color: #166534; font-weight: 600;">At Station HQ</span>
+                      `}
+                    </td>
+                    <td><strong>${l.emergencyContact || '-'}</strong></td>
+                    <td><strong style="color: #15803d;">${returnDateStr}</strong></td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- MOBILE SCREEN CARD LIST -->
+        <div class="sitrep-mobile-leave-cards">
+          ${onLeaveLeaves.map((l, idx) => {
+            let returnDateStr = "Next Working Day";
+            try {
+              const toD = new Date(l.toDate);
+              toD.setDate(toD.getDate() + 1);
+              returnDateStr = formatDate(toD.toISOString().split("T")[0]);
+            } catch(e) {}
+
+            return `
+              <div class="sitrep-leave-mobile-card" onclick="openLeaveDetailsModal('${l.id}')" title="Tap to view leave details">
+                <div class="sitrep-leave-card-top">
+                  <span class="sitrep-leave-num">#${idx + 1}</span>
+                  <div class="sitrep-leave-officer-info">
+                    <div class="sitrep-officer-name">${l.applicantName}</div>
+                    <div class="sitrep-officer-rank">${l.rank} • Belt: ${l.beltNo}</div>
+                  </div>
+                  <span class="badge badge-info" style="font-size: 0.72rem;">${l.leaveType}</span>
+                </div>
+                <div class="sitrep-leave-meta-grid">
+                  <div><span class="sitrep-lbl">Branch:</span> <strong>${l.branchName}</strong></div>
+                  <div><span class="sitrep-lbl">Duration:</span> <strong>${l.totalDays} Days</strong></div>
+                  <div class="full-span"><span class="sitrep-lbl">Period:</span> <strong>${formatDate(l.fromDate)}</strong> to <strong>${formatDate(l.toDate)}</strong></div>
+                  <div><span class="sitrep-lbl">Resumption:</span> <strong style="color: #15803d;">${returnDateStr}</strong></div>
+                  <div><span class="sitrep-lbl">Contact:</span> <strong>${l.emergencyContact || '-'}</strong></div>
+                  <div class="full-span"><span class="sitrep-lbl">Station Status:</span> ${l.stationLeave ? `<span style="color:#b45309;font-weight:700;">Out of HQ (${l.stationDestination || l.stationLeaveAddress || 'Declared'})</span>` : '<span style="color:#166534;font-weight:600;">At Station HQ</span>'}</div>
+                </div>
+                <div class="sitrep-leave-card-footer">
+                  <span class="sitrep-view-order-link">Tap for Sanction Order & Details &rarr;</span>
+                </div>
+              </div>
+            `;
+          }).join("")}
         </div>
       `}
 
       <!-- SECTION 2: 13 BRANCHES FORCE STRENGTH MATRIX -->
       <div class="sitrep-section-header">
         <span>SECTION 2: 13 CYBER BRANCHES DEPLOYMENT & STRENGTH MATRIX</span>
-        <span style="font-size: 0.78rem; font-weight: normal; color: #475569;">Total Units: 13 | Headquarters Panchkula</span>
+        <span class="sitrep-section-date">Headquarters Panchkula</span>
       </div>
 
-      <div class="responsive-table">
-      <table class="sitrep-table">
-        <thead>
-          <tr>
-            <th style="width: 40px; text-align: center;">S.No.</th>
-            <th>Cyber Branch</th>
-            <th>Branch Incharge</th>
-            <th style="text-align: center;">Sanctioned</th>
-            <th style="text-align: center;">On Duty</th>
-            <th style="text-align: center;">On Leave</th>
-            <th>Operational Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${AppState.branches.map((b, idx) => {
-            const branchUsers = AppState.users.filter(u => u.branchId === b.id);
-            const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
-            const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
-            const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
-            const isFullStrength = branchOnLeave === 0;
+      <!-- DESKTOP / PRINT TABLE VIEW -->
+      <div class="sitrep-table-wrap">
+        <table class="sitrep-table">
+          <thead>
+            <tr>
+              <th style="width: 35px; text-align: center;">S.No.</th>
+              <th>Cyber Branch</th>
+              <th>Branch Incharge</th>
+              <th style="text-align: center;">Sanctioned</th>
+              <th style="text-align: center;">On Duty</th>
+              <th style="text-align: center;">On Leave</th>
+              <th>Operational Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${AppState.branches.map((b, idx) => {
+              const branchUsers = AppState.users.filter(u => u.branchId === b.id);
+              const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
+              const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
+              const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
+              const isFullStrength = branchOnLeave === 0;
 
-            return `
-              <tr>
-                <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
-                <td>
-                  <strong>${b.name}</strong><br>
-                  <small style="color: #64748b;">CODE: ${b.id.toUpperCase()}</small>
-                </td>
-                <td>
-                  ${incharge ? `<strong>${incharge.name}</strong><br><small style="color: #64748b;">${incharge.rank}</small>` : '<span style="color: #94a3b8;">Nodal Officer</span>'}
-                </td>
-                <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
-                <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
-                <td style="text-align: center; font-weight: 700; color: ${branchOnLeave > 0 ? '#dc2626' : '#64748b'};">${branchOnLeave}</td>
-                <td>
-                  ${isFullStrength ? `
-                    <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d; font-weight: 600; font-size: 0.78rem;">
-                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a;"></span>
-                      100% Operational (On-Duty)
-                    </span>
-                  ` : `
-                    <span style="display: inline-flex; align-items: center; gap: 4px; color: #b45309; font-weight: 600; font-size: 0.78rem;">
-                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span>
-                      Active (${branchOnDuty} Present, ${branchOnLeave} on Leave)
-                    </span>
-                  `}
-                </td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
+              return `
+                <tr>
+                  <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                  <td>
+                    <strong>${b.name}</strong><br>
+                    <small style="color: #64748b;">CODE: ${b.id.toUpperCase()}</small>
+                  </td>
+                  <td>
+                    ${incharge ? `<strong>${incharge.name}</strong><br><small style="color: #64748b;">${incharge.rank}</small>` : '<span style="color: #94a3b8;">Nodal Officer</span>'}
+                  </td>
+                  <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
+                  <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
+                  <td style="text-align: center; font-weight: 700; color: ${branchOnLeave > 0 ? '#dc2626' : '#64748b'};">${branchOnLeave}</td>
+                  <td>
+                    ${isFullStrength ? `
+                      <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d; font-weight: 600; font-size: 0.78rem;">
+                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a;"></span>
+                        100% Operational (On-Duty)
+                      </span>
+                    ` : `
+                      <span style="display: inline-flex; align-items: center; gap: 4px; color: #b45309; font-weight: 600; font-size: 0.78rem;">
+                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span>
+                        Active (${branchOnDuty} Present, ${branchOnLeave} on Leave)
+                      </span>
+                    `}
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- MOBILE SCREEN BRANCH CARDS -->
+      <div class="sitrep-mobile-branch-cards">
+        ${AppState.branches.map((b, idx) => {
+          const branchUsers = AppState.users.filter(u => u.branchId === b.id);
+          const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
+          const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
+          const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
+          const isFullStrength = branchOnLeave === 0;
+
+          return `
+            <div class="sitrep-branch-mobile-card ${isFullStrength ? 'full-strength' : 'has-leave'}">
+              <div class="sitrep-branch-card-header">
+                <span class="sitrep-branch-num">#${idx + 1}</span>
+                <div class="sitrep-branch-info">
+                  <div class="sitrep-branch-title">${b.name}</div>
+                  <div class="sitrep-branch-incharge">${incharge ? incharge.name + ' (' + incharge.rank + ')' : 'Nodal Officer'}</div>
+                </div>
+                <span class="badge ${isFullStrength ? 'badge-success' : 'badge-warning'}" style="font-size: 0.72rem;">
+                  ${isFullStrength ? '100% Present' : `${branchOnLeave} on Leave`}
+                </span>
+              </div>
+              <div class="sitrep-branch-stats-row">
+                <div class="sitrep-branch-stat">
+                  <span class="sitrep-stat-label">Sanctioned</span>
+                  <span class="sitrep-stat-val">${branchUsers.length}</span>
+                </div>
+                <div class="sitrep-branch-stat present">
+                  <span class="sitrep-stat-label">On Duty</span>
+                  <span class="sitrep-stat-val">${branchOnDuty}</span>
+                </div>
+                <div class="sitrep-branch-stat leave">
+                  <span class="sitrep-stat-label">On Leave</span>
+                  <span class="sitrep-stat-val">${branchOnLeave}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
       </div>
 
       <!-- OFFICIAL VERIFICATION & SIGNATURES BLOCK -->
@@ -4532,6 +4865,26 @@ function openLeaveDetailsModal(leaveId) {
           </div>
         </div>
       </div>
+
+      <!-- APPROVED LEAVE SANCTION ORDER BUTTON -->
+      ${isApproved ? `
+        <div style="grid-column: 1 / -1; margin-top: 10px; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <strong style="color: #166534; font-size: 0.95rem;">✓ Official Sanction Order Issued</strong>
+            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">Dispatch No: <strong>${leave.sanctionNo}</strong> | Sanctioned by SP Cyber</div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${leave.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              View Sanction Slip
+            </button>
+            <button type="button" class="btn btn-gold btn-sm" onclick="openSanctionSlipInNewTab('${leave.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              Full A4 PDF View
+            </button>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- INCHARGE ACTION DIRECT BUTTON -->
       ${canActAsIncharge && isPendingIncharge ? `
@@ -4905,12 +5258,16 @@ function viewAttachment(leaveId) {
   }
 
   const att = leave.attachment;
+  AppState.currentAttachmentLeaveId = leaveId;
   const modal = document.getElementById("attachmentPreviewModal");
   const titleEl = document.getElementById("attachmentModalTitle");
   const contentEl = document.getElementById("attachmentPreviewContent");
   const downloadBtn = document.getElementById("attachmentDownloadBtn");
+  const nativePdfBtn = document.getElementById("attachmentNativePdfBtn");
 
   if (titleEl) titleEl.innerHTML = `Supporting Attachment: <strong>${att.name}</strong> (${att.size || ''})`;
+
+  const isPdf = (att.type === "application/pdf") || (att.name && att.name.toLowerCase().endsWith(".pdf"));
 
   if (att.dataUrl && (att.type.startsWith("image/") || att.type === "image/png" || att.type === "image/jpeg")) {
     contentEl.innerHTML = `
@@ -4921,13 +5278,41 @@ function viewAttachment(leaveId) {
     downloadBtn.href = att.dataUrl;
     downloadBtn.download = att.name;
     downloadBtn.style.display = "inline-flex";
-  } else if (att.dataUrl && att.type === "application/pdf") {
+    if (nativePdfBtn) nativePdfBtn.style.display = "none";
+  } else if (att.dataUrl && isPdf) {
     contentEl.innerHTML = `
-      <iframe src="${att.dataUrl}" style="width: 100%; height: 500px; border: 1px solid #cbd5e1; border-radius: 8px;"></iframe>
+      <div class="pdf-viewer-modal-box">
+        <div class="pdf-viewer-banner">
+          <div class="pdf-file-info">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <div>
+              <strong>${att.name}</strong>
+              <div style="font-size: 0.78rem; color: #64748b;">PDF Document • ${att.size || 'Official File'}</div>
+            </div>
+          </div>
+          <div class="pdf-mobile-btns">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openAttachedPdfBlob('${leave.id}')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              Open in Native PDF Viewer
+            </button>
+            <a href="${att.dataUrl}" download="${att.name}" class="btn btn-outline btn-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download PDF
+            </a>
+          </div>
+        </div>
+        <div class="pdf-iframe-container">
+          <iframe src="${att.dataUrl}" style="width: 100%; height: 55vh; min-height: 350px; border: 1px solid #cbd5e1; border-radius: 6px;"></iframe>
+        </div>
+      </div>
     `;
     downloadBtn.href = att.dataUrl;
     downloadBtn.download = att.name;
     downloadBtn.style.display = "inline-flex";
+    if (nativePdfBtn) {
+      nativePdfBtn.style.display = "inline-flex";
+      nativePdfBtn.onclick = () => openAttachedPdfBlob(leave.id);
+    }
   } else if (att.dataUrl) {
     contentEl.innerHTML = `
       <div style="padding: 40px 20px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
@@ -4940,30 +5325,68 @@ function viewAttachment(leaveId) {
     downloadBtn.href = att.dataUrl;
     downloadBtn.download = att.name;
     downloadBtn.style.display = "inline-flex";
+    if (nativePdfBtn) nativePdfBtn.style.display = "none";
   } else {
     // Simulated demo document (official certificate view)
     contentEl.innerHTML = `
-      <div style="padding: 30px; background: #fff; border: 2px solid #0f274c; border-radius: 8px; max-width: 600px; margin: 0 auto; text-align: left; font-family: serif;">
+      <div style="padding: 24px 16px; background: #fff; border: 2px solid #0f274c; border-radius: 8px; max-width: 600px; margin: 0 auto; text-align: left; font-family: serif;">
         <div style="text-align: center; border-bottom: 1px solid #0f274c; padding-bottom: 10px; margin-bottom: 16px;">
-          <h3 style="color: #0f274c; text-transform: uppercase;">GOVERNMENT MEDICAL FITNESS / OFFICIAL CERTIFICATE</h3>
+          <h3 style="color: #0f274c; text-transform: uppercase; font-size: 1.05rem;">GOVERNMENT MEDICAL FITNESS / OFFICIAL CERTIFICATE</h3>
           <p style="font-size: 0.8rem; color: #475569;">CIVIL HOSPITAL / AUTHORIZED POLICE MEDICAL OFFICER, HARYANA</p>
         </div>
         <p><strong>File Name:</strong> ${att.name}</p>
         <p><strong>Applicant Officer:</strong> ${leave.applicantName} (${leave.rank}, Belt No. ${leave.beltNo})</p>
         <p><strong>Attached For:</strong> ${leave.leaveTypeName} (${leave.totalDays} Days, ${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)})</p>
-        <p style="margin-top: 14px; line-height: 1.6; background: #f8fafc; padding: 12px; border-left: 3px solid #2563eb;">
+        <p style="margin-top: 14px; line-height: 1.6; background: #f8fafc; padding: 12px; border-left: 3px solid #2563eb; font-size: 0.88rem;">
           "This is to verify that the official has attached legitimate documentation (${att.name}) supporting the stated reason: <em>${leave.reason}</em>. Verified for Haryana Cyber Police records."
         </p>
         <div style="margin-top: 24px; text-align: right;">
-          <div style="font-family: cursive; color: #1e3a8a; font-weight: bold;">[Verified Digital Seal]</div>
+          <div style="font-family: cursive; color: #1e3a8a; font-weight: bold; font-size: 1.1rem;">[Verified Digital Seal]</div>
           <small>Authorized Medical / Verification Authority</small>
         </div>
       </div>
     `;
     downloadBtn.style.display = "none";
+    if (nativePdfBtn) nativePdfBtn.style.display = "none";
   }
 
   modal.classList.add("active");
+}
+
+function openAttachedPdfBlob(leaveId) {
+  const leave = AppState.leaves.find(l => l.id === leaveId);
+  if (!leave || !leave.attachment || !leave.attachment.dataUrl) return;
+  const dataUrl = leave.attachment.dataUrl;
+
+  try {
+    if (dataUrl.startsWith("data:")) {
+      const parts = dataUrl.split(";base64,");
+      const contentType = parts[0].split(":")[1] || "application/pdf";
+      const byteCharacters = atob(parts[1]);
+      const byteArrays = [];
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        byteArrays.push(new Uint8Array(byteNumbers));
+      }
+      const blob = new Blob(byteArrays, { type: contentType });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+    } else {
+      window.open(dataUrl, "_blank");
+    }
+  } catch (e) {
+    window.open(dataUrl, "_blank");
+  }
+}
+
+function openCurrentAttachedPdfInNativeViewer() {
+  if (AppState.currentAttachmentLeaveId) {
+    openAttachedPdfBlob(AppState.currentAttachmentLeaveId);
+  }
 }
 
 // 4. Official Printable Sanction Slip Modal
@@ -4971,12 +5394,24 @@ function openSanctionSlipModal(leaveId) {
   const leave = AppState.leaves.find(l => l.id === leaveId);
   if (!leave) return;
 
+  AppState.currentSanctionSlipLeaveId = leaveId;
   const slipContainer = document.getElementById("sanctionSlipContainer");
   if (!slipContainer) return;
 
   slipContainer.innerHTML = `
     <div class="official-sanction-slip">
       <div class="official-watermark">HARYANA POLICE</div>
+
+      <div class="sanction-slip-mobile-toolbar">
+        <button type="button" class="btn btn-gold btn-sm" onclick="openSanctionSlipInNewTab('${leave.id}')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Full A4 PDF View
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="printSanctionSlipDirect()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print Sanction Order
+        </button>
+      </div>
 
       <div class="sanction-header">
         <div class="sanction-gov-title">HARYANA POLICE DEPARTMENT</div>
@@ -5064,6 +5499,182 @@ function openSanctionSlipModal(leaveId) {
   `;
 
   document.getElementById("sanctionSlipModal").classList.add("active");
+}
+
+function printSanctionSlipDirect() {
+  document.body.classList.add("printing-modal-only");
+  showToast("Opening Print / Save as PDF...", "info");
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove("printing-modal-only");
+    }, 1200);
+  }, 100);
+}
+
+function openCurrentSanctionSlipInNewTab() {
+  if (AppState.currentSanctionSlipLeaveId) {
+    openSanctionSlipInNewTab(AppState.currentSanctionSlipLeaveId);
+  }
+}
+
+function openSanctionSlipInNewTab(leaveId) {
+  const leave = AppState.leaves.find(l => l.id === leaveId);
+  if (!leave) return;
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    showToast("Popup blocked! Please allow popups to view full A4 Sanction Order.", "error");
+    return;
+  }
+
+  const docHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave Sanction Order - ${leave.sanctionNo || leave.id}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Times New Roman", Times, serif; background: #525659; color: #000; padding: 20px 10px; }
+    .page-toolbar { max-width: 800px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .page-toolbar h1 { font-size: 1rem; font-weight: 600; }
+    .page-toolbar .btn-group { display: flex; gap: 8px; }
+    .page-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+    .btn-print { background: #d97706; color: #fff; }
+    .btn-print:hover { background: #b45309; }
+    .btn-close { background: #475569; color: #fff; }
+    .btn-close:hover { background: #334155; }
+    .a4-sheet { max-width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; padding: 20mm 18mm; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; border: 2px solid #0f274c; }
+    .watermark { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 4.8rem; font-weight: 900; color: rgba(15, 39, 76, 0.05); pointer-events: none; white-space: nowrap; letter-spacing: 5px; }
+    .sanction-header { text-align: center; border-bottom: 2px double #000; padding-bottom: 12px; margin-bottom: 16px; }
+    .sanction-gov-title { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .sanction-office-title { font-size: 1.05rem; font-weight: 700; margin-top: 4px; }
+    .sanction-sub-title { font-size: 0.9rem; font-style: italic; margin-top: 2px; }
+    .sanction-meta-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 16px; font-weight: 600; }
+    .sanction-heading { text-align: center; font-size: 1.15rem; font-weight: 800; text-decoration: underline; margin: 18px 0 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sanction-body { font-size: 1rem; line-height: 1.8; text-align: justify; margin-bottom: 24px; }
+    .sanction-body p { margin-bottom: 14px; text-indent: 30px; }
+    .highlight-var { font-weight: 700; text-decoration: underline; }
+    .sanction-conditions { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 12px 16px; font-size: 0.85rem; margin: 16px 0 24px; line-height: 1.6; }
+    .sanction-signatures { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 10px; }
+    .signature-block { text-align: center; min-width: 220px; }
+    .signature-space { height: 48px; display: flex; align-items: center; justify-content: center; font-family: cursive; color: #1e3a8a; font-size: 1.2rem; font-weight: 700; }
+    .signature-name { font-weight: 700; font-size: 0.95rem; }
+    .signature-title { font-size: 0.85rem; color: #333; }
+    .sanction-copy-to { font-size: 0.82rem; margin-top: 24px; border-top: 1px solid #ccc; padding-top: 10px; line-height: 1.7; }
+    @media print {
+      body { background: #fff !important; padding: 0 !important; }
+      .page-toolbar { display: none !important; }
+      .a4-sheet { box-shadow: none !important; border: 1px solid #000 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 12mm !important; }
+      @page { size: A4 portrait; margin: 10mm; }
+    }
+    @media (max-width: 768px) {
+      .a4-sheet { padding: 14px 10px !important; }
+      .sanction-signatures { flex-direction: column; align-items: center; gap: 16px; }
+      .sanction-meta-row { flex-direction: column; gap: 4px; }
+      .sanction-body p { text-indent: 14px; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-toolbar">
+    <h1>📄 Haryana Police - Sanction Order A4 Sheet</h1>
+    <div class="btn-group">
+      <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <button class="btn-close" onclick="window.close()">✕ Close</button>
+    </div>
+  </div>
+
+  <div class="a4-sheet">
+    <div class="watermark">HARYANA POLICE</div>
+    <div class="sanction-header">
+      <div class="sanction-gov-title">HARYANA POLICE DEPARTMENT</div>
+      <div class="sanction-office-title">OFFICE OF THE SUPERINTENDENT OF POLICE, STATE CYBER CRIME</div>
+      <div class="sanction-sub-title">Cyber Crime Police Station, Sector 20, Panchkula (Haryana) - 134117</div>
+      <div style="font-size: 0.82rem; margin-top: 4px;">Email: sp.cyber-hry@gov.in | Cyber Helpline: 1930</div>
+    </div>
+
+    <div class="sanction-meta-row">
+      <div><strong>Order Dispatch No:</strong> ${leave.sanctionNo}</div>
+      <div><strong>Dated, Panchkula, the:</strong> ${leave.spActionAt ? leave.spActionAt.split(" ")[0] : new Date().toISOString().split("T")[0]}</div>
+    </div>
+
+    <div class="sanction-heading">OFFICE ORDER / LEAVE SANCTION ORDER</div>
+
+    <div class="sanction-body">
+      <p>
+        Sanction is hereby accorded to grant 
+        <span class="highlight-var">${leave.totalDays} (${numberToWords(leave.totalDays)}) days</span> 
+        ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
+          <span style="color: #92400e; font-weight: bold;">(curtailed from ${leave.originalDays} days originally applied, due to administrative/operational requirements)</span> 
+        ` : ''}
+        <strong>${leave.leaveTypeName}</strong> with effect from 
+        <span class="highlight-var">${formatDate(leave.fromDate)}</span> to 
+        <span class="highlight-var">${formatDate(leave.toDate)}</span> 
+        in respect of <strong>${leave.rank} ${leave.applicantName}</strong>, 
+        Belt No. <strong>${leave.beltNo}</strong>, posted in 
+        <strong>${leave.branchName}</strong>, State Cyber Crime Unit Panchkula, on the ground of:
+        <em>"${leave.reason}"</em>.
+      </p>
+
+      ${leave.stationLeave ? `
+        <p>
+          2. Further, permission to leave Headquarters / Station during the above sanctioned leave period is also 
+          <strong>GRANTED</strong> to visit the address: 
+          <span class="highlight-var">${leave.stationLeaveAddress || "As declared in application"}</span>. 
+          The officer shall keep his/her mobile phone active at all times on <strong>${leave.emergencyContact}</strong> 
+          and shall report immediately if recalled for any emergent cyber investigation duty.
+        </p>
+      ` : `
+        <p>
+          2. The official shall remain at station headquarters and shall report for duty immediately upon expiry of the leave.
+        </p>
+      `}
+
+      <p>
+        3. It is certified that the official has sufficient leave balance in his/her leave account and necessary handover 
+        of official duties/consoles was made to <strong>${leave.handoverTo || "the Branch Incharge"}</strong>.
+      </p>
+    </div>
+
+    <div class="sanction-conditions">
+      <strong>Conditions of Sanction:</strong><br>
+      i) Overstayal beyond the sanctioned period without prior written approval will invite departmental action.<br>
+      ii) Certificate of resumption of duty must be submitted to the Establishment Branch / Reader to SP immediately on return.
+    </div>
+
+    <div class="sanction-signatures">
+      <div style="font-size: 0.82rem; text-align: left;">
+        <div><strong>Digital Verification Code:</strong></div>
+        <div style="font-family: monospace; font-size: 0.88rem; background: #eee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 2px;">
+          CYB-PKL-${leave.id}-${Date.now().toString().slice(-6)}
+        </div>
+      </div>
+
+      <div class="signature-block">
+        <div class="signature-space">Mayank Gupta</div>
+        <div class="signature-name">Superintendent of Police</div>
+        <div class="signature-title">State Cyber Crime, Panchkula<br>(Haryana)</div>
+      </div>
+    </div>
+
+    <div class="sanction-copy-to">
+      <strong>Endst. No. ${leave.sanctionNo} / E-1 / Cyber, dated even.</strong><br>
+      Copy is forwarded for information and necessary action to:<br>
+      1. Incharge, ${leave.branchName}, Cyber Unit Panchkula.<br>
+      2. Reader to SP Cyber Crime, Panchkula.<br>
+      3. Accountant / Establishment Branch (for leave register entry & salary deduction if any).<br>
+      4. Official concerned: ${leave.rank} ${leave.applicantName}, Belt No. ${leave.beltNo}.<br>
+      5. Guard file.
+    </div>
+  </div>
+</body>
+</html>`;
+
+  printWindow.document.open();
+  printWindow.document.write(docHtml);
+  printWindow.document.close();
 }
 
 function numberToWords(num) {

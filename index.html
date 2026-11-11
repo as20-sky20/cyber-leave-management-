@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261111.1205">
+  <link rel="stylesheet" href="css/style.css?v=20261111.1225">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -291,9 +291,13 @@
       <div class="modal-body" id="sanctionSlipContainer">
         <!-- Official Sanction Slip rendered by JS -->
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
         <button class="btn btn-outline" onclick="closeModals()">Close</button>
-        <button class="btn btn-primary" onclick="window.print()">
+        <button class="btn btn-gold" id="sanctionSlipNewTabBtn" onclick="openCurrentSanctionSlipInNewTab()" title="Open Fullscreen Clean A4 PDF for Mobile / Download">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Full PDF View
+        </button>
+        <button class="btn btn-primary" onclick="printSanctionSlipDirect()" title="Print / Save as PDF">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
           Print Sanction Slip
         </button>
@@ -314,8 +318,12 @@
       <div class="modal-body" id="attachmentPreviewContent" style="text-align: center; max-height: 70vh; overflow-y: auto;">
         <!-- Injected by JS -->
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
         <button class="btn btn-outline" onclick="closeModals()">Close</button>
+        <button class="btn btn-gold" id="attachmentNativePdfBtn" style="display: none;" onclick="openCurrentAttachedPdfInNativeViewer()" title="Open Fullscreen PDF in Phone / Browser">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Full PDF View
+        </button>
         <a id="attachmentDownloadBtn" class="btn btn-primary" download="document">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Download File
@@ -686,6 +694,6 @@
 
   <!-- SCRIPTS -->
   <script src="js/data.js?v=20261111.1205"></script>
-  <script src="js/app.main.js?v=20261111.1205"></script>
+  <script src="js/app.main.js?v=20261111.1225"></script>
 </body>
 </html>
