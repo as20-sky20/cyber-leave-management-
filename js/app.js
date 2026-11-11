@@ -1,4 +1,4 @@
-﻿
+
 // ==========================================
 // LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP & MOBILE)
 // ==========================================
@@ -65,6 +65,10 @@ function initApp() {
   initViewMode();
   populateUserSwitcher();
   setupEventListeners();
+
+  // Guarantee Dashboard as default active tab on initial load for all officers
+  AppState.activeTab = "dashboard";
+
   renderApp();
 
   // Connect to shared LAN office database and Real-time Cloud Stream
@@ -507,6 +511,7 @@ function quickSwitchUser(userId) {
     AppState.currentUser = target;
     recalculateAllUserLeaveBalances();
     localStorage.setItem("cyber_police_current_user_id", target.id);
+    AppState.activeTab = "dashboard";
     const sel = document.getElementById("userSwitchSelect");
     if (sel) sel.value = target.id;
     const sideSel = document.getElementById("sidebarUserSwitchSelect");
@@ -811,20 +816,8 @@ function handleUserSwitch(userId) {
   recalculateAllUserLeaveBalances();
   saveData();
 
-  // Automatic smart tab redirection based on switched role
-  if (user.role === "branch_incharge") {
-    if (AppState.activeTab === "apply_leave" || AppState.activeTab === "my_leaves" || AppState.activeTab === "sp_desk") {
-      AppState.activeTab = "incharge_desk";
-    }
-  } else if (user.role === "sp_cyber") {
-    if (AppState.activeTab === "apply_leave" || AppState.activeTab === "my_leaves" || AppState.activeTab === "incharge_desk") {
-      AppState.activeTab = "sp_desk";
-    }
-  } else if (user.role === "member") {
-    if (AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk") {
-      AppState.activeTab = "dashboard";
-    }
-  }
+  // When any officer ID (especially SP or Incharge) is opened/switched, always land on Dashboard
+  AppState.activeTab = "dashboard";
 
   updateHeaderUserInfo();
   renderNavigationTabs();
@@ -1097,11 +1090,11 @@ function renderNavigationTabs() {
     headerBackupBtn.style.display = canBackup ? "inline-flex" : "none";
   }
 
-  // If SP is currently on apply_leave, my_leaves or incharge_desk, redirect to sp_desk
+  // If SP is currently on apply_leave, my_leaves or incharge_desk, redirect to dashboard
   if (isSPRole && (AppState.activeTab === "apply_leave" || AppState.activeTab === "my_leaves" || AppState.activeTab === "incharge_desk")) {
-    AppState.activeTab = "sp_desk";
+    AppState.activeTab = "dashboard";
     document.querySelectorAll(".nav-tab-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.tab === "sp_desk");
+      btn.classList.toggle("active", btn.dataset.tab === "dashboard");
     });
   }
 
@@ -1128,6 +1121,23 @@ function renderNavigationTabs() {
       btn.classList.toggle("active", btn.dataset.tab === "dashboard");
     });
   }
+
+  // Always synchronize all sidebar navigation tabs with current AppState.activeTab
+  document.querySelectorAll(".nav-tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === AppState.activeTab);
+  });
+
+  // Always synchronize mobile bottom nav buttons with current AppState.activeTab
+  document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
+    if (btn.id === "mobileNavMore") return;
+    if (btn.dataset.tab === AppState.activeTab) {
+      btn.classList.add("active");
+    } else if ((AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk" || (AppState.activeTab === "notices" && user && user.role === "member")) && btn.id === "mobileNavDesk") {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
 }
 
 // Main Render Function based on Active Tab
@@ -2584,15 +2594,15 @@ function renderInchargeDesk(container) {
     </div>
 
     <!-- EXCLUSIVE BRANCH BANNER -->
-    <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 1.25rem;">&#127970;</span>
-        <div>
-          <strong style="color: #0f274c; font-size: 0.96rem;">${branchName}</strong>
-          <div style="font-size: 0.78rem; color: #64748b;">Incharge Verification Scope: Restricted exclusively to ${branchName} personnel</div>
+    <div class="incharge-scope-banner">
+      <div class="incharge-scope-left">
+        <span class="incharge-scope-icon">&#127970;</span>
+        <div class="incharge-scope-info">
+          <strong class="incharge-scope-title">${branchName}</strong>
+          <div class="incharge-scope-sub">Incharge Verification Scope: Restricted exclusively to ${branchName} personnel</div>
         </div>
       </div>
-      <span class="branch-tag" style="font-size: 0.82rem; font-weight: 700; padding: 4px 10px;">
+      <span class="incharge-scope-badge">
         ${branchPendingLeaves.length} Pending Recommendation
       </span>
     </div>
@@ -2628,23 +2638,50 @@ function renderInchargeDesk(container) {
             <tbody>
               ${branchPendingLeaves.map(leave => `
                 <tr class="leave-card-row">
-                  <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
-                  <td data-label="Personnel Details">
-                    <strong>${leave.applicantName}</strong><br>
-                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-                    <span class="branch-tag">${leave.branchName}</span>
+                  <td data-label="Application ID">
+                    <div class="vdesk-id-wrap">
+                      <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
+                      <span class="vdesk-date-tag">${leave.appliedAt}</span>
+                    </div>
                   </td>
-                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
-                  <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                  <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
-                  <td data-label="Ground / Reason" style="max-width: 200px;">${leave.reason}</td>
+                  <td data-label="Personnel Details">
+                    <div class="vdesk-personnel-block">
+                      <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                      <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
+                    </div>
+                  </td>
+                  <td data-label="Leave Type">
+                    <span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span>
+                    <small style="display: block; color: #64748b;">${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small>
+                  </td>
+                  <td data-label="Period">
+                    <span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+                  </td>
+                  <td data-label="Days">
+                    <span class="days-badge"><strong>${leave.totalDays}</strong> Days</span>
+                  </td>
+                  <td data-label="Ground / Reason">
+                    <div class="vdesk-reason-text">"${leave.reason}"</div>
+                    ${leave.attachment ? `
+                      <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
+                        📎 Doc Attached: ${leave.attachment.name || 'View'}
+                      </span>
+                    ` : ''}
+                    ${leave.stationLeave ? `
+                      <span class="vdesk-chip chip-station">
+                        🚩 Station Leave: ${leave.stationLeaveAddress || 'Permission Requested'}
+                      </span>
+                    ` : ''}
+                  </td>
                   <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
                   <td data-label="Incharge Action" class="mobile-card-actions">
-                    <div style="display: flex; gap: 6px; align-items: center;">
+                    <div class="vdesk-btn-group">
                       <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openInchargeActionModal('${leave.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2h11"></path></svg>
                         Review & Recommend
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         Details
                       </button>
                     </div>
@@ -2683,15 +2720,19 @@ function renderInchargeDesk(container) {
             </thead>
             <tbody>
               ${branchProcessedLeaves.slice(0, 8).map(leave => `
-                <tr>
-                  <td>${leave.id}</td>
-                  <td><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
-                  <td>${leave.leaveType}</td>
-                  <td>${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}</td>
-                  <td>${leave.totalDays} Days</td>
-                  <td><small>${leave.inchargeRemarks || "-"}</small></td>
-                  <td>${getStatusBadge(leave.status)}</td>
-                  <td><button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')">Details</button></td>
+                <tr class="leave-card-row">
+                  <td data-label="Leave ID"><strong>${leave.id}</strong></td>
+                  <td data-label="Personnel"><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
+                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
+                  <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
+                  <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                  <td data-label="Incharge Remarks"><div class="vdesk-reason-text">${leave.inchargeRemarks || "-"}</div></td>
+                  <td data-label="Current Status">${getStatusBadge(leave.status)}</td>
+                  <td data-label="Details" class="mobile-card-actions">
+                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                      Details
+                    </button>
+                  </td>
                 </tr>
               `).join("")}
             </tbody>
@@ -2802,26 +2843,48 @@ function renderSPDesk(container) {
             <tbody>
               ${recommendedLeaves.map(leave => `
                 <tr class="leave-card-row">
-                  <td data-label="Application ID"><strong>${leave.id}</strong></td>
-                  <td data-label="Personnel & Branch">
-                    <strong>${leave.applicantName}</strong><br>
-                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-                    <span class="branch-tag">${leave.branchName}</span>
+                  <td data-label="Application ID">
+                    <div class="vdesk-id-wrap">
+                      <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
+                      <span class="vdesk-date-tag">${leave.appliedAt || ''}</span>
+                    </div>
                   </td>
-                  <td data-label="Leave Type"><span style="font-weight: 700;">${leave.leaveType}</span></td>
-                  <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                  <td data-label="Days"><strong>${leave.totalDays}</strong> Days</td>
-                  <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
-                  <td data-label="Incharge Remarks" style="background: #f8fafc; font-size: 0.8rem; color: #1e3a8a;">
-                    "${leave.inchargeRemarks || 'Recommended'}"
+                  <td data-label="Personnel & Branch">
+                    <div class="vdesk-personnel-block">
+                      <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                      <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
+                    </div>
+                  </td>
+                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
+                  <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
+                  <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                  <td data-label="Ground / Reason">
+                    <div class="vdesk-reason-text">"${leave.reason}"</div>
+                    ${leave.attachment ? `
+                      <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
+                        📎 Doc Attached: ${leave.attachment.name || 'View'}
+                      </span>
+                    ` : ''}
+                    ${leave.stationLeave ? `
+                      <span class="vdesk-chip chip-station">
+                        🚩 Station Leave: ${leave.stationLeaveAddress || 'Permission Requested'}
+                      </span>
+                    ` : ''}
+                  </td>
+                  <td data-label="Incharge Remarks">
+                    <div class="vdesk-incharge-note">
+                      <strong>Incharge Note:</strong> "${leave.inchargeRemarks || 'Recommended'}"
+                    </div>
                   </td>
                   <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
                   <td data-label="SP Action" class="mobile-card-actions">
-                    <div style="display: flex; gap: 6px; align-items: center;">
+                    <div class="vdesk-btn-group">
                       <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         Sanction Order
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         Details
                       </button>
                     </div>
@@ -2866,22 +2929,43 @@ function renderSPDesk(container) {
             <tbody>
               ${initialPendingLeaves.map(leave => `
                 <tr class="leave-card-row">
-                  <td data-label="Application ID"><strong>${leave.id}</strong><br><small style="color: #64748b;">${leave.appliedAt}</small></td>
-                  <td data-label="Personnel Details">
-                    <strong>${leave.applicantName}</strong><br>
-                    <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small>
+                  <td data-label="Application ID">
+                    <div class="vdesk-id-wrap">
+                      <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
+                      <span class="vdesk-date-tag">${leave.appliedAt}</span>
+                    </div>
                   </td>
-                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><br><small>${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
-                  <td data-label="Period">${formatDate(leave.fromDate)} to ${formatDate(leave.toDate)}</td>
-                  <td data-label="Days"><strong style="font-size: 1.05rem;">${leave.totalDays}</strong> Days</td>
-                  <td data-label="Ground / Reason" style="max-width: 180px;">${leave.reason}</td>
+                  <td data-label="Personnel Details">
+                    <div class="vdesk-personnel-block">
+                      <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                      <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
+                    </div>
+                  </td>
+                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><small style="display: block; color: #64748b;">${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
+                  <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
+                  <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                  <td data-label="Ground / Reason">
+                    <div class="vdesk-reason-text">"${leave.reason}"</div>
+                    ${leave.attachment ? `
+                      <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
+                        📎 Doc Attached: ${leave.attachment.name || 'View'}
+                      </span>
+                    ` : ''}
+                    ${leave.stationLeave ? `
+                      <span class="vdesk-chip chip-station">
+                        🚩 Station Leave: ${leave.stationLeaveAddress || 'Permission Requested'}
+                      </span>
+                    ` : ''}
+                  </td>
                   <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
                   <td data-label="SP Direct Action" class="mobile-card-actions">
-                    <div style="display: flex; gap: 6px; align-items: center;">
+                    <div class="vdesk-btn-group">
                       <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         Direct Sanction
                       </button>
                       <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         Details
                       </button>
                     </div>
@@ -4286,7 +4370,7 @@ function openLeaveDetailsModal(leaveId) {
       </div>
     </div>
 
-    <div class="modal-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.88rem;">
+    <div class="modal-grid-2col" style="font-size: 0.88rem;">
       <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
         <span style="color: #64748b; font-size: 0.78rem;">Applicant:</span><br>
         <strong>${leave.applicantName}</strong> (${leave.rank})<br>
@@ -4472,7 +4556,7 @@ function openInchargeActionModal(leaveId) {
         </label>
       </div>
       <div id="inchargeCurtailFields" style="display: none; margin-top: 10px;">
-        <div class="modal-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="modal-grid-2col">
           <div>
             <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">From Date:</label>
             <input type="text" class="form-control" value="${formatDate(leave.fromDate)}" readonly>
@@ -4644,7 +4728,7 @@ function openSPActionModal(leaveId) {
         </label>
       </div>
       <div id="spCurtailFields" style="display: none; margin-top: 10px;">
-        <div class="modal-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="modal-grid-2col">
           <div>
             <label style="font-size: 0.78rem; font-weight: 600; color: #78350f;">Sanctioned From Date:</label>
             <input type="text" class="form-control" value="${formatDate(leave.fromDate)}" readonly>
@@ -5068,7 +5152,11 @@ function showToast(message, type = "info") {
 }
 
 // Run on page load
-window.addEventListener("DOMContentLoaded", initApp);
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 
 // ==========================================
@@ -5129,14 +5217,8 @@ function quickLoginUser(userId) {
   localStorage.setItem("cyber_police_current_user_id", target.id);
   recalculateAllUserLeaveBalances();
 
-  // Smart tab assignment based on role
-  if (target.role === "branch_incharge") {
-    AppState.activeTab = "incharge_desk";
-  } else if (target.role === "sp_cyber") {
-    AppState.activeTab = "sp_desk";
-  } else {
-    AppState.activeTab = "dashboard";
-  }
+  // When Incharge, SP, or any officer logs in, always land on Dashboard
+  AppState.activeTab = "dashboard";
 
   renderApp();
   showToast("Welcome, " + target.name + " (" + target.rank + ")", "success");
@@ -5144,6 +5226,7 @@ function quickLoginUser(userId) {
 
 function handleLogout() {
   AppState.currentUser = null;
+  AppState.activeTab = "dashboard";
   sessionStorage.removeItem("cyber_police_current_user_id");
   localStorage.removeItem("cyber_police_current_user_id");
   renderApp();
