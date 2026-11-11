@@ -95,6 +95,19 @@ function updateSyncIndicator(isConnected, statusText) {
   }
 }
 
+// Helper: Check if a user is a Branch Incharge or higher authority (SP Cyber / Admin)
+function isUserBranchIncharge(user, branchId = null) {
+  if (!user) return false;
+  if (user.role === "branch_incharge" || user.role === "sp_cyber" || user.role === "admin") return true;
+  if (user.id && (user.id.startsWith("INCH-") || user.id === "SP-001")) return true;
+  if (user.isApprover && user.role !== "member") return true;
+  if (branchId && Array.isArray(AppState.users)) {
+    const isBranchMatch = AppState.users.some(u => u.branchId === branchId && (u.role === "branch_incharge" || (u.id && u.id.startsWith("INCH-"))) && u.id === user.id);
+    if (isBranchMatch) return true;
+  }
+  return false;
+}
+
 // Load data from localStorage or Seed Data (with Anti-Corruption ? sanitization)
 function loadFromLocalStorage() {
   try {
@@ -150,6 +163,19 @@ function loadFromLocalStorage() {
           if (!l.originalDays) l.originalDays = l.totalDays;
           if (!l.originalToDate) l.originalToDate = l.toDate;
           if (l.attachment === undefined) l.attachment = null;
+          // Auto-upgrade Branch Incharge leave applications to RECOMMENDED if still PENDING_INCHARGE
+          if (l.status === "PENDING_INCHARGE") {
+            const applicantUser = (AppState.users || []).find(u => u.id === l.applicantId);
+            if (applicantUser && isUserBranchIncharge(applicantUser, l.branchId)) {
+              l.status = "RECOMMENDED";
+              if (!l.inchargeRemarks) {
+                l.inchargeRemarks = `[Direct Incharge Submission] Applied by Branch Incharge (${applicantUser.name}) - Directly forwarded to SP Cyber for Final Sanction.`;
+              }
+              if (!l.inchargeActionAt) {
+                l.inchargeActionAt = l.appliedAt || new Date().toISOString().substring(0, 10);
+              }
+            }
+          }
         });
       } else {
         AppState.leaves = DEFAULT_LEAVES;
@@ -981,7 +1007,7 @@ function renderNavigationTabs() {
   // Calculate pending counts
   const pendingInchargeCount = AppState.leaves.filter(l => {
     if (l.status !== "PENDING_INCHARGE") return false;
-    return l.branchId === (user ? user.branchId : "");
+    return l.branchId === (user ? user.branchId : "") && l.applicantId !== (user ? user.id : "");
   }).length;
 
   const pendingSPCount = AppState.leaves.filter(l => l.status === "RECOMMENDED").length;
@@ -1375,11 +1401,11 @@ function renderDashboard(container) {
   const isBranchInchargeUser = user && (user.role === "branch_incharge" || user.role === "admin");
   const isSPUser = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
 
-  // Branch pending leaves for Incharges / Admin
+  // Branch pending leaves for Incharges / Admin (excluding self-applications)
   const branchPendingLeaves = isBranchInchargeUser ? AppState.leaves.filter(l => {
     if (l.status !== "PENDING_INCHARGE") return false;
-    if (user.role === "admin" || user.id === "INCH-ADMIN") return true;
-    return l.branchId === user.branchId;
+    if (user.role === "admin" || user.id === "INCH-ADMIN") return l.applicantId !== (user ? user.id : "");
+    return l.branchId === user.branchId && l.applicantId !== (user ? user.id : "");
   }) : [];
 
   let html = `
@@ -1607,6 +1633,7 @@ function renderApplyLeave(container) {
     .filter(l => l.applicantId === user.id)
     .sort((a, b) => new Date(b.fromDate || b.appliedAt) - new Date(a.fromDate || a.appliedAt));
   const lastLeave = userPastLeaves.length > 0 ? userPastLeaves[0] : null;
+  const isApplicantIncharge = isUserBranchIncharge(user, user.branchId);
 
   const lastLeaveHtml = lastLeave ? `
     <div class="compact-history-strip">
@@ -1655,6 +1682,15 @@ function renderApplyLeave(container) {
             </select>
           </div>
         </div>
+
+        ${isApplicantIncharge ? `
+          <div style="background: #eff6ff; border: 1.5px solid #93c5fd; color: #1e3a8a; border-radius: 8px; padding: 10px 14px; font-size: 0.83rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.2rem;">⚡</span>
+            <div>
+              <strong>Branch Incharge Direct Routing:</strong> As Branch Incharge, your leave application will bypass branch review and be forwarded directly to <strong>SP Cyber (Mayank Gupta, IPS)</strong> for final sanction.
+            </div>
+          </div>
+        ` : ''}
 
         <!-- RECENT LEAVE SUMMARY BANNER -->
         ${lastLeaveHtml}
@@ -2188,6 +2224,7 @@ function openApplicationPreviewModal() {
   }
 
   const user = AppState.currentUser;
+  const isApplicantIncharge = isUserBranchIncharge(user, selectedBranchId);
   let diffDays = Math.ceil(Math.abs(new Date(toDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1;
   const isHalfDay = document.getElementById("halfDayCheck")?.checked;
   const halfDayShift = isHalfDay ? (document.querySelector('input[name="halfDayShift"]:checked')?.value || "Morning Shift") : "";
@@ -2238,7 +2275,7 @@ function openApplicationPreviewModal() {
         <strong>To,</strong><br>
         The Superintendent of Police,<br>
         State Cyber Crime, Panchkula (Haryana).<br>
-        <span style="color: #64748b;">(Through: Branch Incharge - <strong>${branchName}</strong>)</span>
+        ${isApplicantIncharge ? `<span style="color: #1e40af; font-weight: 700;">(Submitted Directly by Branch Incharge to SP Cyber)</span>` : `<span style="color: #64748b;">(Through: Branch Incharge - <strong>${branchName}</strong>)</span>`}
       </div>
 
       <div style="background: #f1f5f9; padding: 6px 12px; border-radius: 4px; font-size: 0.86rem; font-weight: 700; color: #0f274c; margin-bottom: 14px;">
@@ -2446,6 +2483,7 @@ function handleApplyLeaveSubmit(e) {
   const nextNum = Math.max(maxLeaveNum + 1, AppState.leaves.length + 1);
   const newId = `LV-2026-${String(nextNum).padStart(3, "0")}`;
   const sanctionNo = `CYB/PKL/LEAVE/2026/${String(nextNum + 140).padStart(4, "0")}`;
+  const isApplicantIncharge = isUserBranchIncharge(user, selectedBranchId);
 
   const newLeave = {
     id: newId,
@@ -2482,10 +2520,10 @@ function handleApplyLeaveSubmit(e) {
     handoverTo: handoverTo,
     emergencyContact: emergencyContact,
     attachment: AppState.currentAttachment || null,
-    status: "PENDING_INCHARGE", // Awaiting Branch Incharge recommendation
+    status: isApplicantIncharge ? "RECOMMENDED" : "PENDING_INCHARGE",
     appliedAt: appliedAt,
-    inchargeRemarks: "",
-    inchargeActionAt: "",
+    inchargeRemarks: isApplicantIncharge ? `[Direct Incharge Submission] Applied by Branch Incharge (${user.name}) - Directly forwarded to SP Cyber for Final Sanction.` : "",
+    inchargeActionAt: isApplicantIncharge ? appliedAt : "",
     spRemarks: "",
     spActionAt: ""
   };
@@ -2495,7 +2533,11 @@ function handleApplyLeaveSubmit(e) {
   saveData();
   broadcastLiveAction({ action: "NEW_LEAVE", leave: newLeave });
 
-  showToast(`Leave Application ${newId} (${totalDays} Days) submitted successfully and forwarded to Branch Incharge.`, "success");
+  if (isApplicantIncharge) {
+    showToast(`Leave Application ${newId} (${totalDays} Days) submitted by Branch Incharge and forwarded directly to SP Cyber for Sanction.`, "success");
+  } else {
+    showToast(`Leave Application ${newId} (${totalDays} Days) submitted successfully and forwarded to Branch Incharge.`, "success");
+  }
   switchTab("my_leaves");
 }
 
@@ -2590,9 +2632,9 @@ function renderInchargeDesk(container) {
   const branch = AppState.branches.find(b => b.id === user.branchId);
   const branchName = branch ? branch.name : "Cyber Branch";
 
-  // STRICTLY filter only for current Incharge's own branch
+  // STRICTLY filter only for current Incharge's own branch (excluding self-applications, which route directly to SP Cyber)
   const branchPendingLeaves = AppState.leaves.filter(l => {
-    return l.status === "PENDING_INCHARGE" && l.branchId === user.branchId;
+    return l.status === "PENDING_INCHARGE" && l.branchId === user.branchId && l.applicantId !== user.id;
   });
 
   const branchProcessedLeaves = AppState.leaves.filter(l => {
@@ -2838,7 +2880,7 @@ function renderSPDesk(container) {
       <div class="table-toolbar">
         <div class="table-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          Recommended by Branch Incharges (Ready for Sanction)
+          Recommended Applications &amp; Branch Incharge Direct Submissions (Ready for Sanction)
           <span class="tab-badge" style="margin-left: 6px;">${recommendedLeaves.length}</span>
         </div>
       </div>
@@ -4987,12 +5029,15 @@ function openLeaveDetailsModal(leaveId) {
 
   const user = AppState.currentUser;
   const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
-  const canActAsIncharge = user && (user.role === "branch_incharge" || user.role === "admin" || isSP) && (isSP || user.branchId === leave.branchId);
+  const canActAsIncharge = user && (user.role === "branch_incharge" || user.role === "admin" || isSP) && (isSP || user.branchId === leave.branchId) && (user.id !== leave.applicantId);
 
   const isPendingIncharge = leave.status === "PENDING_INCHARGE";
   const isRecommended = leave.status === "RECOMMENDED";
   const isApproved = leave.status === "APPROVED";
   const isRejected = leave.status === "REJECTED";
+
+  const applicantUser = (AppState.users || []).find(u => u.id === leave.applicantId);
+  const isApplicantIncharge = isUserBranchIncharge(applicantUser, leave.branchId) || (leave.applicantId && leave.applicantId.startsWith("INCH-"));
 
   modalBody.innerHTML = `
     <!-- STEPPER -->
@@ -5003,7 +5048,7 @@ function openLeaveDetailsModal(leaveId) {
       </div>
       <div class="step-node ${isRecommended || isApproved ? 'completed' : (isPendingIncharge ? 'active' : '')}">
         <div class="step-circle">${isRecommended || isApproved ? '✓' : '2'}</div>
-        <div class="step-label">Branch Recommendation</div>
+        <div class="step-label">${isApplicantIncharge ? 'Direct to SP (Incharge)' : 'Branch Recommendation'}</div>
       </div>
       <div class="step-node ${isApproved ? 'completed' : (isRecommended ? 'active' : '')}">
         <div class="step-circle">${isApproved ? '✓' : '3'}</div>
@@ -5117,7 +5162,7 @@ function openLeaveDetailsModal(leaveId) {
             <strong>1. Application Submitted:</strong> ${leave.appliedAt} by ${leave.applicantName}
           </div>
           <div style="padding: 8px 12px; background: ${leave.inchargeActionAt ? '#eff6ff' : '#f8fafc'}; border-radius: 6px;">
-            <strong>2. Branch Incharge Recommendation:</strong> ${leave.inchargeRemarks || "Pending Incharge Review"}
+            <strong>2. ${isApplicantIncharge ? 'Branch Incharge Direct Routing:' : 'Branch Incharge Recommendation:'}</strong> ${leave.inchargeRemarks || "Pending Incharge Review"}
             ${leave.inchargeActionAt ? `<br><small style="color: #64748b;">Date: ${leave.inchargeActionAt}</small>` : ''}
           </div>
           <div style="padding: 8px 12px; background: ${leave.spActionAt ? '#f0fdf4' : '#f8fafc'}; border-radius: 6px;">
@@ -5164,11 +5209,11 @@ function openLeaveDetailsModal(leaveId) {
       ` : ''}
 
       <!-- SP ACTION DIRECT BUTTON -->
-      ${user && user.role === "sp_cyber" && isRecommended ? `
+      ${user && (user.role === "sp_cyber" || user.role === "admin") && isRecommended ? `
         <div style="grid-column: 1 / -1; margin-top: 10px; background: #fefce8; border: 2px solid #ca8a04; border-radius: 8px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <strong style="color: #854d0e; font-size: 0.95rem;">Recommended for SP Cyber Final Sanction</strong>
-            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">Recommended by Branch Incharge. Click below to issue final sanction order.</div>
+            <strong style="color: #854d0e; font-size: 0.95rem;">${isApplicantIncharge ? 'Direct Branch Incharge Application - Ready for SP Sanction' : 'Recommended for SP Cyber Final Sanction'}</strong>
+            <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">${isApplicantIncharge ? 'Submitted directly by Branch Incharge. Click below to issue final sanction order.' : 'Recommended by Branch Incharge. Click below to issue final sanction order.'}</div>
           </div>
           <button type="button" class="btn btn-gold" onclick="closeModals(); openSPActionModal('${leave.id}')">
             Sanction Leave & Dispatch Order
