@@ -4380,47 +4380,55 @@ function downloadSitrepPdfDirect(targetDate) {
     return;
   }
 
+  // Open the in-app modal immediately so the official document is in the visible DOM
+  openInAppPdfViewer("sitrep", dateStr);
+
+  const statusEl = document.getElementById("inAppPdfStatus");
+  if (statusEl) {
+    statusEl.innerHTML = `<span style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.72rem;">⏳ Generating PDF file...</span>`;
+  }
   showToast("Generating Daily SITREP PDF file...", "info");
 
-  let tempDiv = null;
-  let targetEl = null;
-  const inAppViewer = document.getElementById("inAppPdfViewerModal");
-  if (inAppViewer && inAppViewer.classList.contains("active") && inAppPdfCurrentType === "sitrep") {
-    targetEl = document.getElementById("inAppPdfContent");
-  } else {
-    tempDiv = document.createElement("div");
-    tempDiv.style.position = "fixed";
-    tempDiv.style.left = "-9999px";
-    tempDiv.style.top = "0";
-    tempDiv.style.width = "780px";
-    tempDiv.style.background = "#ffffff";
-    tempDiv.style.padding = "25px";
-    tempDiv.innerHTML = buildSitrepOfficialA4Html(dateStr);
-    document.body.appendChild(tempDiv);
-    targetEl = tempDiv;
-  }
+  // Reset zoom & scroll for accurate canvas capture
+  resetInAppPdfZoom();
+  const pdfBody = document.getElementById("inAppPdfBody");
+  if (pdfBody) pdfBody.scrollTop = 0;
 
+  const targetEl = document.getElementById("inAppPdfContent");
   const filename = `Cyber_Daily_Sitrep_${dateStr}.pdf`;
 
-  if (typeof window.html2pdf === "function") {
+  if (typeof window.html2pdf === "function" && targetEl) {
     const opt = {
-      margin: [8, 8, 8, 8],
+      margin: [6, 6, 6, 6],
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      html2canvas: {
+        scale: 1.5,
+        useCORS: true,
+        letterRendering: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 800
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
     window.html2pdf().set(opt).from(targetEl).save().then(() => {
       showToast("✓ SITREP PDF downloaded: " + filename, "success");
-      if (tempDiv) document.body.removeChild(tempDiv);
+      if (statusEl) {
+        statusEl.innerHTML = `<span style="background: rgba(34, 197, 94, 0.25); color: #4ade80; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.72rem;">✓ PDF Downloaded</span>`;
+        setTimeout(() => { if (statusEl) statusEl.innerHTML = ""; }, 4000);
+      }
     }).catch(err => {
-      console.warn("html2pdf error, falling back:", err);
-      if (tempDiv) document.body.removeChild(tempDiv);
-      openSitrepInNewTab(dateStr);
+      console.warn("html2pdf generation error:", err);
+      if (statusEl) statusEl.innerHTML = "";
+      showToast("Direct download failed, opening print dialog...", "info");
+      printCurrentInAppPdf();
     });
   } else {
-    if (tempDiv) document.body.removeChild(tempDiv);
-    openSitrepInNewTab(dateStr);
+    if (statusEl) statusEl.innerHTML = "";
+    printCurrentInAppPdf();
   }
 }
 
@@ -4431,115 +4439,61 @@ function downloadSanctionPdfDirect(leaveId) {
     return;
   }
 
+  // Open the in-app modal immediately so the official order is in the visible DOM
+  openInAppPdfViewer("sanction", leave.id);
+
+  const statusEl = document.getElementById("inAppPdfStatus");
+  if (statusEl) {
+    statusEl.innerHTML = `<span style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.72rem;">⏳ Generating PDF file...</span>`;
+  }
   showToast("Generating Sanction Order PDF file...", "info");
 
-  let tempDiv = null;
-  let targetEl = null;
-  const inAppViewer = document.getElementById("inAppPdfViewerModal");
-  if (inAppViewer && inAppViewer.classList.contains("active") && inAppPdfCurrentType === "sanction") {
-    targetEl = document.getElementById("inAppPdfContent");
-  } else {
-    tempDiv = document.createElement("div");
-    tempDiv.style.position = "fixed";
-    tempDiv.style.left = "-9999px";
-    tempDiv.style.top = "0";
-    tempDiv.style.width = "780px";
-    tempDiv.style.background = "#ffffff";
-    tempDiv.style.padding = "25px";
-    tempDiv.innerHTML = buildSanctionSlipA4Html(leave);
-    document.body.appendChild(tempDiv);
-    targetEl = tempDiv;
-  }
+  resetInAppPdfZoom();
+  const pdfBody = document.getElementById("inAppPdfBody");
+  if (pdfBody) pdfBody.scrollTop = 0;
 
+  const targetEl = document.getElementById("inAppPdfContent");
   const safeSanctionNo = leave.sanctionNo ? leave.sanctionNo.split("/").join("_").split(" ").join("_") : leave.id;
   const filename = `Sanction_Order_${safeSanctionNo}.pdf`;
 
-  if (typeof window.html2pdf === "function") {
+  if (typeof window.html2pdf === "function" && targetEl) {
     const opt = {
-      margin: [10, 10, 10, 10],
+      margin: [8, 8, 8, 8],
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      html2canvas: {
+        scale: 1.5,
+        useCORS: true,
+        letterRendering: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 800
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
     window.html2pdf().set(opt).from(targetEl).save().then(() => {
       showToast("✓ Sanction Order PDF downloaded: " + filename, "success");
-      if (tempDiv) document.body.removeChild(tempDiv);
+      if (statusEl) {
+        statusEl.innerHTML = `<span style="background: rgba(34, 197, 94, 0.25); color: #4ade80; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.72rem;">✓ PDF Downloaded</span>`;
+        setTimeout(() => { if (statusEl) statusEl.innerHTML = ""; }, 4000);
+      }
     }).catch(err => {
-      console.warn("html2pdf error, falling back:", err);
-      if (tempDiv) document.body.removeChild(tempDiv);
-      openSanctionSlipInNewTab(leaveId);
+      console.warn("html2pdf generation error:", err);
+      if (statusEl) statusEl.innerHTML = "";
+      showToast("Direct download failed, opening print dialog...", "info");
+      printCurrentInAppPdf();
     });
   } else {
-    if (tempDiv) document.body.removeChild(tempDiv);
-    openSanctionSlipInNewTab(leaveId);
+    if (statusEl) statusEl.innerHTML = "";
+    printCurrentInAppPdf();
   }
 }
 
 function openSitrepInNewTab(targetDate) {
   const dateStr = targetDate || currentSitrepDate;
-  const user = AppState.currentUser;
-  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
-  if (!canViewSitrep) {
-    showToast("Permission Denied", "error");
-    return;
-  }
-
-  const isMobile = window.innerWidth <= 768 || document.body.classList.contains("force-mobile-view");
-  if (isMobile) {
-    openInAppPdfViewer("sitrep", dateStr);
-    return;
-  }
-
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    openInAppPdfViewer("sitrep", dateStr);
-    return;
-  }
-
-  const innerDocHtml = buildSitrepOfficialA4Html(dateStr);
-  const docHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Force & Leave Roznamcha Sitrep - ${dateStr}</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #525659; color: #111; padding: 20px 10px; }
-    .page-toolbar { max-width: 800px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-    .page-toolbar h1 { font-size: 1rem; font-weight: 600; }
-    .page-toolbar .btn-group { display: flex; gap: 8px; }
-    .page-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
-    .btn-print { background: #d97706; color: #fff; }
-    .btn-close { background: #475569; color: #fff; }
-    .a4-sheet { max-width: 800px; margin: 0 auto; background: #fff; padding: 35px 40px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; }
-    @media print {
-      body { background: #fff !important; padding: 0 !important; }
-      .page-toolbar { display: none !important; }
-      .a4-sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 8mm !important; }
-      @page { size: A4 portrait; margin: 10mm; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page-toolbar">
-    <h1>📄 Haryana Police - Daily SITREP A4 Sheet</h1>
-    <div class="btn-group">
-      <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
-      <button class="btn-close" onclick="window.close()">✕ Close</button>
-    </div>
-  </div>
-  <div class="a4-sheet">
-    ${innerDocHtml}
-  </div>
-</body>
-</html>`;
-
-  printWindow.document.open();
-  printWindow.document.write(docHtml);
-  printWindow.document.close();
+  openInAppPdfViewer("sitrep", dateStr);
 }
 
 function exportSitrepCSV(targetDate) {
@@ -5565,27 +5519,29 @@ function viewAttachment(leaveId) {
             </div>
           </div>
           <div class="pdf-mobile-btns">
-            <button type="button" class="btn btn-primary btn-sm" onclick="openAttachedPdfBlob('${leave.id}')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-              Open in Native PDF Viewer
-            </button>
-            <a href="${att.dataUrl}" download="${att.name}" class="btn btn-outline btn-sm">
+            <button type="button" class="btn btn-gold btn-sm" onclick="openAttachedPdfBlob('${leave.id}')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Download PDF
-            </a>
+              Download PDF File
+            </button>
           </div>
         </div>
-        <div class="pdf-iframe-container">
+        <div class="pdf-iframe-container" style="${window.innerWidth <= 768 ? 'display: none;' : ''}">
           <iframe src="${att.dataUrl}" style="width: 100%; height: 55vh; min-height: 350px; border: 1px solid #cbd5e1; border-radius: 6px;"></iframe>
         </div>
+        ${window.innerWidth <= 768 ? `
+          <div style="padding: 24px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 12px; text-align: center;">
+            <p style="color: #475569; font-size: 0.85rem; margin-bottom: 12px;">Mobile browsers do not embed inline PDF viewports. Tap below to download the file directly to your phone.</p>
+            <button type="button" class="btn btn-primary" onclick="openAttachedPdfBlob('${leave.id}')">
+              📥 Download ${att.name}
+            </button>
+          </div>
+        ` : ''}
       </div>
     `;
-    downloadBtn.href = att.dataUrl;
-    downloadBtn.download = att.name;
     downloadBtn.style.display = "inline-flex";
+    downloadBtn.onclick = () => openAttachedPdfBlob(leave.id);
     if (nativePdfBtn) {
-      nativePdfBtn.style.display = "inline-flex";
-      nativePdfBtn.onclick = () => openAttachedPdfBlob(leave.id);
+      nativePdfBtn.style.display = "none";
     }
   } else if (att.dataUrl) {
     contentEl.innerHTML = `
@@ -5596,17 +5552,16 @@ function viewAttachment(leaveId) {
         <p style="margin-top: 14px;">Please download the document using the button below to view.</p>
       </div>
     `;
-    downloadBtn.href = att.dataUrl;
-    downloadBtn.download = att.name;
     downloadBtn.style.display = "inline-flex";
+    downloadBtn.onclick = () => openAttachedPdfBlob(leave.id);
     if (nativePdfBtn) nativePdfBtn.style.display = "none";
   } else {
     // Simulated demo document (official certificate view)
     contentEl.innerHTML = `
       <div style="padding: 24px 16px; background: #fff; border: 2px solid #0f274c; border-radius: 8px; max-width: 600px; margin: 0 auto; text-align: left; font-family: serif;">
         <div style="text-align: center; border-bottom: 1px solid #0f274c; padding-bottom: 10px; margin-bottom: 16px;">
-          <h3 style="color: #0f274c; text-transform: uppercase; font-size: 1.05rem;">GOVERNMENT MEDICAL FITNESS / OFFICIAL CERTIFICATE</h3>
-          <p style="font-size: 0.8rem; color: #475569;">CIVIL HOSPITAL / AUTHORIZED POLICE MEDICAL OFFICER, HARYANA</p>
+          <h3 style="color: #0f274c; text-transform: uppercase; font-size: 1.05rem;">OFFICIAL SUPPORTING DOCUMENT / CERTIFICATE</h3>
+          <p style="font-size: 0.8rem; color: #475569;">STATE CYBER CRIME HEADQUARTERS, PANCHKULA</p>
         </div>
         <p><strong>File Name:</strong> ${att.name}</p>
         <p><strong>Applicant Officer:</strong> ${leave.applicantName} (${leave.rank}, Belt No. ${leave.beltNo})</p>
@@ -5620,7 +5575,8 @@ function viewAttachment(leaveId) {
         </div>
       </div>
     `;
-    downloadBtn.style.display = "none";
+    downloadBtn.style.display = "inline-flex";
+    downloadBtn.onclick = () => openAttachedPdfBlob(leave.id);
     if (nativePdfBtn) nativePdfBtn.style.display = "none";
   }
 
@@ -5629,12 +5585,13 @@ function viewAttachment(leaveId) {
 
 function openAttachedPdfBlob(leaveId) {
   const leave = AppState.leaves.find(l => l.id === leaveId);
-  if (!leave || !leave.attachment || !leave.attachment.dataUrl) return;
-  const dataUrl = leave.attachment.dataUrl;
+  if (!leave || !leave.attachment) return;
+  const att = leave.attachment;
+  const filename = att.name || "attached_document.pdf";
 
   try {
-    if (dataUrl.startsWith("data:")) {
-      const parts = dataUrl.split(";base64,");
+    if (att.dataUrl && att.dataUrl.startsWith("data:")) {
+      const parts = att.dataUrl.split(";base64,");
       const contentType = parts[0].split(":")[1] || "application/pdf";
       const byteCharacters = atob(parts[1]);
       const byteArrays = [];
@@ -5648,12 +5605,34 @@ function openAttachedPdfBlob(leaveId) {
       }
       const blob = new Blob(byteArrays, { type: contentType });
       const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, "_blank");
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast("Downloading attachment: " + filename, "success");
+    } else if (att.dataUrl) {
+      const a = document.createElement("a");
+      a.href = att.dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } else {
-      window.open(dataUrl, "_blank");
+      const docText = `HARYANA POLICE - STATE CYBER CRIME HEADQUARTERS PANCHKULA\nVERIFIED SUPPORTING DOCUMENT\n\nFile: ${filename}\nApplicant: ${leave.applicantName} (${leave.rank}, Belt No. ${leave.beltNo})\nBranch: ${leave.branchName}\nLeave Period: ${leave.fromDate} to ${leave.toDate}\nReason: ${leave.reason}\n\nStatus: Officially Verified & Logged in DLMS Portal.`;
+      const blob = new Blob([docText], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename.replace(/\.pdf$/i, ".txt");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast("Downloading verified attachment note...", "success");
     }
   } catch (e) {
-    window.open(dataUrl, "_blank");
+    console.error("Error downloading attachment:", e);
+    showToast("Could not download attachment file", "error");
   }
 }
 
@@ -5780,82 +5759,22 @@ function openSanctionSlipModal(leaveId) {
 }
 
 function printSanctionSlipDirect() {
-  document.body.classList.add("printing-modal-only");
-  showToast("Opening Print / Save as PDF...", "info");
-  setTimeout(() => {
-    window.print();
+  if (AppState.currentSanctionSlipLeaveId) {
+    openInAppPdfViewer("sanction", AppState.currentSanctionSlipLeaveId);
     setTimeout(() => {
-      document.body.classList.remove("printing-modal-only");
-    }, 1200);
-  }, 100);
+      printCurrentInAppPdf();
+    }, 200);
+  }
 }
 
 function openCurrentSanctionSlipInNewTab() {
   if (AppState.currentSanctionSlipLeaveId) {
-    openSanctionSlipInNewTab(AppState.currentSanctionSlipLeaveId);
+    openInAppPdfViewer("sanction", AppState.currentSanctionSlipLeaveId);
   }
 }
 
 function openSanctionSlipInNewTab(leaveId) {
-  const leave = AppState.leaves.find(l => l.id === leaveId);
-  if (!leave) return;
-
-  const isMobile = window.innerWidth <= 768 || document.body.classList.contains("force-mobile-view");
-  if (isMobile) {
-    openInAppPdfViewer("sanction", leave.id);
-    return;
-  }
-
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    openInAppPdfViewer("sanction", leave.id);
-    return;
-  }
-
-  const innerDocHtml = buildSanctionSlipA4Html(leave);
-  const docHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leave Sanction Order - ${leave.sanctionNo || leave.id}</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #525659; color: #111; padding: 20px 10px; }
-    .page-toolbar { max-width: 800px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-    .page-toolbar h1 { font-size: 1rem; font-weight: 600; }
-    .page-toolbar .btn-group { display: flex; gap: 8px; }
-    .page-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
-    .btn-print { background: #d97706; color: #fff; }
-    .btn-close { background: #475569; color: #fff; }
-    .a4-sheet { max-width: 800px; margin: 0 auto; background: #fff; padding: 35px 40px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; }
-    @media print {
-      body { background: #fff !important; padding: 0 !important; }
-      .page-toolbar { display: none !important; }
-      .a4-sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 8mm !important; }
-      @page { size: A4 portrait; margin: 10mm; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page-toolbar">
-    <h1>📄 Haryana Police - Sanction Order A4 Sheet</h1>
-    <div class="btn-group">
-      <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
-      <button class="btn-close" onclick="window.close()">✕ Close</button>
-    </div>
-  </div>
-
-  <div class="a4-sheet">
-    ${innerDocHtml}
-  </div>
-</body>
-</html>`;
-
-  printWindow.document.open();
-  printWindow.document.write(docHtml);
-  printWindow.document.close();
+  openInAppPdfViewer("sanction", leaveId);
 }
 
 function numberToWords(num) {
