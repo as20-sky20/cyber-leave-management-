@@ -3958,12 +3958,13 @@ function renderPersonnelDirectory(container) {
               <th>Contact</th>
               <th>CL Balance</th>
               <th>EL Balance</th>
+              <th>Action / Security</th>
             </tr>
           </thead>
           <tbody id="directoryTableBody">
             ${displayedUsers.length === 0 ? `
               <tr>
-                <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">
+                <td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">
                   No personnel records found for this branch.
                 </td>
               </tr>
@@ -3979,6 +3980,12 @@ function renderPersonnelDirectory(container) {
                   <td data-label="Contact Details"><small>${u.mobile}<br>${u.email}</small></td>
                   <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
                   <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
+                  <td data-label="Action / Security">
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                      <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
+                      ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5;" title="Remove Official">🗑️</button>` : ''}
+                    </div>
+                  </td>
                 </tr>
               `;
             }).join("")}
@@ -4002,6 +4009,35 @@ function filterDirectoryTable(branchId) {
       r.style.display = "none";
     }
   });
+}
+
+function resetUserPinPrompt(userId) {
+  const user = AppState.users.find(u => u.id === userId);
+  if (!user) return;
+  const currentPin = user.password || user.pin || "1234";
+  const newPin = prompt(`Set Login Security PIN / Password for:\n${user.name} (${user.rank}, Belt No: ${user.beltNo})`, currentPin);
+  if (newPin !== null && newPin.trim()) {
+    user.password = newPin.trim();
+    saveData();
+    showToast(`✓ PIN / Password for ${user.name} set to: ${user.password}`, "success");
+    renderApp();
+  }
+}
+
+function deleteUserPrompt(userId) {
+  const user = AppState.users.find(u => u.id === userId);
+  if (!user) return;
+  if (user.role === "sp_cyber") {
+    alert("Cannot remove primary SP Cyber profile.");
+    return;
+  }
+  if (confirm(`Are you sure you want to remove official:\n${user.name} (${user.rank}, Belt: ${user.beltNo})\nfrom the Cyber Police roster?`)) {
+    AppState.users = AppState.users.filter(u => u.id !== userId);
+    saveData();
+    populateUserSwitcher();
+    showToast(`Official ${user.name} removed from roster.`, "info");
+    renderApp();
+  }
 }
 
 // ==========================================
@@ -5823,6 +5859,7 @@ function handleAddUserSubmit(e) {
   const branchSelectEl = document.getElementById("newUserBranch");
   const branchId = isSP ? branchSelectEl.value : (user ? user.branchId : branchSelectEl.value);
   const mobile = document.getElementById("newUserMobile").value.trim();
+  const password = document.getElementById("newUserPassword")?.value.trim() || "1234";
   const roleSelectEl = document.getElementById("newUserRole");
   const role = isSP ? roleSelectEl.value : "member";
 
@@ -5837,6 +5874,7 @@ function handleAddUserSubmit(e) {
     branchId: branchId,
     mobile: mobile,
     email: `${name.toLowerCase().replace(/[^a-z]/g, "")}.${beltNo.replace(/[^0-9]/g, "")}@cyberhry.gov.in`,
+    password: password,
     isApprover: role === "branch_incharge" || role === "sp_cyber",
     leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 2 }
   };
@@ -5949,6 +5987,7 @@ function onLoginRosterSelect(userId) {
 function submitOfficerLoginForm() {
   const select = document.getElementById("loginOfficerSelect");
   const input = document.getElementById("loginOfficerInput");
+  const pinInput = document.getElementById("loginPinInput");
 
   let query = (input ? input.value : "").trim();
   if (!query && select && select.value) {
@@ -5969,6 +6008,18 @@ function submitOfficerLoginForm() {
 
   if (!target) {
     showToast("Officer or Belt No. not found (" + query + ")", "error");
+    return;
+  }
+
+  const enteredPin = pinInput ? pinInput.value.trim() : "";
+  const expectedPin = target.password || target.pin || "1234";
+
+  if (enteredPin && enteredPin !== expectedPin) {
+    showToast(`Incorrect Security PIN/Password for ${target.name}. (Default: 1234)`, "error");
+    if (pinInput) {
+      pinInput.focus();
+      pinInput.select();
+    }
     return;
   }
 

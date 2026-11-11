@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261111.1310">
+  <link rel="stylesheet" href="css/style.css?v=20261111.1320">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -455,6 +455,12 @@
               <label for="newUserMobile">Mobile Number <span class="required">*</span></label>
               <input type="tel" id="newUserMobile" class="form-control" required placeholder="+91 98120 XXXXX">
             </div>
+
+            <div class="form-group form-full">
+              <label for="newUserPassword">Security PIN / Password (Default: 1234) <span class="required">*</span></label>
+              <input type="text" id="newUserPassword" class="form-control" value="1234" required placeholder="Enter 4-digit PIN or custom password">
+              <small style="color: #64748b; font-size: 0.75rem;">Official will use this PIN along with their Belt No. to login.</small>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -738,7 +744,7 @@
 
   <!-- SCRIPTS -->
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script src="js/data.js?v=20261111.1310"></script>
-  <script src="js/app.main.js?v=20261111.1310"></script>
+  <script src="js/data.js?v=20261111.1320"></script>
+  <script src="js/app.main.js?v=20261111.1320"></script>
 </body>
 </html>
