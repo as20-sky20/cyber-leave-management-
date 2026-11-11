@@ -1569,73 +1569,51 @@ function renderApplyLeave(container) {
   // Same branch members for handover dropdown
   const sameBranchMembers = AppState.users.filter(u => u.branchId === user.branchId && u.id !== user.id);
 
-  // FEATURE 7: Auto-populate user's last leave record
+  // Auto-populate user's last leave record
   const userPastLeaves = AppState.leaves
     .filter(l => l.applicantId === user.id)
     .sort((a, b) => new Date(b.fromDate || b.appliedAt) - new Date(a.fromDate || a.appliedAt));
   const lastLeave = userPastLeaves.length > 0 ? userPastLeaves[0] : null;
 
   const lastLeaveHtml = lastLeave ? `
-    <div class="last-leave-banner">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-        <span style="font-weight: 700; color: #0f274c;">Previous Leave History:</span>
-        <span class="status-badge ${lastLeave.status.toLowerCase()}">${getStatusBadge(lastLeave.status)}</span>
+    <div class="compact-history-strip">
+      <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <strong>Last Leave:</strong> ${lastLeave.leaveTypeName || lastLeave.leaveType} &bull; ${formatDate(lastLeave.fromDate)} to ${formatDate(lastLeave.toDate)} (${lastLeave.totalDays} Days)
       </div>
-      <div style="font-size: 0.84rem; color: #334155;">
-        Last Taken <strong>${lastLeave.leaveTypeName || lastLeave.leaveType}</strong>: 
-        <strong>${formatDate(lastLeave.fromDate)}</strong> to <strong>${formatDate(lastLeave.toDate)}</strong> 
-        (Total: <strong>${lastLeave.totalDays} Days</strong>) | Reason: <em>"${lastLeave.reason}"</em>
-        ${lastLeave.sanctionNo ? ` | Sanction Order No: <strong>${lastLeave.sanctionNo}</strong>` : ''}
-      </div>
+      <span class="status-badge ${lastLeave.status.toLowerCase()}" style="font-size: 0.68rem; padding: 2px 6px;">${getStatusBadge(lastLeave.status)}</span>
     </div>
   ` : `
-    <div class="last-leave-banner">
-      <span style="font-weight: 700; color: #0f274c;">Previous Leave Record:</span>
-      This is your <strong>First Leave Application</strong> for session 2026.
+    <div class="compact-history-strip">
+      <div><strong>Notice:</strong> This is your <strong>First Leave Application</strong> for session 2026.</div>
     </div>
   `;
 
   let html = `
-    <div class="page-header">
-      <div class="page-title-group">
-        <h2>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          Leave Application Form
+    <div class="apply-leave-wrapper">
+      <div class="apply-leave-header">
+        <h2 class="apply-leave-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          Apply for Leave
         </h2>
-        <p>State Cyber Crime, Panchkula</p>
+        <button class="btn btn-outline btn-sm apply-my-leaves-btn" onclick="switchTab('my_leaves')">
+          My Applications
+        </button>
       </div>
-      <div>
-        <button class="btn btn-outline btn-sm" onclick="switchTab('my_leaves')">My Applications</button>
-      </div>
-    </div>
 
-    <div style="background: #fff; border-radius: 12px; border: 1px solid var(--border-light); padding: 18px; box-shadow: var(--shadow-sm); max-width: 920px; margin: 0 auto;">
-      
-      <!-- FEATURE 7: LAST LEAVE BANNER -->
-      ${lastLeaveHtml}
-
-      <form id="applyLeaveForm" onsubmit="handleApplyLeaveSubmit(event)">
-        
-        <!-- SLEEK APPLICANT CARD -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 1.25rem;">👮</span>
+      <div class="apply-leave-card">
+        <!-- COMPACT OFFICER & BRANCH STRIP -->
+        <div class="apply-officer-strip">
+          <div class="apply-officer-info">
+            <span class="apply-officer-avatar">👮</span>
             <div>
-              <strong style="color: #0f274c; font-size: 0.95rem;">${user.name}</strong> (${user.rank})
-              <div style="font-size: 0.78rem; color: #64748b;">Belt: <strong>${user.beltNo}</strong> | Ph: ${user.mobile}</div>
+              <div class="apply-officer-name">${user.name} <span class="apply-officer-belt">(${user.beltNo})</span></div>
+              <div class="apply-officer-sub">${user.rank} &bull; ${user.mobile}</div>
             </div>
           </div>
-          <span class="branch-tag" style="font-size: 0.8rem;">${branchName}</span>
-        </div>
-
-        <div class="form-grid">
-          <!-- BRANCH SELECTION DROPDOWN -->
-          <div class="form-group form-full">
-            <label for="leaveBranchSelect" style="font-weight: 700; color: #0f274c; font-size: 0.88rem;">
-              Select Cyber Branch <span class="required">*</span>
-            </label>
-            <select id="leaveBranchSelect" class="form-control" required onchange="handleLeaveBranchChange(this.value)" style="border: 1.5px solid var(--police-blue); font-weight: 600;">
-              <option value="">-- Select Cyber Branch --</option>
+          <div class="apply-branch-pill-box">
+            <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; text-transform: uppercase; font-weight: 700;">Assigned Branch *</div>
+            <select id="leaveBranchSelect" class="form-control form-control-sm apply-branch-select" required onchange="handleLeaveBranchChange(this.value)">
+              <option value="">-- Select Branch --</option>
               ${AppState.branches.map(b => `
                 <option value="${b.id}" ${b.id === user.branchId ? 'selected' : ''}>
                   ${b.name}
@@ -1643,258 +1621,250 @@ function renderApplyLeave(container) {
               `).join("")}
             </select>
           </div>
+        </div>
 
-          <!-- LEAVE TYPE -->
-          <div class="form-group form-full">
-            <label for="leaveTypeSelect">Leave Type <span class="required">*</span></label>
+        <!-- RECENT LEAVE SUMMARY BANNER -->
+        ${lastLeaveHtml}
+
+        <form id="applyLeaveForm" onsubmit="handleApplyLeaveSubmit(event)">
+          <!-- SECTION 1: LEAVE TYPE & DATES -->
+          <div class="apply-section-title">
+            <span>1. Leave Period & Category</span>
+          </div>
+
+          <!-- LEAVE TYPE SELECTION -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="leaveTypeSelect" class="apply-field-label">
+              Leave Category / Type <span class="required">*</span>
+            </label>
             <select id="leaveTypeSelect" class="form-control" required onchange="handleLeaveTypeChange()">
-              <option value="">-- Select Leave Type --</option>
+              <option value="">-- Choose Leave Category --</option>
               ${LEAVE_TYPES.map(lt => {
                 const bal = user.leaveBalances ? (user.leaveBalances[lt.code] ?? 0) : 0;
-                return `<option value="${lt.code}">${lt.code} - ${lt.name} [Available Balance: ${bal} Days]</option>`;
+                return `<option value="${lt.code}">${lt.code} - ${lt.name} [Available: ${bal} Days]`;
               }).join("")}
             </select>
-            <small id="leaveTypeDesc" style="color: #64748b; font-size: 0.78rem;"></small>
+            <small id="leaveTypeDesc" style="color: #64748b; font-size: 0.78rem; margin-top: 3px;"></small>
 
-            <!-- FEATURE 5: MANDATORY MEDICAL NOTICE ALERT -->
-            <div id="medicalNoticeAlert" style="display: none; margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
-              <strong>Mandatory Medical Certificate:</strong> Medical Leave (ML) or Child Care Leave (CCL) requires an official medical prescription / fitness certificate.
+            <!-- MANDATORY MEDICAL ALERT -->
+            <div id="medicalNoticeAlert" style="display: none; margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 6px; font-weight: 600; font-size: 0.82rem;">
+              <strong>Mandatory Document:</strong> Medical Leave (ML) or Child Care Leave (CCL) requires an official medical prescription / fitness certificate.
             </div>
           </div>
 
-          <!-- FROM DATE -->
-          <div class="form-group">
-            <label for="leaveFromDate">From Date <span class="required">*</span></label>
-            <input type="date" id="leaveFromDate" class="form-control" required onchange="calculateLeaveDays()">
-          </div>
-
-          <!-- TO DATE -->
-          <div class="form-group">
-            <label for="leaveToDate">To Date <span class="required">*</span></label>
-            <input type="date" id="leaveToDate" class="form-control" required onchange="calculateLeaveDays()">
-          </div>
-
-          <!-- FEATURE 6: HALF DAY LEAVE (CL ONLY) -->
-          <div id="halfDaySection" style="display: none;" class="form-group form-full">
-            <div class="half-day-box">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
-                  <input type="checkbox" id="halfDayCheck" onchange="handleHalfDayToggle(this)">
-                  Apply for Half Day Casual Leave? (0.5 Day CL)
-                </label>
-                <span style="font-size: 0.8rem; background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600;">0.5 Day Quota</span>
-              </div>
-              <div id="halfDayShiftBox" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                <label style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Select Duty Shift:</label>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.88rem;">
-                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="radio" name="halfDayShift" value="Morning Shift (09:00 AM to 02:00 PM)" checked onchange="calculateLeaveDays()">
-                    Morning Shift (09:00 AM to 02:00 PM)
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="radio" name="halfDayShift" value="Evening Shift (02:00 PM to 08:00 PM)" onchange="calculateLeaveDays()">
-                    Evening Shift (02:00 PM to 08:00 PM)
-                  </label>
-                </div>
-              </div>
+          <!-- SIDE-BY-SIDE MOBILE DATE PICKERS -->
+          <div class="mobile-dates-row">
+            <div class="form-group">
+              <label for="leaveFromDate" class="apply-field-label">From Date <span class="required">*</span></label>
+              <input type="date" id="leaveFromDate" class="form-control" required onchange="calculateLeaveDays()">
+            </div>
+            <div class="form-group">
+              <label for="leaveToDate" class="apply-field-label">To Date <span class="required">*</span></label>
+              <input type="date" id="leaveToDate" class="form-control" required onchange="calculateLeaveDays()">
             </div>
           </div>
 
-          <!-- FEATURE 1: PREFIX & SUFFIX HOLIDAYS -->
-          <div class="form-group form-full">
-            <div class="prefix-suffix-box">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #0f274c; margin: 0;">
-                  <input type="checkbox" id="prefixSuffixCheck" onchange="togglePrefixSuffix(this)">
-                  Add Prefix / Suffix Holidays (Optional)
-                </label>
-                <span style="font-size: 0.78rem; color: #64748b;">(Holidays / C-OFF)</span>
-              </div>
-              <div id="prefixSuffixFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
-                <div class="form-grid-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                  <div>
-                    <label for="prefixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
-                      Prefix Days (Preceding start)
-                    </label>
-                    <input type="number" id="prefixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="Days">
-                  </div>
-                  <div>
-                    <label for="suffixDaysInput" style="font-size: 0.82rem; font-weight: 600; color: #334155;">
-                      Suffix Days (Succeeding end)
-                    </label>
-                    <input type="number" id="suffixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="Days">
-                  </div>
-                </div>
-              </div>
-            </div>
+          <!-- COMPUTED DAYS DURATION BADGE -->
+          <div id="leaveDaysNotice" class="leave-days-badge-notice" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;">
+            Please select dates (Total Days: 0)
           </div>
 
-          <!-- COMPUTED DAYS NOTICE -->
-          <div class="form-group form-full">
-            <div id="leaveDaysNotice" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 6px; padding: 10px 14px; font-size: 0.88rem; font-weight: 600;">
-              Please select dates (Total Days: 0)
-            </div>
-          </div>
+          <!-- BRANCH OVERLAP LIVE ALERT -->
+          <div id="branchOverlapNotice" style="display: none; margin-bottom: 12px;"></div>
 
-          <!-- FEATURE 2: LIVE BRANCH OVERLAP ALERT -->
-          <div class="form-group form-full">
-            <div id="branchOverlapNotice" style="display: none;"></div>
-          </div>
-
-          <!-- REASON -->
-          <div class="form-group form-full">
-            <label for="leaveReason">Specific Reason for Leave <span class="required">*</span></label>
-            <textarea id="leaveReason" class="form-control" rows="3" required placeholder="Enter detailed reason for leave (e.g. family obligation, medical emergency, domestic affairs)"></textarea>
-          </div>
-
-          <!-- FEATURE 3: COURT EVIDENCE & CASE HANDOVER -->
-          <div class="form-group form-full">
-            <div class="court-case-box">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #854d0e; margin: 0;">
-                  <input type="checkbox" id="courtEvidenceCheck" onchange="toggleCourtCaseFields(this)">
-                  Is any Court Evidence / Summons scheduled during this leave period?
-                </label>
-              </div>
-              <div id="courtCaseFields" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #fef08a;">
-                <div class="form-grid-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                  <div>
-                    <label for="courtCaseDetails" style="font-size: 0.82rem; font-weight: 600; color: #713f12;">
-                      Court & Case Details (Court Name, FIR No., Hearing Date)
-                    </label>
-                    <input type="text" id="courtCaseDetails" class="form-control" placeholder="e.g. Special CBI Court Panchkula / FIR 42/2025, Hearing 12-Nov">
-                  </div>
-                  <div>
-                    <label for="courtOfficerHandover" style="font-size: 0.82rem; font-weight: 600; color: #713f12;">
-                      Case Diary & Brief Handed Over To (Officer Assigned)
-                    </label>
-                    <input type="text" id="courtOfficerHandover" class="form-control" placeholder="e.g. Handed over to ASI Rajesh (312/PKL)">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- HANDOVER TO -->
-          <div class="form-group">
-            <label for="handoverOfficer">Charge Handover To (Relieving Officer)</label>
-            <select id="handoverOfficer" class="form-control">
-              <option value="">-- Select Relieving Officer --</option>
-              ${sameBranchMembers.map(m => `<option value="${m.name} (${m.beltNo})">${m.name} - ${m.rank} (${m.beltNo})</option>`).join("")}
-              <option value="Branch Incharge">Branch Incharge</option>
-              <option value="Other Arrangement">Other Arrangement</option>
-            </select>
-          </div>
-
-          <!-- EMERGENCY MOBILE -->
-          <div class="form-group">
-            <label for="emergencyMobile">Emergency Contact Mobile Number <span class="required">*</span></label>
-            <input type="tel" id="emergencyMobile" class="form-control" value="${user.mobile}" required>
-          </div>
-
-          <!-- STATION LEAVE CHECKBOX -->
-          <div class="form-group form-full">
-            <div class="checkbox-row">
-              <input type="checkbox" id="stationLeaveCheck" onchange="toggleStationLeaveInputs()">
-              <label for="stationLeaveCheck">
-                Permission to Leave Station / Headquarters (Station Leave)
+          <!-- HALF DAY CASUAL LEAVE CARD (SHOWS ONLY FOR SAME DAY CL) -->
+          <div id="halfDaySection" style="display: none;" class="opt-toggle-card" style="margin-bottom: 12px;">
+            <div class="opt-toggle-header">
+              <label class="opt-toggle-label">
+                <input type="checkbox" id="halfDayCheck" onchange="handleHalfDayToggle(this)">
+                <span>Half Day Casual Leave (0.5 Day CL)</span>
               </label>
             </div>
-          </div>
-
-          <!-- FEATURE 4: EXPANDED STATION LEAVE DETAILS -->
-          <div id="stationLeaveBox" class="form-group form-full" style="display: none;">
-            <div class="station-leave-card">
-              <h4 style="font-size: 0.88rem; color: #92400e; margin-bottom: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                Out-of-Headquarters Travel & Destination Details
-              </h4>
-              <div class="form-grid-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div>
-                  <label for="stationDestination" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    Destination City & State
-                  </label>
-                  <input type="text" id="stationDestination" class="form-control" placeholder="e.g. New Delhi / Rohtak, Haryana">
-                </div>
-                <div>
-                  <label for="stationLocalPS" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    Nearest Local Police Station
-                  </label>
-                  <input type="text" id="stationLocalPS" class="form-control" placeholder="e.g. PS Sampla / PS Model Town">
-                </div>
-                <div>
-                  <label for="stationTravelMode" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    Mode of Travel
-                  </label>
-                  <select id="stationTravelMode" class="form-control">
-                    <option value="Train (Indian Railways)">Train (Indian Railways)</option>
-                    <option value="Bus (State Roadways / Private)">Bus (State Roadways / Private)</option>
-                    <option value="Private Car (Four-Wheeler)">Private Car (Four-Wheeler)</option>
-                    <option value="Two-Wheeler (Motorcycle / Bike)">Two-Wheeler (Motorcycle / Bike)</option>
-                    <option value="Flight / Air Travel">Flight / Air Travel</option>
-                    <option value="Other Arrangement">Other Arrangement</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="stationFamilyContact" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    Family Contact Person & Relationship
-                  </label>
-                  <input type="text" id="stationFamilyContact" class="form-control" placeholder="e.g. Father - Sh. Ram Kishan (98120XXXXX)">
-                </div>
-                <div style="grid-column: 1 / -1;">
-                  <label for="stationLeaveAddress" style="font-size: 0.8rem; font-weight: 600; color: #92400e;">
-                    Complete Address During Out-of-Station Leave
-                  </label>
-                  <textarea id="stationLeaveAddress" class="form-control" rows="2" placeholder="House No., Sector/Street, Village/City, PIN Code"></textarea>
-                </div>
+            <div id="halfDayShiftBox" style="display: none;" class="opt-toggle-body">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Select Shift:</label>
+              <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.84rem;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="radio" name="halfDayShift" value="Morning Shift (09:00 AM to 02:00 PM)" checked onchange="calculateLeaveDays()">
+                  Morning (09:00 AM - 02:00 PM)
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="radio" name="halfDayShift" value="Evening Shift (02:00 PM to 08:00 PM)" onchange="calculateLeaveDays()">
+                  Evening (02:00 PM - 08:00 PM)
+                </label>
               </div>
-              <small style="color: #b45309; font-size: 0.74rem; margin-top: 6px; display: block;">
-                * As per Police Regulations, Station Leave is subject to sanction by the Superintendent of Police (SP Cyber).
-              </small>
             </div>
           </div>
 
-          <!-- REAL FILE ATTACHMENT UPLOAD -->
-          <div class="form-group form-full">
-            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">
-              Document Attachment (Medical Certificate / Invitation / Supporting Letter)
-            </label>
-            <div class="attachment-upload-zone" onclick="document.getElementById('leaveAttachmentInput').click()">
-              <input type="file" id="leaveAttachmentInput" accept=".pdf,image/*,.doc,.docx" onchange="handleAttachmentSelect(event)">
-              <div id="attachmentPrompt">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--police-blue); margin-bottom: 6px;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                <p style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Click to browse or drag & drop file here</p>
-                <p style="font-size: 0.75rem; color: #64748b;">(Supported formats: PDF, JPG, PNG, DOC - Max 5MB)</p>
+          <!-- SECTION 2: REASON & HANDOVER -->
+          <div class="apply-section-title">
+            <span>2. Grounds & Contact</span>
+          </div>
+
+          <!-- REASON TEXTAREA -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="leaveReason" class="apply-field-label">Specific Reason for Leave <span class="required">*</span></label>
+            <textarea id="leaveReason" class="form-control" rows="2" required placeholder="e.g. Urgent domestic affairs, family obligation, personal work"></textarea>
+          </div>
+
+          <!-- HANDOVER & EMERGENCY CONTACT IN COMPACT 2-COL -->
+          <div class="mobile-contact-row" style="margin-bottom: 14px;">
+            <div class="form-group">
+              <label for="handoverOfficer" class="apply-field-label">Charge Handover To</label>
+              <select id="handoverOfficer" class="form-control">
+                <option value="">-- Relieving Officer --</option>
+                ${sameBranchMembers.map(m => `<option value="${m.name} (${m.beltNo})">${m.name} - ${m.rank} (${m.beltNo})</option>`).join("")}
+                <option value="Branch Incharge">Branch Incharge</option>
+                <option value="Other Arrangement">Other Arrangement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="emergencyMobile" class="apply-field-label">Emergency Mobile <span class="required">*</span></label>
+              <input type="tel" id="emergencyMobile" class="form-control" value="${user.mobile}" required placeholder="10-digit mobile">
+            </div>
+          </div>
+
+          <!-- SECTION 3: OPTIONAL PERMISSIONS & ATTACHMENT ACCORDION -->
+          <div class="apply-section-title">
+            <span>3. Additional Options (Optional)</span>
+          </div>
+
+          <div class="apply-optional-group">
+            <!-- 1. STATION LEAVE (OUT OF HQ) -->
+            <div class="opt-toggle-card">
+              <div class="opt-toggle-header">
+                <label class="opt-toggle-label">
+                  <input type="checkbox" id="stationLeaveCheck" onchange="toggleStationLeaveInputs()">
+                  <span>📍 Out-of-Station Leave (Leaving HQ)</span>
+                  <span class="opt-toggle-sub">Tap to specify destination</span>
+                </label>
               </div>
-              <div id="attachmentPreviewBox" style="display: none;" class="attachment-preview-card" onclick="event.stopPropagation()">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div class="attachment-icon">📎</div>
-                  <div style="text-align: left;">
-                    <strong id="attachmentFileName" style="font-size: 0.85rem; color: #0f274c;"></strong>
+              <div id="stationLeaveBox" style="display: none;" class="opt-toggle-body">
+                <div class="station-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div>
+                    <label for="stationDestination" class="apply-field-label">Destination City &amp; State</label>
+                    <input type="text" id="stationDestination" class="form-control" placeholder="e.g. Rohtak / New Delhi">
+                  </div>
+                  <div>
+                    <label for="stationLocalPS" class="apply-field-label">Nearest Police Station</label>
+                    <input type="text" id="stationLocalPS" class="form-control" placeholder="e.g. PS Model Town">
+                  </div>
+                  <div>
+                    <label for="stationTravelMode" class="apply-field-label">Mode of Travel</label>
+                    <select id="stationTravelMode" class="form-control">
+                      <option value="Train (Indian Railways)">Train (Indian Railways)</option>
+                      <option value="Bus (State Roadways / Private)">Bus (State Roadways / Private)</option>
+                      <option value="Private Car (Four-Wheeler)">Private Car (Four-Wheeler)</option>
+                      <option value="Two-Wheeler (Motorcycle / Bike)">Two-Wheeler (Motorcycle / Bike)</option>
+                      <option value="Flight / Air Travel">Flight / Air Travel</option>
+                      <option value="Other Arrangement">Other Arrangement</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="stationFamilyContact" class="apply-field-label">Family Contact Person</label>
+                    <input type="text" id="stationFamilyContact" class="form-control" placeholder="e.g. Amit - Brother (98120XXXXX)">
+                  </div>
+                  <div style="grid-column: 1 / -1;">
+                    <label for="stationLeaveAddress" class="apply-field-label">Complete Address During Stay</label>
+                    <textarea id="stationLeaveAddress" class="form-control" rows="2" placeholder="Full house address, street &amp; village/city"></textarea>
+                  </div>
+                </div>
+                <small style="color: #b45309; font-size: 0.74rem; margin-top: 6px; display: block;">
+                  * Subject to sanction by SP Cyber Crime, Panchkula.
+                </small>
+              </div>
+            </div>
+
+            <!-- 2. PREFIX & SUFFIX HOLIDAYS -->
+            <div class="opt-toggle-card">
+              <div class="opt-toggle-header">
+                <label class="opt-toggle-label">
+                  <input type="checkbox" id="prefixSuffixCheck" onchange="togglePrefixSuffix(this)">
+                  <span>🗓️ Add Prefix / Suffix Holidays (C-OFF)</span>
+                  <span class="opt-toggle-sub">Optional</span>
+                </label>
+              </div>
+              <div id="prefixSuffixFields" style="display: none;" class="opt-toggle-body">
+                <div class="mobile-dates-row">
+                  <div>
+                    <label for="prefixDaysInput" class="apply-field-label">Prefix Days (Before leave)</label>
+                    <input type="number" id="prefixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="0">
+                  </div>
+                  <div>
+                    <label for="suffixDaysInput" class="apply-field-label">Suffix Days (After leave)</label>
+                    <input type="number" id="suffixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. COURT EVIDENCE / SUMMONS -->
+            <div class="opt-toggle-card">
+              <div class="opt-toggle-header">
+                <label class="opt-toggle-label">
+                  <input type="checkbox" id="courtEvidenceCheck" onchange="toggleCourtCaseFields(this)">
+                  <span>⚖️ Court Evidence / Summons Scheduled</span>
+                  <span class="opt-toggle-sub">Optional</span>
+                </label>
+              </div>
+              <div id="courtCaseFields" style="display: none;" class="opt-toggle-body">
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <label for="courtCaseDetails" class="apply-field-label">Court &amp; Case / FIR Details</label>
+                  <input type="text" id="courtCaseDetails" class="form-control" placeholder="e.g. Session Court / FIR 112/2025, Hearing 15-Nov">
+                </div>
+                <div class="form-group">
+                  <label for="courtOfficerHandover" class="apply-field-label">Case Diary Handed Over To</label>
+                  <input type="text" id="courtOfficerHandover" class="form-control" placeholder="e.g. ASI Rajesh Kumar (312/PKL)">
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. ATTACHMENT CARD -->
+            <div class="opt-toggle-card">
+              <div class="mobile-attachment-card">
+                <div style="flex-grow: 1;">
+                  <div style="font-weight: 700; font-size: 0.86rem; color: #0f274c;">📎 Supporting Document / Medical Slip</div>
+                  <div style="font-size: 0.74rem; color: #64748b;">PDF, JPG, PNG (Max 5MB)</div>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('leaveAttachmentInput').click()" style="padding: 6px 12px; font-weight: 700; font-size: 0.8rem;">
+                    Upload File
+                  </button>
+                </div>
+              </div>
+              <input type="file" id="leaveAttachmentInput" style="display: none;" accept=".pdf,image/*,.doc,.docx" onchange="handleAttachmentSelect(event)">
+              <div id="attachmentPrompt" style="display: none;"></div>
+              <div id="attachmentPreviewBox" style="display: none; padding: 10px 14px; border-top: 1px dashed #cbd5e1; background: #ffffff;" class="attachment-preview-card" onclick="event.stopPropagation()">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                  <span style="font-size: 1.2rem;">📄</span>
+                  <div style="text-align: left; overflow: hidden;">
+                    <strong id="attachmentFileName" style="font-size: 0.85rem; color: #0f274c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></strong>
                     <div id="attachmentFileSize" style="font-size: 0.72rem; color: #64748b;"></div>
                   </div>
                 </div>
-                <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)">Remove</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- FORM ACTION BUTTONS WITH PREVIEW OPTION -->
-        <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">Cancel</button>
-          
-          <button type="button" class="btn btn-outline" onclick="openApplicationPreviewModal()" style="border-color: #0f274c; color: #0f274c;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            Preview Memo
-          </button>
+          <!-- ACTION BUTTONS -->
+          <div class="apply-actions-container">
+            <button type="submit" class="btn btn-primary btn-apply-submit-main">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              Submit Leave Application
+            </button>
 
-          <button type="submit" class="btn btn-primary" style="flex-grow: 1;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            Submit Application
-          </button>
-        </div>
-      </form>
+            <div class="apply-secondary-btns">
+              <button type="button" class="btn btn-outline" onclick="openApplicationPreviewModal()" style="border-color: #0f274c; color: #0f274c; font-weight: 600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Preview Memo
+              </button>
+              <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')" style="color: #64748b; font-weight: 600;">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   `;
 

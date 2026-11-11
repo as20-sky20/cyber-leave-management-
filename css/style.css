@@ -4292,3 +4292,311 @@ body.portal-logged-out #loginScreen {
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+
+/* ==========================================================================
+   MOBILE-FIRST LEAVE APPLICATION FORM STYLING
+   ========================================================================== */
+.apply-leave-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+
+.apply-leave-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.apply-leave-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f274c;
+  margin: 0;
+}
+
+.apply-leave-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 3px 12px rgba(15, 39, 76, 0.06);
+  padding: 18px 20px;
+}
+
+/* Compact Officer Banner */
+.apply-officer-strip {
+  background: linear-gradient(135deg, #09172e 0%, #0f274c 100%);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.apply-officer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.apply-officer-avatar {
+  font-size: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+}
+
+.apply-officer-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.apply-officer-belt {
+  color: var(--police-gold, #ffd700);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.apply-officer-sub {
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.apply-branch-pill-box {
+  min-width: 170px;
+}
+
+.apply-branch-select {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 5px 8px !important;
+  border-radius: 6px !important;
+  min-height: unset !important;
+  cursor: pointer;
+}
+
+.apply-branch-select option {
+  background: #0f274c;
+  color: #ffffff;
+}
+
+/* Compact History Strip */
+.compact-history-strip {
+  background: #f8fafc;
+  border-left: 3px solid var(--police-accent, #2563eb);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: #334155;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form section grouping */
+.apply-section-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1e3a8a;
+  margin: 16px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 4px;
+}
+
+.apply-field-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f274c;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* 2-column mobile responsive rows */
+.mobile-dates-row,
+.mobile-contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Days duration badge */
+.leave-days-badge-notice {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  margin: 10px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Clean Option Accordion Cards */
+.apply-optional-group {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opt-toggle-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.opt-toggle-header {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.opt-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: #0f274c;
+  margin: 0;
+  width: 100%;
+}
+
+.opt-toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+  flex-shrink: 0;
+}
+
+.opt-toggle-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.opt-toggle-body {
+  padding: 12px 14px;
+  border-top: 1px dashed #cbd5e1;
+  background: #ffffff;
+}
+
+/* Mobile Attachment Card */
+.mobile-attachment-card {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Bottom Action Bar */
+.apply-actions-container {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-apply-submit-main {
+  width: 100%;
+  min-height: 48px !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer;
+}
+
+.apply-secondary-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .apply-leave-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+  
+  .apply-officer-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+  
+  .apply-branch-pill-box {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+  
+  .apply-branch-select {
+    width: 100% !important;
+  }
+  
+  .mobile-dates-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .mobile-dates-row .form-control {
+    font-size: 14px !important;
+    padding: 8px 8px !important;
+    min-height: 42px !important;
+  }
+
+  .mobile-contact-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .station-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .opt-toggle-sub {
+    display: none !important;
+  }
+}
