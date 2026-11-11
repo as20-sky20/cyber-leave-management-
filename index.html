@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261111.1225">
+  <link rel="stylesheet" href="css/style.css?v=20261111.1300">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -328,6 +328,47 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Download File
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5C. IN-APP MOBILE PDF VIEWER MODAL -->
+  <div class="modal-overlay" id="inAppPdfViewerModal">
+    <div class="modal-content pdf-viewer-modal-fullscreen">
+      <div class="modal-header pdf-viewer-header">
+        <div class="pdf-viewer-title-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <div>
+            <h3 id="inAppPdfTitle" style="font-size: 1rem; margin: 0; line-height: 1.2;">Official PDF Document</h3>
+            <span id="inAppPdfSubtitle" style="font-size: 0.72rem; color: #cbd5e1;">Haryana Police • Official A4 Order</span>
+          </div>
+        </div>
+        <div class="pdf-viewer-top-actions">
+          <div class="pdf-zoom-controls">
+            <button type="button" class="btn btn-outline btn-sm zoom-btn" onclick="zoomInAppPdf(-0.15)" title="Zoom Out">-</button>
+            <button type="button" class="btn btn-outline btn-sm zoom-btn" onclick="resetInAppPdfZoom()" title="Fit Screen">Fit</button>
+            <button type="button" class="btn btn-outline btn-sm zoom-btn" onclick="zoomInAppPdf(0.15)" title="Zoom In">+</button>
+          </div>
+          <button class="close-btn" onclick="closeInAppPdfModal()">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body pdf-viewer-body" id="inAppPdfBody">
+        <div class="pdf-sheet-wrapper" id="inAppPdfSheetWrapper">
+          <div id="inAppPdfContent" class="pdf-render-canvas">
+            <!-- Rendered A4 Document injected here -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer pdf-viewer-footer">
+        <button type="button" class="btn btn-outline" onclick="closeInAppPdfModal()">Close</button>
+        <button type="button" class="btn btn-gold" id="inAppPdfDownloadBtn" onclick="downloadCurrentInAppPdf()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download PDF (.pdf)
+        </button>
+        <button type="button" class="btn btn-primary" onclick="printCurrentInAppPdf()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print / Save PDF
+        </button>
       </div>
     </div>
   </div>
@@ -693,7 +734,8 @@
 
 
   <!-- SCRIPTS -->
-  <script src="js/data.js?v=20261111.1205"></script>
-  <script src="js/app.main.js?v=20261111.1225"></script>
+  <script src="js/html2pdf.bundle.min.js"></script>
+  <script src="js/data.js?v=20261111.1300"></script>
+  <script src="js/app.main.js?v=20261111.1300"></script>
 </body>
 </html>

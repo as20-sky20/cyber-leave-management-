@@ -4031,23 +4031,25 @@ function printSitrepReport() {
   }
   document.body.classList.add("printing-sitrep-only");
   showToast("Opening Print / Save as PDF...", "info");
+  window.print();
   setTimeout(() => {
-    window.print();
-    setTimeout(() => {
-      document.body.classList.remove("printing-sitrep-only");
-    }, 1200);
-  }, 100);
+    document.body.classList.remove("printing-sitrep-only");
+  }, 1000);
 }
 
-function openSitrepInNewTab(targetDate) {
-  const dateStr = targetDate || currentSitrepDate;
-  const user = AppState.currentUser;
-  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
-  if (!canViewSitrep) {
-    showToast("Permission Denied", "error");
-    return;
-  }
+function printSitrepDirect() {
+  printSitrepReport();
+}
 
+// ==========================================================================
+// IN-APP MOBILE PDF VIEWER & HTML2PDF EXPORT ENGINE
+// ==========================================================================
+let inAppPdfCurrentType = null;
+let inAppPdfCurrentTarget = null;
+let inAppPdfCurrentZoom = 1;
+
+function buildSitrepOfficialA4Html(targetDate) {
+  const dateStr = targetDate || currentSitrepDate;
   const totalForce = AppState.users.length;
   const onLeaveLeaves = AppState.leaves.filter(l => {
     if (l.status !== "APPROVED") return false;
@@ -4061,64 +4063,463 @@ function openSitrepInNewTab(targetDate) {
   const stationLeaveCount = onLeaveLeaves.filter(l => l.stationLeave).length;
   const displayDate = formatDate(dateStr);
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    showToast("Popup blocked! Please allow popups to view full A4 PDF sheet.", "error");
+  return `
+    <div class="official-doc-canvas" id="sitrepDocumentCanvas">
+      <div class="doc-gov-header">
+        <div style="font-size: 0.74rem; font-weight: 800; color: #64748b; letter-spacing: 2px;">GOVERNMENT OF HARYANA • POLICE DEPARTMENT</div>
+        <div class="doc-state-title">STATE CYBER CRIME HEADQUARTERS, PANCHKULA</div>
+        <div class="doc-unit-title">DAILY FORCE STRENGTH &amp; LEAVE ROZNAMCHA (SITREP)</div>
+        <div class="doc-sub-text">Sector 20, Panchkula (Haryana) - 134117 | Competent Authority: Mayank Gupta, IPS, SP Cyber Crime</div>
+        <div class="doc-order-badge">OFFICIAL DAILY POLICE SITREP • CONFIDENTIAL</div>
+      </div>
+
+      <div class="doc-meta-bar">
+        <div><strong>Date:</strong> ${displayDate}</div>
+        <div><strong>GD Entry No:</strong> CYB/PKL/ROZ/${dateStr.replace(/-/g, '')}/01</div>
+        <div><strong>Roll Call:</strong> 09:00 Hours Morning Session</div>
+      </div>
+
+      <div class="doc-stat-grid">
+        <div class="doc-stat-cell">
+          <div class="doc-stat-val">${totalForce}</div>
+          <div class="doc-stat-lbl">Total Strength</div>
+        </div>
+        <div class="doc-stat-cell" style="background: #f0fdf4; border-color: #86efac;">
+          <div class="doc-stat-val" style="color: #15803d;">${onDutyCount}</div>
+          <div class="doc-stat-lbl">On Duty Present</div>
+        </div>
+        <div class="doc-stat-cell" style="background: #fffbeb; border-color: #fde68a;">
+          <div class="doc-stat-val" style="color: #b45309;">${onLeaveCount}</div>
+          <div class="doc-stat-lbl">On Sanctioned Leave</div>
+        </div>
+        <div class="doc-stat-cell" style="background: #eff6ff; border-color: #bfdbfe;">
+          <div class="doc-stat-val" style="color: #1d4ed8;">${helplineOnDuty}/${helplineUsers.length}</div>
+          <div class="doc-stat-lbl">1930 Helpline Desk</div>
+        </div>
+      </div>
+
+      <div style="font-weight: 800; font-size: 0.85rem; color: #0f274c; margin: 14px 0 6px 0; border-left: 3px solid #0f274c; padding-left: 8px; text-transform: uppercase;">
+        SECTION 1: PERSONNEL CURRENTLY ON SANCTIONED LEAVE (${onLeaveCount})
+      </div>
+
+      ${onLeaveLeaves.length === 0 ? `
+        <div style="padding: 12px; text-align: center; background: #f0fdf4; border: 1px dashed #86efac; color: #166534; font-size: 0.82rem; font-weight: 700; margin-bottom: 12px;">
+          ✓ Entire force strength of ${totalForce} personnel across all 13 wings is present on duty. No personnel on leave.
+        </div>
+      ` : `
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 28px; text-align: center;">#</th>
+              <th>Personnel Name &amp; Rank</th>
+              <th>Cyber Wing</th>
+              <th>Leave Type</th>
+              <th>Period</th>
+              <th style="text-align: center;">Days</th>
+              <th>Station / Destination</th>
+              <th>Resumption</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${onLeaveLeaves.map((l, idx) => {
+              let returnDateStr = "Next Working Day";
+              try {
+                const toD = new Date(l.toDate);
+                toD.setDate(toD.getDate() + 1);
+                returnDateStr = formatDate(toD.toISOString().split("T")[0]);
+              } catch(e) {}
+              return `
+                <tr>
+                  <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                  <td><strong>${l.applicantName}</strong><br><small style="color: #64748b;">${l.rank} (${l.beltNo})</small></td>
+                  <td>${l.branchName}</td>
+                  <td><strong>${l.leaveType}</strong></td>
+                  <td>${formatDate(l.fromDate)} to ${formatDate(l.toDate)}</td>
+                  <td style="text-align: center; font-weight: 700;">${l.totalDays}</td>
+                  <td>${l.stationLeave ? `Out of HQ (${l.stationDestination || l.stationLeaveAddress || 'Declared'})` : 'Station HQ'}</td>
+                  <td><strong>${returnDateStr}</strong></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `}
+
+      <div style="font-weight: 800; font-size: 0.85rem; color: #0f274c; margin: 14px 0 6px 0; border-left: 3px solid #0f274c; padding-left: 8px; text-transform: uppercase;">
+        SECTION 2: 13 CYBER BRANCHES DEPLOYMENT &amp; STRENGTH MATRIX
+      </div>
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th style="width: 28px; text-align: center;">#</th>
+            <th>Cyber Wing</th>
+            <th>Branch Incharge</th>
+            <th style="text-align: center;">Total</th>
+            <th style="text-align: center;">On Duty</th>
+            <th style="text-align: center;">On Leave</th>
+            <th>Operational Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${AppState.branches.map((b, idx) => {
+            const branchUsers = AppState.users.filter(u => u.branchId === b.id);
+            const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
+            const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
+            const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
+            const isFullStrength = branchOnLeave === 0;
+            return `
+              <tr>
+                <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
+                <td><strong>${b.name}</strong></td>
+                <td>${incharge ? incharge.name + ' (' + incharge.rank + ')' : 'Nodal Officer'}</td>
+                <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
+                <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
+                <td style="text-align: center; font-weight: 700; color: ${branchOnLeave > 0 ? '#dc2626' : '#64748b'};">${branchOnLeave}</td>
+                <td>${isFullStrength ? '<span style="color: #15803d; font-weight: 700;">✓ 100% Present</span>' : '<span style="color: #b45309; font-weight: 700;">Active (' + branchOnDuty + ' Present)</span>'}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+
+      <div class="doc-sig-row">
+        <div class="doc-sig-box">
+          <div>Prepared &amp; Verified By:</div>
+          <div style="font-weight: 700; margin-top: 24px;">Reader to SP Cyber Crime</div>
+          <div style="font-size: 0.72rem; color: #475569;">State Cyber Crime, Panchkula</div>
+        </div>
+        <div class="doc-sig-box">
+          <div>Supervisory Officer:</div>
+          <div style="font-weight: 700; margin-top: 24px;">DSP Cyber Crime</div>
+          <div style="font-size: 0.72rem; color: #475569;">State Cyber Crime, Panchkula</div>
+        </div>
+        <div class="doc-sig-box">
+          <div>Sanctioning Authority:</div>
+          <div style="font-weight: 700; margin-top: 24px;">Mayank Gupta, IPS</div>
+          <div style="font-size: 0.72rem; color: #475569;">Superintendent of Police, State Cyber Crime</div>
+        </div>
+      </div>
+
+      <div class="doc-footer-notice">
+        Electronically generated &amp; verified by Haryana Police Digital Leave Management System • Hash: DLMS-${dateStr.replace(/-/g, '')}-PKL
+      </div>
+    </div>
+  `;
+}
+
+function buildSanctionSlipA4Html(leaveOrId) {
+  const leave = typeof leaveOrId === "object" ? leaveOrId : AppState.leaves.find(l => l.id === leaveOrId);
+  if (!leave) return '<div style="padding: 20px; text-align: center; color: red;">Leave record not found</div>';
+
+  return `
+    <div class="official-doc-canvas" id="sanctionDocumentCanvas">
+      <div class="doc-gov-header">
+        <div style="font-size: 0.76rem; font-weight: 800; color: #64748b; letter-spacing: 2px;">GOVERNMENT OF HARYANA • POLICE DEPARTMENT</div>
+        <div class="doc-state-title">OFFICE OF THE SUPERINTENDENT OF POLICE, STATE CYBER CRIME</div>
+        <div class="doc-unit-title">Cyber Crime Police Station, Sector 20, Panchkula (Haryana) - 134117</div>
+        <div class="doc-sub-text">Email: sp.cyber-hry@gov.in | Cyber Helpline: 1930 | Emergency: 112</div>
+        <div class="doc-order-badge">OFFICE ORDER • LEAVE SANCTION ORDER</div>
+      </div>
+
+      <div class="doc-meta-bar">
+        <div><strong>Order Dispatch No:</strong> ${leave.sanctionNo}</div>
+        <div><strong>Dated, Panchkula, the:</strong> ${leave.spActionAt ? leave.spActionAt.split(" ")[0] : new Date().toISOString().split("T")[0]}</div>
+      </div>
+
+      <div style="font-size: 0.95rem; line-height: 1.8; text-align: justify; margin: 18px 0; color: #1e293b;">
+        <p style="margin-bottom: 14px; text-indent: 24px;">
+          Sanction is hereby accorded to grant 
+          <strong style="text-decoration: underline;">${leave.totalDays} (${numberToWords(leave.totalDays)}) days</strong> 
+          ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
+            <span style="color: #92400e; font-weight: bold;">(curtailed from ${leave.originalDays} days originally applied, due to administrative/operational requirements)</span> 
+          ` : ''}
+          <strong>${leave.leaveTypeName}</strong> with effect from 
+          <strong style="text-decoration: underline;">${formatDate(leave.fromDate)}</strong> to 
+          <strong style="text-decoration: underline;">${formatDate(leave.toDate)}</strong> 
+          in respect of <strong>${leave.rank} ${leave.applicantName}</strong>, 
+          Belt No. <strong>${leave.beltNo}</strong>, posted in 
+          <strong>${leave.branchName}</strong>, State Cyber Crime Unit Panchkula, on the ground of:
+          <em>"${leave.reason}"</em>.
+        </p>
+
+        ${leave.stationLeave ? `
+          <p style="margin-bottom: 14px; text-indent: 24px;">
+            2. Further, permission to leave Headquarters / Station during the above sanctioned leave period is also 
+            <strong>GRANTED</strong> to visit the address: 
+            <strong style="text-decoration: underline;">${leave.stationLeaveAddress || "As declared in application"}</strong>. 
+            The officer shall keep his/her mobile phone active at all times on <strong>${leave.emergencyContact}</strong> 
+            and shall report immediately if recalled for any emergent cyber investigation duty.
+          </p>
+        ` : `
+          <p style="margin-bottom: 14px; text-indent: 24px;">
+            2. The official shall remain at station headquarters and shall report for duty immediately upon expiry of the leave.
+          </p>
+        `}
+
+        <p style="margin-bottom: 14px; text-indent: 24px;">
+          3. It is certified that the official has sufficient leave balance in his/her leave account and necessary handover 
+          of official duties/consoles was made to <strong>${leave.handoverTo || "the Branch Incharge"}</strong>.
+        </p>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px 14px; font-size: 0.8rem; margin: 14px 0 20px; line-height: 1.6; border-radius: 4px;">
+        <strong>Conditions of Sanction:</strong><br>
+        i) Overstayal beyond the sanctioned period without prior written approval will invite departmental action.<br>
+        ii) Certificate of resumption of duty must be submitted to the Establishment Branch / Reader to SP immediately on return.
+      </div>
+
+      <div class="doc-sig-row" style="margin-top: 24px;">
+        <div style="font-size: 0.78rem; text-align: left; width: 45%;">
+          <div><strong>Digital Verification Code:</strong></div>
+          <div style="font-family: monospace; font-size: 0.85rem; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: 700;">
+            CYB-PKL-${leave.id}-${Date.now().toString().slice(-6)}
+          </div>
+          <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">Tamper-proof digital seal of Haryana Police</div>
+        </div>
+
+        <div class="doc-sig-box" style="width: 45%; border-top: 1px solid #0f274c;">
+          <div style="font-family: cursive, 'Segoe Script', serif; color: #1e3a8a; font-size: 1.15rem; font-weight: 700; margin-bottom: 2px;">Mayank Gupta</div>
+          <div style="font-weight: 700; font-size: 0.85rem;">Superintendent of Police</div>
+          <div style="font-size: 0.75rem; color: #334155;">State Cyber Crime, Panchkula<br>(Haryana)</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.76rem; margin-top: 20px; border-top: 1px solid #cbd5e1; padding-top: 8px; line-height: 1.6; color: #475569;">
+        <strong>Endst. No. ${leave.sanctionNo} / E-1 / Cyber, dated even.</strong><br>
+        Copy is forwarded for information and necessary action to:<br>
+        1. Incharge, ${leave.branchName}, Cyber Unit Panchkula.<br>
+        2. Reader to SP Cyber Crime, Panchkula.<br>
+        3. Accountant / Establishment Branch (for leave register entry &amp; salary deduction if any).<br>
+        4. Official concerned: ${leave.rank} ${leave.applicantName}, Belt No. ${leave.beltNo}.<br>
+        5. Guard file.
+      </div>
+    </div>
+  `;
+}
+
+function openInAppPdfViewer(type, idOrDate) {
+  inAppPdfCurrentType = type;
+  inAppPdfCurrentTarget = idOrDate;
+  inAppPdfCurrentZoom = 1;
+
+  const modal = document.getElementById("inAppPdfViewerModal");
+  const titleEl = document.getElementById("inAppPdfTitle");
+  const subtitleEl = document.getElementById("inAppPdfSubtitle");
+  const contentEl = document.getElementById("inAppPdfContent");
+  const wrapper = document.getElementById("inAppPdfSheetWrapper");
+
+  if (!modal || !contentEl) return;
+
+  if (wrapper) wrapper.style.transform = "scale(1)";
+
+  if (type === "sitrep") {
+    const dateStr = idOrDate || currentSitrepDate;
+    if (titleEl) titleEl.textContent = `Daily SITREP Roznamcha (${dateStr})`;
+    if (subtitleEl) subtitleEl.textContent = `Haryana Police • State Cyber Crime Headquarters • Official A4 Report`;
+    contentEl.innerHTML = buildSitrepOfficialA4Html(dateStr);
+  } else if (type === "sanction") {
+    const leave = typeof idOrDate === "object" ? idOrDate : AppState.leaves.find(l => l.id === idOrDate);
+    if (!leave) {
+      showToast("Sanction order record not found", "error");
+      return;
+    }
+    inAppPdfCurrentTarget = leave.id;
+    if (titleEl) titleEl.textContent = `Sanction Order: ${leave.sanctionNo || leave.id}`;
+    if (subtitleEl) subtitleEl.textContent = `Office of SP Cyber Crime Panchkula • ${leave.rank} ${leave.applicantName}`;
+    contentEl.innerHTML = buildSanctionSlipA4Html(leave);
+  }
+
+  modal.classList.add("active");
+}
+
+function closeInAppPdfModal() {
+  const modal = document.getElementById("inAppPdfViewerModal");
+  if (modal) modal.classList.remove("active");
+  resetInAppPdfZoom();
+}
+
+function zoomInAppPdf(delta) {
+  inAppPdfCurrentZoom = Math.max(0.5, Math.min(1.8, Math.round((inAppPdfCurrentZoom + delta) * 100) / 100));
+  const wrapper = document.getElementById("inAppPdfSheetWrapper");
+  if (wrapper) {
+    wrapper.style.transform = `scale(${inAppPdfCurrentZoom})`;
+  }
+}
+
+function resetInAppPdfZoom() {
+  inAppPdfCurrentZoom = 1;
+  const wrapper = document.getElementById("inAppPdfSheetWrapper");
+  if (wrapper) {
+    wrapper.style.transform = "scale(1)";
+  }
+}
+
+function downloadCurrentInAppPdf() {
+  if (inAppPdfCurrentType === "sitrep") {
+    downloadSitrepPdfDirect(inAppPdfCurrentTarget);
+  } else if (inAppPdfCurrentType === "sanction") {
+    downloadSanctionPdfDirect(inAppPdfCurrentTarget);
+  }
+}
+
+function printCurrentInAppPdf() {
+  document.body.classList.add("printing-inapp-pdf-only");
+  showToast("Opening Print / Save as PDF...", "info");
+  window.print();
+  setTimeout(() => {
+    document.body.classList.remove("printing-inapp-pdf-only");
+  }, 1000);
+}
+
+function downloadSitrepPdfDirect(targetDate) {
+  const dateStr = targetDate || currentSitrepDate;
+  const user = AppState.currentUser;
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canViewSitrep) {
+    showToast("Permission Denied", "error");
     return;
   }
 
+  showToast("Generating Daily SITREP PDF file...", "info");
+
+  let tempDiv = null;
+  let targetEl = null;
+  const inAppViewer = document.getElementById("inAppPdfViewerModal");
+  if (inAppViewer && inAppViewer.classList.contains("active") && inAppPdfCurrentType === "sitrep") {
+    targetEl = document.getElementById("inAppPdfContent");
+  } else {
+    tempDiv = document.createElement("div");
+    tempDiv.style.position = "fixed";
+    tempDiv.style.left = "-9999px";
+    tempDiv.style.top = "0";
+    tempDiv.style.width = "780px";
+    tempDiv.style.background = "#ffffff";
+    tempDiv.style.padding = "25px";
+    tempDiv.innerHTML = buildSitrepOfficialA4Html(dateStr);
+    document.body.appendChild(tempDiv);
+    targetEl = tempDiv;
+  }
+
+  const filename = `Cyber_Daily_Sitrep_${dateStr}.pdf`;
+
+  if (typeof window.html2pdf === "function") {
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    window.html2pdf().set(opt).from(targetEl).save().then(() => {
+      showToast("✓ SITREP PDF downloaded: " + filename, "success");
+      if (tempDiv) document.body.removeChild(tempDiv);
+    }).catch(err => {
+      console.warn("html2pdf error, falling back:", err);
+      if (tempDiv) document.body.removeChild(tempDiv);
+      openSitrepInNewTab(dateStr);
+    });
+  } else {
+    if (tempDiv) document.body.removeChild(tempDiv);
+    openSitrepInNewTab(dateStr);
+  }
+}
+
+function downloadSanctionPdfDirect(leaveId) {
+  const leave = AppState.leaves.find(l => l.id === leaveId);
+  if (!leave) {
+    showToast("Leave record not found", "error");
+    return;
+  }
+
+  showToast("Generating Sanction Order PDF file...", "info");
+
+  let tempDiv = null;
+  let targetEl = null;
+  const inAppViewer = document.getElementById("inAppPdfViewerModal");
+  if (inAppViewer && inAppViewer.classList.contains("active") && inAppPdfCurrentType === "sanction") {
+    targetEl = document.getElementById("inAppPdfContent");
+  } else {
+    tempDiv = document.createElement("div");
+    tempDiv.style.position = "fixed";
+    tempDiv.style.left = "-9999px";
+    tempDiv.style.top = "0";
+    tempDiv.style.width = "780px";
+    tempDiv.style.background = "#ffffff";
+    tempDiv.style.padding = "25px";
+    tempDiv.innerHTML = buildSanctionSlipA4Html(leave);
+    document.body.appendChild(tempDiv);
+    targetEl = tempDiv;
+  }
+
+  const safeSanctionNo = leave.sanctionNo ? leave.sanctionNo.split("/").join("_").split(" ").join("_") : leave.id;
+  const filename = `Sanction_Order_${safeSanctionNo}.pdf`;
+
+  if (typeof window.html2pdf === "function") {
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    window.html2pdf().set(opt).from(targetEl).save().then(() => {
+      showToast("✓ Sanction Order PDF downloaded: " + filename, "success");
+      if (tempDiv) document.body.removeChild(tempDiv);
+    }).catch(err => {
+      console.warn("html2pdf error, falling back:", err);
+      if (tempDiv) document.body.removeChild(tempDiv);
+      openSanctionSlipInNewTab(leaveId);
+    });
+  } else {
+    if (tempDiv) document.body.removeChild(tempDiv);
+    openSanctionSlipInNewTab(leaveId);
+  }
+}
+
+function openSitrepInNewTab(targetDate) {
+  const dateStr = targetDate || currentSitrepDate;
+  const user = AppState.currentUser;
+  const canViewSitrep = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
+  if (!canViewSitrep) {
+    showToast("Permission Denied", "error");
+    return;
+  }
+
+  const isMobile = window.innerWidth <= 768 || document.body.classList.contains("force-mobile-view");
+  if (isMobile) {
+    openInAppPdfViewer("sitrep", dateStr);
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    openInAppPdfViewer("sitrep", dateStr);
+    return;
+  }
+
+  const innerDocHtml = buildSitrepOfficialA4Html(dateStr);
   const docHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Force & Leave Roznamcha Sitrep - ${dateStr}</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Segoe UI", Arial, sans-serif; background: #525659; color: #111; padding: 20px 10px; }
-    .page-toolbar { max-width: 900px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #525659; color: #111; padding: 20px 10px; }
+    .page-toolbar { max-width: 800px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     .page-toolbar h1 { font-size: 1rem; font-weight: 600; }
     .page-toolbar .btn-group { display: flex; gap: 8px; }
     .page-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
     .btn-print { background: #d97706; color: #fff; }
-    .btn-print:hover { background: #b45309; }
     .btn-close { background: #475569; color: #fff; }
-    .btn-close:hover { background: #334155; }
-    .a4-sheet { max-width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; padding: 15mm 15mm; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; }
-    .watermark { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 4.5rem; font-weight: 900; color: rgba(15, 39, 76, 0.04); pointer-events: none; white-space: nowrap; letter-spacing: 5px; }
-    .police-header { text-align: center; border-bottom: 2px solid #0f274c; padding-bottom: 12px; margin-bottom: 14px; }
-    .police-header .dept-name { font-size: 0.82rem; font-weight: 800; color: #64748b; letter-spacing: 1.5px; }
-    .police-header .report-title { font-size: 1.15rem; font-weight: 900; color: #0f274c; margin: 6px 0 2px; text-transform: uppercase; }
-    .police-header .hq-name { font-size: 0.84rem; color: #334155; font-weight: 600; }
-    .meta-bar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 0.82rem; font-weight: 600; margin-top: 10px; border-radius: 4px; }
-    .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 14px 0; }
-    .metric-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 6px; text-align: center; background: #f8fafc; }
-    .metric-box .label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #475569; }
-    .metric-box .val { font-size: 1.3rem; font-weight: 900; color: #0f274c; margin: 2px 0; }
-    .metric-box.green .val { color: #15803d; }
-    .metric-box.amber .val { color: #b45309; }
-    .metric-box.blue .val { color: #1d4ed8; }
-    .metric-box.purple .val { color: #6b21a8; }
-    .section-title { font-size: 0.88rem; font-weight: 800; color: #0f274c; background: #e2e8f0; padding: 6px 10px; margin: 16px 0 8px; border-left: 4px solid #0f274c; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-bottom: 12px; }
-    table th, table td { border: 1px solid #94a3b8; padding: 5px 7px; text-align: left; }
-    table th { background: #f1f5f9; color: #0f274c; font-weight: 700; }
-    table tr:nth-child(even) td { background: #f8fafc; }
-    .signatures-block { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 14px; border-top: 1px solid #94a3b8; }
-    .sig-box { width: 31%; text-align: center; font-size: 0.78rem; }
-    .sig-line { border-top: 1px dashed #475569; margin-top: 40px; padding-top: 4px; font-weight: 700; }
-    .footer-note { margin-top: 16px; font-size: 0.72rem; color: #64748b; text-align: center; border-top: 1px dotted #cbd5e1; padding-top: 6px; }
+    .a4-sheet { max-width: 800px; margin: 0 auto; background: #fff; padding: 35px 40px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; }
     @media print {
       body { background: #fff !important; padding: 0 !important; }
       .page-toolbar { display: none !important; }
-      .a4-sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; }
+      .a4-sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 8mm !important; }
       @page { size: A4 portrait; margin: 10mm; }
-    }
-    @media (max-width: 768px) {
-      .a4-sheet { padding: 12px !important; }
-      .metrics-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .metrics-grid .metric-box:last-child { grid-column: span 2; }
-      .meta-bar { flex-direction: column; align-items: flex-start; gap: 4px; }
     }
   </style>
 </head>
@@ -4130,142 +4531,8 @@ function openSitrepInNewTab(targetDate) {
       <button class="btn-close" onclick="window.close()">✕ Close</button>
     </div>
   </div>
-
   <div class="a4-sheet">
-    <div class="watermark">HARYANA POLICE</div>
-    <div class="police-header">
-      <div class="dept-name">HARYANA POLICE | STATE CYBER CRIME HEADQUARTERS</div>
-      <div class="report-title">DAILY FORCE STRENGTH & LEAVE ROZNAMCHA (DAILY SITREP)</div>
-      <div class="hq-name">Sector 20, Panchkula | Competent Authority: Mayank Gupta, IPS, SP Cyber Crime</div>
-      <div class="meta-bar">
-        <div>Date: <strong>${displayDate}</strong></div>
-        <div>GD Entry Dispatch No: <strong>CYB/PKL/ROZ/${dateStr.replace(/-/g, '')}/01</strong></div>
-        <div>Session: <strong>09:00 Hours Morning Roll Call</strong></div>
-      </div>
-    </div>
-
-    <div class="metrics-grid">
-      <div class="metric-box">
-        <div class="label">Total Force</div>
-        <div class="val">${totalForce}</div>
-      </div>
-      <div class="metric-box green">
-        <div class="label">On Duty</div>
-        <div class="val">${onDutyCount}</div>
-      </div>
-      <div class="metric-box amber">
-        <div class="label">On Leave</div>
-        <div class="val">${onLeaveCount}</div>
-      </div>
-      <div class="metric-box blue">
-        <div class="label">1930 Helpline</div>
-        <div class="val">${helplineOnDuty}/${helplineUsers.length}</div>
-      </div>
-      <div class="metric-box purple">
-        <div class="label">Station Leave</div>
-        <div class="val">${stationLeaveCount}</div>
-      </div>
-    </div>
-
-    <div class="section-title">SECTION 1: PERSONNEL CURRENTLY ON SANCTIONED LEAVE (${onLeaveCount})</div>
-    ${onLeaveLeaves.length === 0 ? `
-      <div style="padding: 12px; text-align: center; background: #f0fdf4; border: 1px dashed #86efac; color: #166534; font-size: 0.85rem; font-weight: 700;">
-        ✓ Entire force strength of ${totalForce} personnel across all 13 branches is present on duty. No personnel on leave.
-      </div>
-    ` : `
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 30px; text-align: center;">S.No.</th>
-            <th>Name, Rank & Belt No.</th>
-            <th>Branch</th>
-            <th>Leave Type</th>
-            <th>Period (From - To)</th>
-            <th style="text-align: center;">Days</th>
-            <th>Station Leave / Address</th>
-            <th>Contact</th>
-            <th>Resumption</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${onLeaveLeaves.map((l, idx) => {
-            let returnDateStr = "Next Working Day";
-            try {
-              const toD = new Date(l.toDate);
-              toD.setDate(toD.getDate() + 1);
-              returnDateStr = formatDate(toD.toISOString().split("T")[0]);
-            } catch(e) {}
-            return `
-              <tr>
-                <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
-                <td><strong>${l.applicantName}</strong><br><small>${l.rank} (${l.beltNo})</small></td>
-                <td>${l.branchName}</td>
-                <td><strong>${l.leaveType}</strong><br><small>${l.leaveTypeName || ''}</small></td>
-                <td>${formatDate(l.fromDate)} to ${formatDate(l.toDate)}</td>
-                <td style="text-align: center; font-weight: 700;">${l.totalDays}</td>
-                <td>${l.stationLeave ? `Out of HQ (${l.stationDestination || l.stationLeaveAddress || 'Declared'})` : 'Station HQ'}</td>
-                <td>${l.emergencyContact || '-'}</td>
-                <td><strong>${returnDateStr}</strong></td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `}
-
-    <div class="section-title">SECTION 2: 13 CYBER BRANCHES DEPLOYMENT & STRENGTH MATRIX</div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 30px; text-align: center;">S.No.</th>
-          <th>Cyber Branch</th>
-          <th>Branch Incharge</th>
-          <th style="text-align: center;">Strength</th>
-          <th style="text-align: center;">On Duty</th>
-          <th style="text-align: center;">On Leave</th>
-          <th>Operational Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${AppState.branches.map((b, idx) => {
-          const branchUsers = AppState.users.filter(u => u.branchId === b.id);
-          const incharge = AppState.users.find(u => u.branchId === b.id && u.role === "branch_incharge");
-          const branchOnLeave = onLeaveLeaves.filter(l => l.branchId === b.id).length;
-          const branchOnDuty = Math.max(0, branchUsers.length - branchOnLeave);
-          const isFullStrength = branchOnLeave === 0;
-          return `
-            <tr>
-              <td style="text-align: center; font-weight: 700;">${idx + 1}</td>
-              <td><strong>${b.name}</strong> (${b.id.toUpperCase()})</td>
-              <td>${incharge ? incharge.name + ' (' + incharge.rank + ')' : 'Nodal Officer'}</td>
-              <td style="text-align: center; font-weight: 700;">${branchUsers.length}</td>
-              <td style="text-align: center; font-weight: 700; color: #15803d;">${branchOnDuty}</td>
-              <td style="text-align: center; font-weight: 700; color: ${branchOnLeave > 0 ? '#dc2626' : '#64748b'};">${branchOnLeave}</td>
-              <td>${isFullStrength ? '<span style="color: #15803d; font-weight: 700;">✓ 100% Present</span>' : '<span style="color: #b45309; font-weight: 700;">Active (' + branchOnDuty + ' Present, ' + branchOnLeave + ' Leave)</span>'}</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-
-    <div class="signatures-block">
-      <div class="sig-box">
-        <div>Prepared & Verified By:</div>
-        <div class="sig-line">Reader to SP Cyber Crime<br><span style="font-weight: normal; font-size: 0.72rem;">State Cyber Crime, Panchkula</span></div>
-      </div>
-      <div class="sig-box">
-        <div>Supervisory Officer:</div>
-        <div class="sig-line">DSP Cyber Crime / Establishment<br><span style="font-weight: normal; font-size: 0.72rem;">State Cyber Crime, Panchkula</span></div>
-      </div>
-      <div class="sig-box">
-        <div>Sanctioning Authority:</div>
-        <div class="sig-line">Mayank Gupta, IPS<br><span style="font-weight: normal; font-size: 0.72rem;">Superintendent of Police, State Cyber Crime</span></div>
-      </div>
-    </div>
-
-    <div class="footer-note">
-      Electronically generated & verified by Digital Leave Management System, State Cyber Crime Headquarters, Sector 20, Panchkula (Haryana).
-    </div>
+    ${innerDocHtml}
   </div>
 </body>
 </html>`;
@@ -4402,13 +4669,17 @@ function renderDailySitrep(container) {
 
         <!-- Action Buttons Row -->
         <div class="sitrep-action-buttons-group">
-          <button class="btn btn-gold btn-sm sitrep-action-btn" onclick="printSitrepReport()" title="Print or Save A4 PDF Report">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-            Print / Save A4 PDF
+          <button class="btn btn-gold btn-sm sitrep-action-btn" onclick="downloadSitrepPdfDirect('${targetDate}')" title="Direct Download Official PDF File to Mobile Phone">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download PDF (.pdf)
           </button>
-          <button class="btn btn-primary btn-sm sitrep-action-btn" onclick="openSitrepInNewTab('${targetDate}')" title="Open Fullscreen Clean PDF View">
+          <button class="btn btn-primary btn-sm sitrep-action-btn" onclick="openInAppPdfViewer('sitrep', '${targetDate}')" title="Open Clean In-App Fullscreen Mobile PDF Sheet">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            Full PDF View
+            Open A4 PDF View
+          </button>
+          <button class="btn btn-outline btn-sm sitrep-action-btn" onclick="printSitrepDirect()" title="Print or Save via System Dialog">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print
           </button>
           <button class="btn btn-outline btn-sm sitrep-action-btn" onclick="exportSitrepCSV('${targetDate}')" title="Export CSV Spreadsheet">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -4874,13 +5145,16 @@ function openLeaveDetailsModal(leaveId) {
             <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">Dispatch No: <strong>${leave.sanctionNo}</strong> | Sanctioned by SP Cyber</div>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${leave.id}')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-              View Sanction Slip
+            <button type="button" class="btn btn-gold btn-sm" onclick="downloadSanctionPdfDirect('${leave.id}')" title="Direct Download PDF to Mobile Phone">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download PDF (.pdf)
             </button>
-            <button type="button" class="btn btn-gold btn-sm" onclick="openSanctionSlipInNewTab('${leave.id}')">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openInAppPdfViewer('sanction', '${leave.id}')" title="Open Clean In-App A4 Fullscreen PDF">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               Full A4 PDF View
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="closeModals(); openSanctionSlipModal('${leave.id}')">
+              View Sanction Slip
             </button>
           </div>
         </div>
@@ -5403,11 +5677,15 @@ function openSanctionSlipModal(leaveId) {
       <div class="official-watermark">HARYANA POLICE</div>
 
       <div class="sanction-slip-mobile-toolbar">
-        <button type="button" class="btn btn-gold btn-sm" onclick="openSanctionSlipInNewTab('${leave.id}')">
+        <button type="button" class="btn btn-gold btn-sm" onclick="downloadSanctionPdfDirect('${leave.id}')" title="Direct Download Official PDF Order to Phone">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download PDF (.pdf)
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openInAppPdfViewer('sanction', '${leave.id}')" title="In-App Fullscreen Clean A4 Mobile PDF Sheet">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           Full A4 PDF View
         </button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="printSanctionSlipDirect()">
+        <button type="button" class="btn btn-outline btn-sm" onclick="printSanctionSlipDirect()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
           Print Sanction Order
         </button>
@@ -5522,58 +5800,41 @@ function openSanctionSlipInNewTab(leaveId) {
   const leave = AppState.leaves.find(l => l.id === leaveId);
   if (!leave) return;
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    showToast("Popup blocked! Please allow popups to view full A4 Sanction Order.", "error");
+  const isMobile = window.innerWidth <= 768 || document.body.classList.contains("force-mobile-view");
+  if (isMobile) {
+    openInAppPdfViewer("sanction", leave.id);
     return;
   }
 
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    openInAppPdfViewer("sanction", leave.id);
+    return;
+  }
+
+  const innerDocHtml = buildSanctionSlipA4Html(leave);
   const docHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leave Sanction Order - ${leave.sanctionNo || leave.id}</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Times New Roman", Times, serif; background: #525659; color: #000; padding: 20px 10px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #525659; color: #111; padding: 20px 10px; }
     .page-toolbar { max-width: 800px; margin: 0 auto 15px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     .page-toolbar h1 { font-size: 1rem; font-weight: 600; }
     .page-toolbar .btn-group { display: flex; gap: 8px; }
     .page-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
     .btn-print { background: #d97706; color: #fff; }
-    .btn-print:hover { background: #b45309; }
     .btn-close { background: #475569; color: #fff; }
-    .btn-close:hover { background: #334155; }
-    .a4-sheet { max-width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; padding: 20mm 18mm; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; border: 2px solid #0f274c; }
-    .watermark { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 4.8rem; font-weight: 900; color: rgba(15, 39, 76, 0.05); pointer-events: none; white-space: nowrap; letter-spacing: 5px; }
-    .sanction-header { text-align: center; border-bottom: 2px double #000; padding-bottom: 12px; margin-bottom: 16px; }
-    .sanction-gov-title { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-    .sanction-office-title { font-size: 1.05rem; font-weight: 700; margin-top: 4px; }
-    .sanction-sub-title { font-size: 0.9rem; font-style: italic; margin-top: 2px; }
-    .sanction-meta-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 16px; font-weight: 600; }
-    .sanction-heading { text-align: center; font-size: 1.15rem; font-weight: 800; text-decoration: underline; margin: 18px 0 16px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sanction-body { font-size: 1rem; line-height: 1.8; text-align: justify; margin-bottom: 24px; }
-    .sanction-body p { margin-bottom: 14px; text-indent: 30px; }
-    .highlight-var { font-weight: 700; text-decoration: underline; }
-    .sanction-conditions { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 12px 16px; font-size: 0.85rem; margin: 16px 0 24px; line-height: 1.6; }
-    .sanction-signatures { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 10px; }
-    .signature-block { text-align: center; min-width: 220px; }
-    .signature-space { height: 48px; display: flex; align-items: center; justify-content: center; font-family: cursive; color: #1e3a8a; font-size: 1.2rem; font-weight: 700; }
-    .signature-name { font-weight: 700; font-size: 0.95rem; }
-    .signature-title { font-size: 0.85rem; color: #333; }
-    .sanction-copy-to { font-size: 0.82rem; margin-top: 24px; border-top: 1px solid #ccc; padding-top: 10px; line-height: 1.7; }
+    .a4-sheet { max-width: 800px; margin: 0 auto; background: #fff; padding: 35px 40px; border-radius: 4px; box-shadow: 0 8px 16px rgba(0,0,0,0.35); position: relative; }
     @media print {
       body { background: #fff !important; padding: 0 !important; }
       .page-toolbar { display: none !important; }
-      .a4-sheet { box-shadow: none !important; border: 1px solid #000 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 12mm !important; }
+      .a4-sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 8mm !important; }
       @page { size: A4 portrait; margin: 10mm; }
-    }
-    @media (max-width: 768px) {
-      .a4-sheet { padding: 14px 10px !important; }
-      .sanction-signatures { flex-direction: column; align-items: center; gap: 16px; }
-      .sanction-meta-row { flex-direction: column; gap: 4px; }
-      .sanction-body p { text-indent: 14px; text-align: left; }
     }
   </style>
 </head>
@@ -5587,87 +5848,7 @@ function openSanctionSlipInNewTab(leaveId) {
   </div>
 
   <div class="a4-sheet">
-    <div class="watermark">HARYANA POLICE</div>
-    <div class="sanction-header">
-      <div class="sanction-gov-title">HARYANA POLICE DEPARTMENT</div>
-      <div class="sanction-office-title">OFFICE OF THE SUPERINTENDENT OF POLICE, STATE CYBER CRIME</div>
-      <div class="sanction-sub-title">Cyber Crime Police Station, Sector 20, Panchkula (Haryana) - 134117</div>
-      <div style="font-size: 0.82rem; margin-top: 4px;">Email: sp.cyber-hry@gov.in | Cyber Helpline: 1930</div>
-    </div>
-
-    <div class="sanction-meta-row">
-      <div><strong>Order Dispatch No:</strong> ${leave.sanctionNo}</div>
-      <div><strong>Dated, Panchkula, the:</strong> ${leave.spActionAt ? leave.spActionAt.split(" ")[0] : new Date().toISOString().split("T")[0]}</div>
-    </div>
-
-    <div class="sanction-heading">OFFICE ORDER / LEAVE SANCTION ORDER</div>
-
-    <div class="sanction-body">
-      <p>
-        Sanction is hereby accorded to grant 
-        <span class="highlight-var">${leave.totalDays} (${numberToWords(leave.totalDays)}) days</span> 
-        ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
-          <span style="color: #92400e; font-weight: bold;">(curtailed from ${leave.originalDays} days originally applied, due to administrative/operational requirements)</span> 
-        ` : ''}
-        <strong>${leave.leaveTypeName}</strong> with effect from 
-        <span class="highlight-var">${formatDate(leave.fromDate)}</span> to 
-        <span class="highlight-var">${formatDate(leave.toDate)}</span> 
-        in respect of <strong>${leave.rank} ${leave.applicantName}</strong>, 
-        Belt No. <strong>${leave.beltNo}</strong>, posted in 
-        <strong>${leave.branchName}</strong>, State Cyber Crime Unit Panchkula, on the ground of:
-        <em>"${leave.reason}"</em>.
-      </p>
-
-      ${leave.stationLeave ? `
-        <p>
-          2. Further, permission to leave Headquarters / Station during the above sanctioned leave period is also 
-          <strong>GRANTED</strong> to visit the address: 
-          <span class="highlight-var">${leave.stationLeaveAddress || "As declared in application"}</span>. 
-          The officer shall keep his/her mobile phone active at all times on <strong>${leave.emergencyContact}</strong> 
-          and shall report immediately if recalled for any emergent cyber investigation duty.
-        </p>
-      ` : `
-        <p>
-          2. The official shall remain at station headquarters and shall report for duty immediately upon expiry of the leave.
-        </p>
-      `}
-
-      <p>
-        3. It is certified that the official has sufficient leave balance in his/her leave account and necessary handover 
-        of official duties/consoles was made to <strong>${leave.handoverTo || "the Branch Incharge"}</strong>.
-      </p>
-    </div>
-
-    <div class="sanction-conditions">
-      <strong>Conditions of Sanction:</strong><br>
-      i) Overstayal beyond the sanctioned period without prior written approval will invite departmental action.<br>
-      ii) Certificate of resumption of duty must be submitted to the Establishment Branch / Reader to SP immediately on return.
-    </div>
-
-    <div class="sanction-signatures">
-      <div style="font-size: 0.82rem; text-align: left;">
-        <div><strong>Digital Verification Code:</strong></div>
-        <div style="font-family: monospace; font-size: 0.88rem; background: #eee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 2px;">
-          CYB-PKL-${leave.id}-${Date.now().toString().slice(-6)}
-        </div>
-      </div>
-
-      <div class="signature-block">
-        <div class="signature-space">Mayank Gupta</div>
-        <div class="signature-name">Superintendent of Police</div>
-        <div class="signature-title">State Cyber Crime, Panchkula<br>(Haryana)</div>
-      </div>
-    </div>
-
-    <div class="sanction-copy-to">
-      <strong>Endst. No. ${leave.sanctionNo} / E-1 / Cyber, dated even.</strong><br>
-      Copy is forwarded for information and necessary action to:<br>
-      1. Incharge, ${leave.branchName}, Cyber Unit Panchkula.<br>
-      2. Reader to SP Cyber Crime, Panchkula.<br>
-      3. Accountant / Establishment Branch (for leave register entry & salary deduction if any).<br>
-      4. Official concerned: ${leave.rank} ${leave.applicantName}, Belt No. ${leave.beltNo}.<br>
-      5. Guard file.
-    </div>
+    ${innerDocHtml}
   </div>
 </body>
 </html>`;
