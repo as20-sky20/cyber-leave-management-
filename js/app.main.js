@@ -140,20 +140,14 @@ function loadFromLocalStorage() {
         spUser.name = "Mayank Gupta, IPS";
       }
 
-      // Repair and validate user leave balances against seed defaults
+      // Repair and validate user leave balances against official Haryana Police annual quotas
       if (!AppState.users || !Array.isArray(AppState.users) || AppState.users.length === 0) {
         AppState.users = DEFAULT_USERS;
       } else {
         AppState.users.forEach(u => {
-          const def = (typeof DEFAULT_USERS !== "undefined") ? DEFAULT_USERS.find(du => du.id === u.id) : null;
-          if (def && def.leaveBalances) {
-            if (!u.initialLeaveBalances) {
-              u.initialLeaveBalances = { ...def.leaveBalances };
-            }
-            if (!u.leaveBalances || typeof u.leaveBalances.CL !== "number") {
-              u.leaveBalances = { ...def.leaveBalances };
-            }
-          }
+          const isFemale = (u.name && (u.name.includes("Pooja") || u.name.includes("Sunita") || u.name.includes("Neha") || u.name.includes("Anita") || u.name.includes("Kavita") || u.name.includes("Ritu") || u.name.includes("Devi")));
+          const standardQuota = { CL: 20, EL: 30, ML: 20, PL: isFemale ? 0 : 15, CCL: isFemale ? 30 : 0, "C-OFF": 10, HPL: 20, RH: 2 };
+          u.initialLeaveBalances = { ...standardQuota };
         });
       }
 
@@ -210,15 +204,34 @@ function loadFromLocalStorage() {
   }
 }
 
-// Calculate accurate, non-duplicative leave balances for all users based on approved applications
+// Calculate accurate, non-duplicative leave balances for all users based on official Haryana Police Annual Quotas & Approved Leaves
 function recalculateAllUserLeaveBalances() {
   if (!AppState.users || !Array.isArray(AppState.users)) return;
 
   AppState.users.forEach(user => {
-    const defaultUser = (typeof DEFAULT_USERS !== "undefined") ? DEFAULT_USERS.find(du => du.id === user.id) : null;
-    const baseBalances = defaultUser && defaultUser.leaveBalances
-      ? { ...defaultUser.leaveBalances }
-      : (user.initialLeaveBalances ? { ...user.initialLeaveBalances } : { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 2 });
+    const isFemale = (user.name && (
+      user.name.includes("Pooja") || user.name.includes("Sunita") ||
+      user.name.includes("Neha") || user.name.includes("Anita") ||
+      user.name.includes("Kavita") || user.name.includes("Ritu") ||
+      user.name.includes("Devi") || (user.name.includes("Sharma") && user.id === "INCH-DAW")
+    ));
+
+    // Official Haryana Police Annual Leave Quotas (Session 2026)
+    const standardAnnualQuota = {
+      CL: 20,     // 20 Days Casual Leave
+      EL: 30,     // 30 Days Earned Leave
+      ML: 20,     // 20 Days Medical Leave
+      PL: isFemale ? 0 : 15,  // 15 Days Paternity Leave (male personnel)
+      CCL: isFemale ? 30 : 0, // 30 Days Child Care Leave (female personnel)
+      "C-OFF": 10,// 10 Days Compensatory Off
+      HPL: 20,    // 20 Days Half Pay Leave
+      RH: 2       // 2 Days Restricted Holiday
+    };
+
+    const baseBalances = { ...standardAnnualQuota };
+    if (user.customInitialBalances && typeof user.customInitialBalances.CL === "number") {
+      Object.assign(baseBalances, user.customInitialBalances);
+    }
 
     user.initialLeaveBalances = { ...baseBalances };
 
@@ -248,13 +261,14 @@ function recalculateAllUserLeaveBalances() {
 // Works 100% across multiple computers, laptops, and mobile phones simultaneously
 // Zero CORS preflight issues, zero API keys, instant cross-device updates (< 100ms)
 // ============================================================================
-const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v2";
-const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v2/sse";
-const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v2/json?poll=1&since=all";
+const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v4";
+const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v4/sse";
+const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v4/json?poll=1&since=all";
 
 let isCloudConnected = false;
 let liveSseSource = null;
 let lastProcessedSyncIds = new Set();
+window._lastSyncBroadcastTime = 0;
 
 function getClientId() {
   let cid = localStorage.getItem("cyber_police_client_uuid");
@@ -279,6 +293,41 @@ function sanitizeLeaveForBroadcast(leave) {
   return clone;
 }
 
+// Compact leave object for ultra-lightweight sync transmission
+function compactLeaveForSync(l) {
+  if (!l) return null;
+  return {
+    id: l.id,
+    sanctionNo: l.sanctionNo || "",
+    applicantId: l.applicantId || "",
+    applicantName: l.applicantName || "",
+    beltNo: l.beltNo || "",
+    rank: l.rank || "",
+    branchId: l.branchId || "",
+    branchName: l.branchName || "",
+    leaveType: l.leaveType || "CL",
+    leaveTypeName: l.leaveTypeName || "",
+    fromDate: l.fromDate || "",
+    toDate: l.toDate || "",
+    totalDays: Number(l.totalDays) || 0,
+    originalDays: l.originalDays || l.totalDays,
+    originalToDate: l.originalToDate || l.toDate,
+    status: l.status || "PENDING_INCHARGE",
+    appliedAt: l.appliedAt || "",
+    reason: (l.reason || "").substring(0, 100),
+    inchargeRemarks: (l.inchargeRemarks || "").substring(0, 150),
+    inchargeActionAt: l.inchargeActionAt || "",
+    spRemarks: (l.spRemarks || "").substring(0, 150),
+    spActionAt: l.spActionAt || "",
+    stationLeave: !!l.stationLeave,
+    stationLeaveAddress: (l.stationLeaveAddress || "").substring(0, 80),
+    handoverTo: (l.handoverTo || "").substring(0, 50),
+    emergencyContact: l.emergencyContact || "",
+    curtailedBy: l.curtailedBy || "",
+    curtailReason: l.curtailReason || ""
+  };
+}
+
 // Connect and Sync with Shared Office Database (Local LAN server OR Real-time Cloud Stream)
 async function syncWithOfficeDatabase() {
   updateSyncIndicator(false, "Syncing...");
@@ -298,6 +347,7 @@ async function syncWithOfficeDatabase() {
           populateUserSwitcher();
           renderNavigationTabs();
           renderApp();
+          showToast("Data synced from Local Office LAN Server.", "success");
           return;
         }
       }
@@ -312,25 +362,26 @@ async function syncWithOfficeDatabase() {
   updateSyncIndicator(true, "Live Cloud Sync Online");
   closeSidebarNav();
   renderApp();
+  showToast("Multi-Device Cloud Sync refreshed.", "success");
 }
 
-// Start Live Cross-Device Real-Time Sync (SSE + Background Polling)
+// Start Live Cross-Device Real-Time Sync (SSE + Periodic Polling)
 function startLiveSync() {
   pollLiveSyncHistory();
   connectLiveSSE();
 
-  // Send request for latest leaves after initial connection
+  // Send request for latest state 1.5s after connection
   setTimeout(() => {
     broadcastLiveAction({ action: "REQUEST_SYNC" });
-  }, 1200);
+  }, 1500);
 
-  // Background refresh every 10 seconds to catch any missed updates
+  // Background refresh every 30 seconds to maintain sync without flood
   setInterval(() => {
     if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
       connectLiveSSE();
     }
     pollLiveSyncHistory();
-  }, 10000);
+  }, 30000);
 }
 
 function connectLiveSSE() {
@@ -344,18 +395,11 @@ function connectLiveSSE() {
       isCloudConnected = true;
       updateSyncIndicator(true, "Live Cloud Sync Online");
     };
-    liveSseSource.onmessage = (event) => {
+    liveSseSource.onmessage = async (event) => {
       try {
         const msg = JSON.parse(event.data);
-        if (msg.event === "message" && msg.message) {
-          if (msg.id && lastProcessedSyncIds.has(msg.id)) return;
-          if (msg.id) lastProcessedSyncIds.add(msg.id);
-
-          const msgStr = msg.message.trim();
-          if (!msgStr.startsWith("{")) return;
-
-          const payload = JSON.parse(msgStr);
-          handleLiveSyncAction(payload);
+        if (msg.event === "message") {
+          await parseMessageOrAttachment(msg, false);
         }
       } catch (err) {
         console.warn("Live SSE parse error", err);
@@ -369,6 +413,39 @@ function connectLiveSSE() {
   }
 }
 
+// Parse inline JSON string or downloaded attachment file from ntfy
+async function parseMessageOrAttachment(dataObj, isInitialSync = false) {
+  if (!dataObj) return;
+
+  if (dataObj.id && lastProcessedSyncIds.has(dataObj.id)) return;
+  if (dataObj.id) lastProcessedSyncIds.add(dataObj.id);
+
+  // 1. Direct inline JSON string
+  if (dataObj.message && typeof dataObj.message === "string") {
+    const msgStr = dataObj.message.trim();
+    if (msgStr.startsWith("{")) {
+      try {
+        const payload = JSON.parse(msgStr);
+        handleLiveSyncAction(payload, isInitialSync);
+        return;
+      } catch (e) {}
+    }
+  }
+
+  // 2. ntfy File Attachment (for payloads converted to file by server)
+  if (dataObj.attachment && dataObj.attachment.url) {
+    try {
+      const res = await fetch(dataObj.attachment.url);
+      if (res.ok) {
+        const filePayload = await res.json();
+        handleLiveSyncAction(filePayload, isInitialSync);
+      }
+    } catch (e) {
+      console.warn("Could not fetch sync attachment payload", e);
+    }
+  }
+}
+
 // Poll recent events from Cloud history on page load and periodically
 async function pollLiveSyncHistory() {
   try {
@@ -376,22 +453,15 @@ async function pollLiveSyncHistory() {
     if (res.ok) {
       const text = await res.text();
       const lines = text.trim().split("\n");
-      lines.forEach(line => {
-        if (!line.trim()) return;
+      for (const line of lines) {
+        if (!line.trim()) continue;
         try {
           const data = JSON.parse(line);
-          if (data.event === "message" && data.message) {
-            if (data.id && lastProcessedSyncIds.has(data.id)) return;
-            if (data.id) lastProcessedSyncIds.add(data.id);
-
-            const msgStr = data.message.trim();
-            if (!msgStr.startsWith("{")) return;
-
-            const payload = JSON.parse(msgStr);
-            handleLiveSyncAction(payload, true);
+          if (data.event === "message") {
+            await parseMessageOrAttachment(data, true);
           }
         } catch (e) {}
-      });
+      }
       isCloudConnected = true;
       updateSyncIndicator(true, "Live Cloud Sync Online");
     }
@@ -410,7 +480,7 @@ async function broadcastLiveAction(actionPayload) {
       actionPayload.leave = sanitizeLeaveForBroadcast(actionPayload.leave);
     }
     if (Array.isArray(actionPayload.leaves)) {
-      actionPayload.leaves = actionPayload.leaves.map(sanitizeLeaveForBroadcast);
+      actionPayload.leaves = actionPayload.leaves.map(compactLeaveForSync);
     }
 
     const bodyText = JSON.stringify(actionPayload);
@@ -438,7 +508,7 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
 
   let hasChanged = false;
 
-  // 1. NEW LEAVE APPLIED ON ANOTHER COMPUTER
+  // 1. NEW LEAVE APPLIED ON ANOTHER COMPUTER/MOBILE
   if (payload.action === "NEW_LEAVE" && payload.leave) {
     const existingIndex = AppState.leaves.findIndex(l => l.id === payload.leave.id);
     if (existingIndex === -1) {
@@ -464,9 +534,7 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
       if (payload.curtailedBy) leave.curtailedBy = payload.curtailedBy;
       if (payload.curtailReason) leave.curtailReason = payload.curtailReason;
 
-      // Recalculate deterministic leave balances accurately
       recalculateAllUserLeaveBalances();
-
       hasChanged = true;
       const statusLabel = payload.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
                           (payload.status === "APPROVED" ? "Sanctioned by SP Cyber" : "Rejected");
@@ -476,7 +544,7 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
     }
   }
 
-  // 3. NOTICE CREATION ON ANOTHER COMPUTER
+  // 3. NOTICE CREATION ON ANOTHER DEVICE
   else if (payload.action === "NEW_NOTICE" && payload.notice) {
     if (!AppState.notices) AppState.notices = [];
     if (!AppState.notices.some(n => n.id === payload.notice.id)) {
@@ -496,19 +564,31 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
     }
   }
 
-  // 5. REQUEST_SYNC (Another newly connected device wants all leaves)
+  // 5. REQUEST_SYNC (Another device asks for full state sync)
   else if (payload.action === "REQUEST_SYNC") {
-    if (AppState.leaves && AppState.leaves.length > 0) {
-      broadcastLiveAction({
-        action: "SYNC_ALL_LEAVES",
-        leaves: AppState.leaves.slice(0, 50).map(sanitizeLeaveForBroadcast)
-      });
-    }
+    // CRITICAL: NEVER reply to sync requests from historical polling or older than 15s!
+    if (isInitialSync) return;
+    if (payload.timestamp && (Date.now() - payload.timestamp > 15000)) return;
+
+    // Rate-limit: only 1 sync response per device every 30 seconds to prevent feedback loops
+    const now = Date.now();
+    if (window._lastSyncBroadcastTime && (now - window._lastSyncBroadcastTime < 30000)) return;
+    window._lastSyncBroadcastTime = now;
+
+    const compactLeaves = (AppState.leaves || []).slice(0, 30).map(compactLeaveForSync);
+    const customUsers = (AppState.users || []).filter(u => !DEFAULT_USERS.some(du => du.id === u.id));
+
+    broadcastLiveAction({
+      action: "SYNC_ALL_DATA",
+      leaves: compactLeaves,
+      customUsers: customUsers,
+      notices: AppState.notices || []
+    });
     return;
   }
 
-  // 6. SYNC_ALL_LEAVES (Incoming full state sync)
-  else if (payload.action === "SYNC_ALL_LEAVES" && Array.isArray(payload.leaves)) {
+  // 6. SYNC_ALL_DATA / SYNC_ALL_LEAVES (Incoming full state sync)
+  else if ((payload.action === "SYNC_ALL_DATA" || payload.action === "SYNC_ALL_LEAVES") && Array.isArray(payload.leaves)) {
     payload.leaves.forEach(incoming => {
       if (!incoming || !incoming.id) return;
       const existing = AppState.leaves.find(l => l.id === incoming.id);
@@ -516,23 +596,78 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
         AppState.leaves.push(incoming);
         hasChanged = true;
       } else {
-        if (existing.status !== incoming.status || existing.totalDays !== incoming.totalDays) {
+        if (existing.status !== incoming.status || existing.totalDays !== incoming.totalDays || existing.spRemarks !== incoming.spRemarks) {
           Object.assign(existing, incoming);
           hasChanged = true;
         }
       }
     });
 
+    if (Array.isArray(payload.customUsers)) {
+      payload.customUsers.forEach(incUser => {
+        if (!incUser || !incUser.id) return;
+        const exists = AppState.users.find(u => u.id === incUser.id);
+        if (!exists) {
+          AppState.users.push(incUser);
+          hasChanged = true;
+        } else {
+          if (incUser.password && exists.password !== incUser.password) {
+            exists.password = incUser.password;
+            hasChanged = true;
+          }
+        }
+      });
+    }
+
+    if (Array.isArray(payload.notices) && payload.notices.length > 0) {
+      if (!AppState.notices) AppState.notices = [];
+      payload.notices.forEach(n => {
+        if (!AppState.notices.some(en => en.id === n.id)) {
+          AppState.notices.push(n);
+          hasChanged = true;
+        }
+      });
+    }
+
     if (hasChanged) {
       AppState.leaves.sort((a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0));
     }
+  }
+
+  // 7. NEW_USER ADDED ON ANOTHER DEVICE
+  else if (payload.action === "NEW_USER" && payload.user) {
+    const existing = AppState.users.find(u => u.id === payload.user.id || u.beltNo === payload.user.beltNo);
+    if (!existing) {
+      AppState.users.push(payload.user);
+      hasChanged = true;
+      populateUserSwitcher();
+      if (!isInitialSync) {
+        showToast(`Staff Directory: New Officer ${payload.user.name} (${payload.user.beltNo}) added`, "info");
+      }
+    }
+  }
+
+  // 8. UPDATE_USER_PIN
+  else if (payload.action === "UPDATE_USER_PIN" && payload.userId && payload.password) {
+    const target = AppState.users.find(u => u.id === payload.userId);
+    if (target) {
+      target.password = payload.password;
+      hasChanged = true;
+    }
+  }
+
+  // 9. DELETE_USER
+  else if (payload.action === "DELETE_USER" && payload.userId) {
+    AppState.users = AppState.users.filter(u => u.id !== payload.userId);
+    hasChanged = true;
+    populateUserSwitcher();
   }
 
   if (hasChanged) {
     recalculateAllUserLeaveBalances();
     saveData();
     renderNavigationTabs();
-    if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves"].includes(AppState.activeTab)) {
+    if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves", "directory"].includes(AppState.activeTab)) {
       renderApp();
     }
   }
@@ -4063,6 +4198,7 @@ function resetUserPinPrompt(userId) {
     saveData();
     showToast(`✓ PIN / Password for ${user.name} set to: ${user.password}`, "success");
     renderApp();
+    broadcastLiveAction({ action: "UPDATE_USER_PIN", userId: user.id, password: user.password });
   }
 }
 
@@ -4079,6 +4215,7 @@ function deleteUserPrompt(userId) {
     populateUserSwitcher();
     showToast(`Official ${user.name} removed from roster.`, "info");
     renderApp();
+    broadcastLiveAction({ action: "DELETE_USER", userId: userId });
   }
 }
 
@@ -5910,6 +6047,9 @@ function handleAddUserSubmit(e) {
 
   const newId = `CYB-${AppState.users.length + 101}`;
 
+  const isFemale = (name.includes("Pooja") || name.includes("Sunita") || name.includes("Neha") || name.includes("Anita") || name.includes("Kavita") || name.includes("Ritu") || name.includes("Devi"));
+  const standardQuota = { CL: 20, EL: 30, ML: 20, PL: isFemale ? 0 : 15, CCL: isFemale ? 30 : 0, "C-OFF": 10, HPL: 20, RH: 2 };
+
   const newUser = {
     id: newId,
     beltNo: beltNo,
@@ -5921,7 +6061,8 @@ function handleAddUserSubmit(e) {
     email: `${name.toLowerCase().replace(/[^a-z]/g, "")}.${beltNo.replace(/[^0-9]/g, "")}@cyberhry.gov.in`,
     password: password,
     isApprover: role === "branch_incharge" || role === "sp_cyber",
-    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 2 }
+    leaveBalances: { ...standardQuota },
+    initialLeaveBalances: { ...standardQuota }
   };
 
   AppState.users.push(newUser);
@@ -5930,6 +6071,7 @@ function handleAddUserSubmit(e) {
   closeModals();
   renderApp();
   showToast(`New police personnel ${name} (${beltNo}) added successfully.`, "success");
+  broadcastLiveAction({ action: "NEW_USER", user: newUser });
 }
 
 // Close any open modal

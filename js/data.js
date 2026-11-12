@@ -54,7 +54,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94160 00001",
     email: "sp.cyber-hry@gov.in",
     isApprover: true,
-    leaveBalances: { CL: 18, EL: 28, ML: 20, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
 
   // Branch Incharges
@@ -68,7 +68,7 @@ const DEFAULT_USERS = [
     mobile: "+91 98120 11930",
     email: "incharge.1930@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 14, EL: 26, ML: 20, PL: 15, CCL: 0, "C-OFF": 6, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-DAW",
@@ -80,7 +80,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94670 22001",
     email: "incharge.daw@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 12, EL: 22, ML: 18, PL: 0, CCL: 28, "C-OFF": 4, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 0, CCL: 30, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-SM",
@@ -92,7 +92,7 @@ const DEFAULT_USERS = [
     mobile: "+91 98123 33001",
     email: "incharge.social@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 15, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 3, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-WOMEN",
@@ -104,7 +104,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94161 44001",
     email: "incharge.women@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 11, EL: 25, ML: 20, PL: 0, CCL: 25, "C-OFF": 4, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 0, CCL: 30, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-AWARE",
@@ -116,7 +116,7 @@ const DEFAULT_USERS = [
     mobile: "+91 98130 55001",
     email: "incharge.awareness@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 16, EL: 28, ML: 20, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-ADMIN",
@@ -128,7 +128,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94162 66001",
     email: "admin.cyber@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 13, EL: 27, ML: 20, PL: 15, CCL: 0, "C-OFF": 2, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-INVEST",
@@ -140,7 +140,7 @@ const DEFAULT_USERS = [
     mobile: "+91 98124 77001",
     email: "incharge.investigation@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 10, EL: 24, ML: 19, PL: 15, CCL: 0, "C-OFF": 8, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-DARK",
@@ -152,7 +152,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94671 88001",
     email: "darkweb.crypto@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 15, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 7, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-SEC",
@@ -164,7 +164,7 @@ const DEFAULT_USERS = [
     mobile: "+91 98125 99001",
     email: "cybersec.panchkula@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 14, EL: 28, ML: 20, PL: 15, CCL: 0, "C-OFF": 6, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-BANK",
@@ -176,7 +176,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94163 10101",
     email: "bank.coord@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 12, EL: 26, ML: 20, PL: 15, CCL: 0, "C-OFF": 4, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-STATE",
@@ -188,7 +188,7 @@ const DEFAULT_USERS = [
     mobile: "+91 98126 11201",
     email: "interstate.cyber@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 16, EL: 29, ML: 20, PL: 15, CCL: 0, "C-OFF": 3, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-NCRP",
@@ -200,7 +200,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94672 12301",
     email: "ncrp.nodal@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 11, EL: 23, ML: 20, PL: 0, CCL: 26, "C-OFF": 5, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 0, CCL: 30, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "INCH-PS-PKL",
@@ -212,7 +212,7 @@ const DEFAULT_USERS = [
     mobile: "+91 94164 13401",
     email: "sho.cyberps-pkl@cyberhry.gov.in",
     isApprover: true,
-    leaveBalances: { CL: 10, EL: 20, ML: 19, PL: 15, CCL: 0, "C-OFF": 9, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
 
   // Police Staff / Members (Regular users across branches)
@@ -225,7 +225,7 @@ const DEFAULT_USERS = [
     branchId: "cyber_helpline_1930",
     mobile: "+91 98121 55678",
     email: "rahul.1420@cyberhry.gov.in",
-    leaveBalances: { CL: 12, EL: 28, ML: 18, PL: 15, CCL: 0, "C-OFF": 3, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "CYB-102",
@@ -236,7 +236,7 @@ const DEFAULT_USERS = [
     branchId: "cyber_helpline_1930",
     mobile: "+91 94165 77890",
     email: "sandeep.1655@cyberhry.gov.in",
-    leaveBalances: { CL: 8, EL: 22, ML: 20, PL: 15, CCL: 0, "C-OFF": 2, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "CYB-103",
@@ -247,7 +247,7 @@ const DEFAULT_USERS = [
     branchId: "data_analysis_wing",
     mobile: "+91 98129 11223",
     email: "neha.1892@cyberhry.gov.in",
-    leaveBalances: { CL: 15, EL: 29, ML: 20, PL: 0, CCL: 30, "C-OFF": 4, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 0, CCL: 30, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "CYB-104",
@@ -258,7 +258,7 @@ const DEFAULT_USERS = [
     branchId: "dark_web_crypto_ai",
     mobile: "+91 94678 33445",
     email: "surender.1140@cyberhry.gov.in",
-    leaveBalances: { CL: 10, EL: 24, ML: 16, PL: 15, CCL: 0, "C-OFF": 5, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "CYB-105",
@@ -269,7 +269,7 @@ const DEFAULT_USERS = [
     branchId: "cyber_ps_panchkula",
     mobile: "+91 98135 66778",
     email: "deepak.2104@cyberhry.gov.in",
-    leaveBalances: { CL: 14, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 6, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "CYB-106",
@@ -280,7 +280,7 @@ const DEFAULT_USERS = [
     branchId: "online_crime_women",
     mobile: "+91 94169 88990",
     email: "anita.1780@cyberhry.gov.in",
-    leaveBalances: { CL: 9, EL: 25, ML: 20, PL: 0, CCL: 22, "C-OFF": 3, HPL: 20, RH: 2 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 0, CCL: 30, "C-OFF": 10, HPL: 20, RH: 2 }
   },
   {
     id: "CYB-107",
@@ -291,7 +291,7 @@ const DEFAULT_USERS = [
     branchId: "bank_coordination",
     mobile: "+91 98127 44556",
     email: "naveen.1350@cyberhry.gov.in",
-    leaveBalances: { CL: 11, EL: 27, ML: 19, PL: 15, CCL: 0, "C-OFF": 4, HPL: 20, RH: 1 }
+    leaveBalances: { CL: 20, EL: 30, ML: 20, PL: 15, CCL: 0, "C-OFF": 10, HPL: 20, RH: 2 }
   }
 ];
 
