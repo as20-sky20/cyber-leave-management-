@@ -108,9 +108,26 @@ function isUserBranchIncharge(user, branchId = null) {
   return false;
 }
 
+const DATA_SYNC_VERSION = "2026-11-12_RESET_ALL_LEAVES_V2";
+
 // Load data from localStorage or Seed Data (with Anti-Corruption ? sanitization)
 function loadFromLocalStorage() {
   try {
+    const currentSyncVer = localStorage.getItem("cyber_police_data_sync_version");
+    if (currentSyncVer !== DATA_SYNC_VERSION) {
+      console.warn("Upgrading to unified clean slate version:", DATA_SYNC_VERSION);
+      localStorage.clear();
+      localStorage.setItem("cyber_police_data_sync_version", DATA_SYNC_VERSION);
+      AppState.branches = BRANCHES;
+      AppState.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+      AppState.leaves = [];
+      AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? JSON.parse(JSON.stringify(DEFAULT_NOTICES)) : [];
+      AppState.currentUser = null;
+      recalculateAllUserLeaveBalances();
+      saveData();
+      return;
+    }
+
     const rawBranches = localStorage.getItem("cyber_police_branches");
     const rawUsers = localStorage.getItem("cyber_police_users");
     const rawLeaves = localStorage.getItem("cyber_police_leaves");
@@ -261,9 +278,9 @@ function recalculateAllUserLeaveBalances() {
 // Works 100% across multiple computers, laptops, and mobile phones simultaneously
 // Zero CORS preflight issues, zero API keys, instant cross-device updates (< 100ms)
 // ============================================================================
-const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v4";
-const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v4/sse";
-const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-v2026-v4/json?poll=1&since=all";
+const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-sync-v2026-clean";
+const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-sync-v2026-clean/sse";
+const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-sync-v2026-clean/json?poll=1&since=all";
 
 let isCloudConnected = false;
 let liveSseSource = null;
@@ -356,9 +373,8 @@ async function syncWithOfficeDatabase() {
     // Local server not available, fall through to Cloud sync
   }
 
-  // 2. Poll Cloud Live Sync History & Request Peer Sync
+  // 2. Poll Cloud Live Sync History
   await pollLiveSyncHistory();
-  await broadcastLiveAction({ action: "REQUEST_SYNC" });
   updateSyncIndicator(true, "Live Cloud Sync Online");
   closeSidebarNav();
   renderApp();
@@ -369,11 +385,6 @@ async function syncWithOfficeDatabase() {
 function startLiveSync() {
   pollLiveSyncHistory();
   connectLiveSSE();
-
-  // Send request for latest state 1.5s after connection
-  setTimeout(() => {
-    broadcastLiveAction({ action: "REQUEST_SYNC" });
-  }, 1500);
 
   // Background refresh every 30 seconds to maintain sync without flood
   setInterval(() => {
@@ -564,26 +575,16 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
     }
   }
 
-  // 5. REQUEST_SYNC (Another device asks for full state sync)
-  else if (payload.action === "REQUEST_SYNC") {
-    // CRITICAL: NEVER reply to sync requests from historical polling or older than 15s!
-    if (isInitialSync) return;
-    if (payload.timestamp && (Date.now() - payload.timestamp > 15000)) return;
-
-    // Rate-limit: only 1 sync response per device every 30 seconds to prevent feedback loops
-    const now = Date.now();
-    if (window._lastSyncBroadcastTime && (now - window._lastSyncBroadcastTime < 30000)) return;
-    window._lastSyncBroadcastTime = now;
-
-    const compactLeaves = (AppState.leaves || []).slice(0, 30).map(compactLeaveForSync);
-    const customUsers = (AppState.users || []).filter(u => !DEFAULT_USERS.some(du => du.id === u.id));
-
-    broadcastLiveAction({
-      action: "SYNC_ALL_DATA",
-      leaves: compactLeaves,
-      customUsers: customUsers,
-      notices: AppState.notices || []
-    });
+  // 5. FORCE_RESET_ALL_LEAVES (SP Cyber or Admin wiped all leaves across system)
+  else if (payload.action === "FORCE_RESET_ALL_LEAVES") {
+    AppState.leaves = [];
+    recalculateAllUserLeaveBalances();
+    saveData();
+    renderNavigationTabs();
+    renderApp();
+    if (!isInitialSync) {
+      showToast("All leave records wiped and reset to clean slate by Cyber Command.", "info");
+    }
     return;
   }
 
@@ -2785,7 +2786,10 @@ function renderInchargeDesk(container) {
         </h2>
         <p>Incharge: <strong>${user.name} (${user.rank})</strong> | Unit: <strong>${branchName}</strong></p>
       </div>
-      <div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-outline btn-sm" onclick="forceResetAllLeavesPrompt()" style="color: #ef4444; border-color: #ef4444;" title="Reset all leave applications across all devices to clean slate">
+          🗑️ Reset All Leaves
+        </button>
         <button class="btn btn-outline btn-sm" onclick="renderApp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
           Refresh
@@ -2963,7 +2967,10 @@ function renderSPDesk(container) {
         </h2>
         <p>Sanctioning Authority: <strong>Mayank Gupta, IPS</strong> (SP Cyber Crime, Panchkula)</p>
       </div>
-      <div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-outline btn-sm" onclick="forceResetAllLeavesPrompt()" style="color: #ef4444; border-color: #ef4444;" title="Reset all leave applications across all devices to clean slate">
+          🗑️ Reset All Leaves
+        </button>
         <button class="btn btn-outline btn-sm" onclick="renderApp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
           Refresh
@@ -3328,6 +3335,9 @@ function renderMasterRegister(container) {
         <p>Consolidated leave records of all 13 Cyber Wings</p>
       </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-outline" onclick="forceResetAllLeavesPrompt()" style="border-color: #ef4444; color: #ef4444;" title="Reset all leave applications across all devices to clean slate">
+          🗑️ Reset All Leaves
+        </button>
         <button class="btn btn-outline" onclick="exportLeavesToCSV()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Export to Excel (CSV)
@@ -4216,6 +4226,22 @@ function deleteUserPrompt(userId) {
     showToast(`Official ${user.name} removed from roster.`, "info");
     renderApp();
     broadcastLiveAction({ action: "DELETE_USER", userId: userId });
+  }
+}
+
+function forceResetAllLeavesPrompt() {
+  const user = AppState.currentUser;
+  if (!user || (user.role !== "sp_cyber" && user.role !== "admin")) {
+    alert("Only SP Cyber or Cyber Admin can perform a complete system leave reset.");
+    return;
+  }
+  if (confirm("HARYANA POLICE CYBER WING - SYSTEM RESET\n\nAre you sure you want to REMOVE ALL applied leaves across all mobile devices and computers?\n\nThis will remove all test leaves, set leave applications to zero, and restore all officers' quotas to full 20 CL / 30 EL.")) {
+    AppState.leaves = [];
+    recalculateAllUserLeaveBalances();
+    saveData();
+    showToast("All leave applications wiped and quotas restored to 20 CL.", "success");
+    renderApp();
+    broadcastLiveAction({ action: "FORCE_RESET_ALL_LEAVES" });
   }
 }
 
