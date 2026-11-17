@@ -2636,13 +2636,15 @@ table.data-table tr:hover {
   body:not(.force-desktop-view) .responsive-table {
     display: block !important;
     width: 100% !important;
-    overflow-x: auto !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
     background: #ffffff !important;
     margin-bottom: 16px !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    box-sizing: border-box !important;
   }
 
   /* Compact 100% Mobile Table - Fits entire phone screen width with NO horizontal scroll */
@@ -2650,21 +2652,26 @@ table.data-table tr:hover {
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-desktop-view) table.data-table {
     display: table !important;
     width: 100% !important;
-    min-width: 800px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
     border-collapse: collapse !important;
     text-align: left !important;
+    table-layout: auto !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-desktop-view) table.data-table.mobile-table-compact {
-    min-width: 100% !important;
+    min-width: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    table-layout: auto !important;
+    table-layout: fixed !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-desktop-view) table.data-table thead {
@@ -2686,13 +2693,16 @@ table.data-table tr:hover {
     background: #0f274c !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    padding: 12px 14px !important;
+    padding: 10px 8px !important;
     border: none !important;
     border-bottom: 2px solid var(--police-gold, #cba135) !important;
-    white-space: nowrap !important;
-    font-size: 0.78rem !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.76rem !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    letter-spacing: 0.4px !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-desktop-view) table.data-table.mobile-table-compact th:not(.col-desktop-only) {
@@ -2729,16 +2739,19 @@ table.data-table tr:hover {
 
   body:not(.force-desktop-view) table.data-table tbody td:not(.col-desktop-only) {
     display: table-cell !important;
-    padding: 12px 14px !important;
+    padding: 10px 8px !important;
     border: none !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    font-size: 0.84rem !important;
+    font-size: 0.82rem !important;
     color: #1e293b !important;
     vertical-align: middle !important;
     text-align: left !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
     box-shadow: none !important;
     gap: 0 !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-desktop-view) table.data-table.mobile-table-compact tbody td:not(.col-desktop-only) {
@@ -2953,8 +2966,9 @@ table.data-table tr:hover {
    FORCE DESKTOP VIEW OVERRIDE (For users choosing Desktop layout on mobile)
    ========================================================================== */
 body.force-desktop-view {
-  min-width: 1080px !important;
-  overflow-x: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
   padding-bottom: 0 !important;
 }
 body.force-desktop-view .nav-bar {
@@ -2973,8 +2987,9 @@ body.force-desktop-view .desktop-view-toggle-btn {
   display: inline-flex !important;
 }
 body.force-desktop-view .responsive-table {
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 body.force-desktop-view table.data-table {
   display: table !important;
@@ -3095,14 +3110,19 @@ body.force-desktop-view table.data-table tbody td[colspan] {
    ========================================================================== */
 @media (min-width: 769px) {
   body:not(.force-mobile-view) .responsive-table {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
   body:not(.force-mobile-view) table.data-table {
     display: table !important;
     width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     border-collapse: collapse !important;
     table-layout: auto !important;
+    box-sizing: border-box !important;
   }
   body:not(.force-mobile-view) table.data-table thead {
     display: table-header-group !important;
@@ -3116,7 +3136,7 @@ body.force-desktop-view table.data-table tbody td[colspan] {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
-    background: #f1f5f9 !important;
+    background: #0f274c !important;
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;
@@ -3125,21 +3145,25 @@ body.force-desktop-view table.data-table tbody td[colspan] {
   body:not(.force-mobile-view) table.data-table th,
   body:not(.force-mobile-view) table.data-table thead th {
     display: table-cell !important;
-    background: #f1f5f9 !important;
-    color: #334155 !important;
+    background: #0f274c !important;
+    color: #ffffff !important;
     font-weight: 700 !important;
-    font-size: 0.78rem !important;
+    font-size: 0.74rem !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    padding: 12px 14px !important;
+    letter-spacing: 0.4px !important;
+    padding: 10px 8px !important;
     border: none !important;
-    border-bottom: 2px solid #cbd5e1 !important;
+    border-bottom: 2px solid var(--police-gold, #cba135) !important;
     text-align: left !important;
     vertical-align: middle !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    line-height: 1.25 !important;
     position: static !important;
     opacity: 1 !important;
     visibility: visible !important;
+    box-sizing: border-box !important;
   }
   body:not(.force-mobile-view) table.data-table tbody {
     display: table-row-group !important;
@@ -3158,16 +3182,20 @@ body.force-desktop-view table.data-table tbody td[colspan] {
   }
   body:not(.force-mobile-view) table.data-table tbody td {
     display: table-cell !important;
-    padding: 12px 14px !important;
+    padding: 10px 8px !important;
     border: none !important;
     border-bottom: 1px solid #e2e8f0 !important;
     text-align: left !important;
     vertical-align: middle !important;
     color: #1e293b !important;
-    font-size: 0.86rem !important;
-    line-height: 1.4 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
     box-shadow: none !important;
     background: transparent !important;
+    box-sizing: border-box !important;
   }
   body:not(.force-mobile-view) table.data-table tbody td:before,
   body:not(.force-mobile-view) table.data-table tbody td:after {
@@ -3320,34 +3348,41 @@ body.force-mobile-view .main-header > .header-actions > .btn-outline:not(.deskto
 body.force-mobile-view .responsive-table {
   display: block !important;
   width: 100% !important;
-  overflow-x: auto !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
   background: #ffffff !important;
   margin-bottom: 16px !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
 }
 
 body.force-mobile-view .responsive-table.mobile-fit-100 {
   overflow-x: hidden !important;
   width: 100% !important;
   max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 body.force-mobile-view table.data-table {
   display: table !important;
   width: 100% !important;
-  min-width: 800px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   border-collapse: collapse !important;
   text-align: left !important;
+  table-layout: auto !important;
+  box-sizing: border-box !important;
 }
 
 body.force-mobile-view table.data-table.mobile-table-compact {
-  min-width: 100% !important;
+  min-width: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
-  table-layout: auto !important;
+  table-layout: fixed !important;
+  box-sizing: border-box !important;
 }
 
 body.force-mobile-view table.data-table thead {
@@ -3440,7 +3475,16 @@ body.force-mobile-view .table-filters .select-filter {
    RESPONSIVE TABLE COLUMN VISIBILITY (MOBILE 100% VS DESKTOP MULTI-COLUMN)
    Bulletproof Specificity to Guarantee Desktop Cols Disappear on Mobile!
    ========================================================================== */
-@media (max-width: 991px) {
+/* Hide swipe hints universally since all screens are now 100% fitted */
+.table-scroll-hint {
+  display: none !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE TABLE COLUMN VISIBILITY (MOBILE 100% VS DESKTOP MULTI-COLUMN)
+   Universal Zero-Horizontal-Scroll Architecture for All Mobiles, Tablets & Laptops!
+   ========================================================================== */
+@media (max-width: 1024px) {
   body:not(.force-desktop-view) table.data-table th.col-desktop-only,
   body:not(.force-desktop-view) table.data-table td.col-desktop-only,
   body:not(.force-desktop-view) .col-desktop-only,
@@ -3482,15 +3526,23 @@ body.force-mobile-view .table-filters .select-filter {
     display: table-cell !important;
   }
 
+  .responsive-table {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   table.data-table.mobile-table-compact {
     table-layout: fixed !important;
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1025px) {
   body:not(.force-mobile-view) table.data-table th.col-mobile-only,
   body:not(.force-mobile-view) table.data-table td.col-mobile-only,
   body:not(.force-mobile-view) .col-mobile-only,
@@ -3516,6 +3568,31 @@ body.force-mobile-view .table-filters .select-filter {
   table.data-table td.col-desktop-only,
   .col-desktop-only {
     display: table-cell !important;
+  }
+
+  /* Desktop and Laptop 100% Fit Guarantee - Never Scrolls Horizontally */
+  .responsive-table {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  table.data-table {
+    table-layout: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  table.data-table th,
+  table.data-table td {
+    padding: 10px 8px !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
   }
 }
 
@@ -3553,6 +3630,13 @@ body.force-desktop-view .col-mobile-only {
   width: 0 !important;
   max-width: 0 !important;
   padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  visibility: collapse !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
   margin: 0 !important;
   border: none !important;
   overflow: hidden !important;
@@ -5439,9 +5523,6 @@ body.force-mobile-view .leave-card-row:hover {
   border-color: #3b82f6 !important;
   box-shadow: 0 4px 16px rgba(15, 39, 76, 0.1) !important;
   transform: translateY(-2px) !important;
-}
-  margin-bottom: 14px !important;
-  box-shadow: 0 2px 10px rgba(15, 39, 76, 0.05) !important;
 }
 
 body.force-mobile-view .vdesk-reason-text,
