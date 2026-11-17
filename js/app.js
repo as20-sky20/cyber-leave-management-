@@ -1673,13 +1673,13 @@ function renderDashboard(container) {
           <div class="stat-subtext">Official Orders Issued &bull; Click to view &rarr;</div>
         </div>
 
-        <div class="stat-card purple" onclick="switchTab('daily_sitrep')" style="cursor: pointer;" title="Click to view SITREP Roll Call">
+        <div class="stat-card purple" onclick="openTodayOnLeaveDetails()" style="cursor: pointer;" title="Click to view Officer(s) on Leave today">
           <div class="stat-header">
             <span class="stat-title">Force Strength</span>
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
           </div>
           <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-          <div class="stat-subtext">${currentlyOnLeave} on Leave &bull; Click for SITREP &rarr;</div>
+          <div class="stat-subtext">${currentlyOnLeave} on Leave &bull; Tap to view who &rarr;</div>
         </div>
       </div>
 
@@ -1708,11 +1708,11 @@ function renderDashboard(container) {
             <div class="days-count" style="color: #15803d;">${onDutyCount}</div>
             <div class="days-label">Daily SITREP &rarr;</div>
           </div>
-          <div class="leave-pill-item" onclick="openMasterRegisterWithFilter('APPROVED')" title="Click to view Sanctioned Leaves in Register">
+          <div class="leave-pill-item" onclick="openTodayOnLeaveDetails()" title="Click to view officer(s) on leave today" style="cursor: pointer;">
             <div class="type-code">LEAVE</div>
             <div class="type-name">On Leave Today</div>
             <div class="days-count" style="color: #b45309;">${currentlyOnLeave}</div>
-            <div class="days-label">Leave Register &rarr;</div>
+            <div class="days-label">${currentlyOnLeave > 0 ? 'View Officer &rarr;' : '0 on Leave'}</div>
           </div>
           <div class="leave-pill-item" onclick="switchTab('sp_desk')" title="Click to open SP Sanction Desk">
             <div class="type-code">SP-DESK</div>
@@ -3553,6 +3553,151 @@ function openMasterRegisterWithFilter(status) {
 }
 
 // ==========================================
+// ON LEAVE TODAY DIRECT MODAL & DRILLDOWN
+// ==========================================
+function openTodayOnLeaveDetails(branchIdFilter = null) {
+  const today = new Date().toISOString().split("T")[0];
+  let todaysLeaves = (AppState.leaves || []).filter(l => {
+    if (l.status !== "APPROVED") return false;
+    if (branchIdFilter && l.branchId !== branchIdFilter) return false;
+    return l.fromDate <= today && l.toDate >= today;
+  });
+
+  if (todaysLeaves.length === 0) {
+    const branchName = branchIdFilter ? (AppState.branches.find(b => b.id === branchIdFilter)?.name || "this wing") : "all 13 wings";
+    showToast(`No personnel on leave today in ${branchName}. 100% force is present on duty.`, "info");
+    return;
+  }
+
+  if (todaysLeaves.length === 1) {
+    // Exactly 1 person on leave - directly open their complete Leave Details Modal!
+    openLeaveDetailsModal(todaysLeaves[0].id);
+    return;
+  }
+
+  // Multiple officers on leave - show dedicated roster modal
+  openTodaysOnLeaveModal(todaysLeaves, branchIdFilter);
+}
+
+function openBranchTodayOnLeaveDetails(branchId) {
+  openTodayOnLeaveDetails(branchId);
+}
+
+function openTodaysOnLeaveModal(leavesList, branchIdFilter = null) {
+  const modal = document.getElementById("todaysOnLeaveModal");
+  const modalBody = document.getElementById("todaysOnLeaveModalBody");
+  const modalTitle = document.getElementById("todaysOnLeaveModalTitle");
+  const modalFooter = document.getElementById("todaysOnLeaveModalFooter");
+  if (!modal || !modalBody) return;
+
+  const today = new Date().toISOString().split("T")[0];
+  const dateFormatted = formatDate(today);
+  const branchObj = branchIdFilter ? AppState.branches.find(b => b.id === branchIdFilter) : null;
+
+  if (modalTitle) {
+    modalTitle.innerHTML = branchObj 
+      ? `Personnel On Leave Today &bull; ${branchObj.name} (${dateFormatted})`
+      : `Police Personnel On Leave Today (${dateFormatted}) &bull; Total: ${leavesList.length}`;
+  }
+
+  modalBody.innerHTML = `
+    <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.4rem;">📅</span>
+        <div>
+          <strong style="color: #854d0e; font-size: 0.95rem;">${leavesList.length} Official(s) Currently On Sanctioned Leave Today</strong>
+          <div style="font-size: 0.8rem; color: #713f12;">Report Date: <strong>${dateFormatted}</strong> &bull; Haryana State Cyber Crime Headquarters</div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeModals(); switchTab('daily_sitrep');" style="background: #fff; font-weight: 600;">
+        📊 Open Full SITREP
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      ${leavesList.map((leave, idx) => {
+        const applicant = (AppState.users || []).find(u => u.id === leave.applicantId);
+        const contactMobile = applicant?.mobile || leave.emergencyContact || "-";
+        return `
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <div style="font-size: 1.05rem; font-weight: 800; color: #0f274c;">
+                  ${idx + 1}. ${leave.applicantName}
+                  <span style="font-size: 0.82rem; font-weight: 600; color: #64748b; margin-left: 4px;">(${leave.rank})</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">
+                  Belt No: <strong>${leave.beltNo}</strong> &bull;
+                  <span class="branch-tag" style="font-size: 0.75rem; padding: 2px 7px;">${leave.branchName}</span>
+                </div>
+              </div>
+
+              <div style="text-align: right;">
+                <span class="status-badge approved" style="font-size: 0.74rem;">✓ Sanctioned Active</span>
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px;">App ID: <strong>${leave.id}</strong></div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; background: #f8fafc; padding: 10px 12px; border-radius: 6px; font-size: 0.84rem;">
+              <div>
+                <span style="color: #64748b; font-size: 0.75rem;">Leave Type:</span><br>
+                <strong style="color: #0f274c;">${leave.leaveTypeName || leave.leaveType}</strong>
+              </div>
+              <div>
+                <span style="color: #64748b; font-size: 0.75rem;">Sanctioned Period:</span><br>
+                <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong>
+                <span style="color: #b45309; font-weight: 700;">(${leave.totalDays} Days)</span>
+              </div>
+              <div>
+                <span style="color: #64748b; font-size: 0.75rem;">Station Leave:</span><br>
+                ${leave.stationLeave ? `
+                  <span style="color: #b45309; font-weight: 700;">📍 Out of Station</span><br>
+                  <small style="color: #475569;">${leave.stationDestination || leave.stationLeaveAddress || 'Sanctioned Destination'}</small>
+                ` : `<span style="color: #64748b;">Stationed at HQ</span>`}
+              </div>
+              <div>
+                <span style="color: #64748b; font-size: 0.75rem;">Emergency Contact:</span><br>
+                ${contactMobile !== '-' ? `
+                  <a href="tel:${contactMobile}" style="color: #2563eb; text-decoration: none; font-weight: 700;">📞 ${contactMobile}</a>
+                ` : `<span style="color: #94a3b8;">Not provided</span>`}
+              </div>
+            </div>
+
+            ${leave.reason ? `
+              <div style="margin-top: 8px; font-size: 0.82rem; color: #334155;">
+                <span style="color: #64748b; font-size: 0.75rem;">Reason:</span> <em>"${leave.reason}"</em>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${leave.id}')" style="font-size: 0.78rem; padding: 4px 12px; font-weight: 600;">
+                🔍 View Full Details
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${leave.id}')" style="font-size: 0.78rem; padding: 4px 12px; font-weight: 600;">
+                📄 Official Sanction Slip
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  if (modalFooter) {
+    modalFooter.innerHTML = `
+      <button class="btn btn-outline btn-sm" onclick="closeModals(); switchTab('daily_sitrep');">
+        📊 Open Daily SITREP
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="closeModals()">
+        Close
+      </button>
+    `;
+  }
+
+  modal.classList.add("active");
+}
+
+// ==========================================
 // VIEW 6: ALL 13 BRANCHES VIEW (TABULAR FORMAT)
 // ==========================================
 function renderBranchesView(container) {
@@ -3702,7 +3847,7 @@ function renderBranchesView(container) {
                   </td>
                   <td class="col-desktop-only" style="text-align: center;">
                     ${onLeaveCount > 0 ? `
-                      <span class="status-badge rejected" style="padding: 2px 8px; font-size: 0.72rem;">${onLeaveCount} Leave</span>
+                      <span class="status-badge rejected" onclick="openBranchTodayOnLeaveDetails('${branch.id}')" style="padding: 2px 8px; font-size: 0.72rem; cursor: pointer;" title="Click to view officer(s) on leave in ${branch.name}">${onLeaveCount} Leave &rarr;</span>
                     ` : `<span style="color: #64748b; font-weight: 600;">0</span>`}
                   </td>
                   <td class="col-desktop-only" style="text-align: center;">
@@ -3731,8 +3876,8 @@ function renderBranchesView(container) {
                   </td>
                   <td class="col-mobile-only" style="width: 32%; text-align: center; vertical-align: top; padding: 10px 8px;">
                     <div style="font-weight: 700; color: #15803d; font-size: 0.75rem; white-space: nowrap;">🟢 ${onDutyCount} Duty</div>
-                    <div style="font-weight: 600; color: ${onLeaveCount > 0 ? '#dc2626' : '#64748b'}; font-size: 0.71rem; white-space: nowrap; margin-top: 2px;">
-                      ${onLeaveCount > 0 ? `🔴 ${onLeaveCount} Leave` : '⚪ 0 Leave'}
+                    <div style="font-weight: 600; color: ${onLeaveCount > 0 ? '#dc2626' : '#64748b'}; font-size: 0.71rem; white-space: nowrap; margin-top: 2px; ${onLeaveCount > 0 ? 'cursor: pointer;' : ''}" ${onLeaveCount > 0 ? `onclick="openBranchTodayOnLeaveDetails('${branch.id}')" title="Click to view officer(s) on leave in ${branch.name}"` : ''}>
+                      ${onLeaveCount > 0 ? `🔴 ${onLeaveCount} Leave &rarr;` : '⚪ 0 Leave'}
                     </div>
                     <div style="font-size: 0.67rem; color: #64748b; margin-top: 2px;">Tot: ${branchMembers.length}</div>
                   </td>
@@ -3870,6 +4015,7 @@ function renderMasterRegister(container) {
 
           <select id="registerStatusFilter" class="select-filter" onchange="filterRegisterTable()">
             <option value="">-- All Statuses --</option>
+            <option value="ACTIVE_TODAY">📅 On Leave Today</option>
             <option value="PENDING_INCHARGE">Pending with Incharge</option>
             <option value="RECOMMENDED">Recommended to SP</option>
             <option value="APPROVED">Sanctioned / Approved</option>
@@ -3933,7 +4079,12 @@ function filterRegisterTable() {
 
   const filtered = AppState.leaves.filter(l => {
     if (branchVal && l.branchId !== branchVal) return false;
-    if (statusVal && l.status !== statusVal) return false;
+    if (statusVal === "ACTIVE_TODAY") {
+      const today = new Date().toISOString().split("T")[0];
+      if (l.status !== "APPROVED" || l.fromDate > today || l.toDate < today) return false;
+    } else if (statusVal && l.status !== statusVal) {
+      return false;
+    }
     if (typeVal && l.leaveType !== typeVal) return false;
     if (searchVal) {
       const targetStr = `${l.id} ${l.applicantName} ${l.beltNo} ${l.reason} ${l.branchName}`.toLowerCase();
@@ -5759,7 +5910,27 @@ function openLeaveDetailsModal(leaveId) {
   const applicantUser = (AppState.users || []).find(u => u.id === leave.applicantId);
   const isApplicantIncharge = isUserBranchIncharge(applicantUser, leave.branchId) || (leave.applicantId && leave.applicantId.startsWith("INCH-"));
 
+  const today = new Date().toISOString().split("T")[0];
+  const isCurrentlyOnLeave = isApproved && (leave.fromDate <= today && leave.toDate >= today);
+
   modalBody.innerHTML = `
+    ${isCurrentlyOnLeave ? `
+      <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;">🟢</span>
+          <div>
+            <strong style="color: #92400e; font-size: 0.96rem;">Official Currently On Leave Today (${formatDate(today)})</strong>
+            <div style="font-size: 0.8rem; color: #78350f; margin-top: 2px;">
+              Sanctioned Period: <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong> (${leave.totalDays} Days)
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${leave.id}')" style="padding: 6px 14px; font-weight: 600;">
+          📄 View Sanction Slip
+        </button>
+      </div>
+    ` : ''}
+
     <!-- STEPPER -->
     <div class="stepper-box">
       <div class="step-node completed">
