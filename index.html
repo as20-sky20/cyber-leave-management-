@@ -7,22 +7,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261111.1320">
+  <link rel="stylesheet" href="css/style.css?v=20261117.1015">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
-  <!-- TOP GOV RIBBON -->
-  <div class="gov-top-ribbon">
-    <div class="gov-branding-left">
-      <div class="gov-flag-strip">
-        <span></span><span></span><span></span>
-      </div>
-      <span>GOVERNMENT OF HARYANA | POLICE DEPARTMENT | STATE CYBER CRIME</span>
-    </div>
-    <div>
-      <span style="color: var(--police-gold); font-weight: 600;">🚨 National Cyber Helpline: 1930 | Emergency: 112</span>
-    </div>
-  </div>
 
   <!-- MAIN POLICE HEADER -->
     <!-- DEDICATED OFFICER LOGIN SCREEN -->
@@ -49,53 +37,23 @@
       </div>
       <div class="brand-text">
         <h1 class="portal-main-brand">
-          <span class="haryana-text">HARYANA POLICE</span>
-          <span class="desktop-only-brand"> | STATE CYBER CRIME</span>
-          <span class="brand-badge desktop-only-brand">Panchkula HQ</span>
+          <span class="haryana-text">CYBER POLICE</span>
         </h1>
       </div>
     </div>
 
-    <!-- QUICK ROLE / USER SWITCHER -->
+    <!-- QUICK ACTIONS -->
     <div class="header-actions">
       <!-- LIVE CLOUD / LAN SYNC PILL -->
-      <div id="lanSyncIndicator" class="lan-sync-pill" onclick="syncWithOfficeDatabase()" style="cursor: pointer;" title="Click to synchronize data across devices">
+      <div id="lanSyncIndicator" class="lan-sync-pill" onclick="syncWithOfficeDatabase()" style="cursor: pointer;" title="Live Cloud Sync Status">
         <span class="sync-dot"></span>
         <span id="syncStatusText" style="display: none;"></span>
       </div>
 
-      <!-- MOBILE OFFICER PROFILE BADGE (Visible on Mobile) -->
-      <div class="mobile-header-user-btn" id="mobileHeaderUserBtn" title="Active Officer Profile" style="cursor: default;">
-        <span class="mobile-header-avatar">👮</span>
-        <span id="mobileHeaderUserName">SP Cyber</span>
-      </div>
-
-      <!-- MOBILE LOGOUT BUTTON -->
-      <button class="mobile-header-logout-btn" onclick="handleLogout()" title="Logout Officer Session">
+      <!-- UNIFIED HEADER LOGOUT BUTTON -->
+      <button class="header-logout-pill" onclick="handleLogout()" title="Logout Officer Session">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         <span>Logout</span>
-      </button>
-
-      <div class="role-switcher-card" title="Logged in Police Personnel Profile">
-        <span style="font-size: 1.25rem; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 50%;">👮</span>
-        <div class="user-info-box" style="text-align: left;">
-          <span class="user-name-title" id="headerUserName">Mayank Gupta, IPS</span>
-          <span class="user-role-badge" id="headerUserRole">SP Cyber Crime, Panchkula</span>
-        </div>
-      </div>
-
-            <!-- LOGOUT BUTTON IN HEADER -->
-      <button class="btn btn-outline btn-sm logout-btn" id="headerLogoutBtn" onclick="handleLogout()" title="Logout Officer Session" style="color: #fca5a5; border-color: rgba(252, 165, 165, 0.4); display: inline-flex; align-items: center; gap: 5px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        <span>Logout</span>
-      </button>
-
-      <button class="btn btn-outline btn-sm desktop-view-toggle-btn" onclick="toggleDesktopMobileMode()" title="Toggle between Mobile App View and Desktop Layout" style="color: #fff; border-color: rgba(255,255,255,0.3);">
-        <span id="desktopToggleIcon">📱</span> <span id="desktopToggleText">Mobile View</span>
-      </button>
-
-      <button class="btn btn-outline btn-sm" id="headerBackupBtn" onclick="openBackupModal()" title="Data Backup & Security Center" style="color: #fff; border-color: rgba(255,255,255,0.3); display: none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Data Backup
       </button>
     </div>
   </header>
@@ -107,11 +65,11 @@
 
     <!-- LEFT NAVIGATION BAR (SIDEBAR) -->
     <aside class="sidebar-nav nav-bar" id="portalSidebarNav">
-      <!-- SIDEBAR HEADER (Visible on Mobile) -->
+      <!-- SIDEBAR HEADER -->
       <div class="sidebar-header">
         <div class="sidebar-brand-title">
-          <span class="sidebar-brand-main">Cyber Navigation</span>
-          <span class="sidebar-brand-sub">Panchkula Headquarters</span>
+          <span class="sidebar-brand-main">Cyber Police</span>
+          <span class="sidebar-brand-sub">Leave Management Portal</span>
         </div>
         <button class="sidebar-close-btn" onclick="closeSidebarNav()" aria-label="Close Navigation Menu">&times;</button>
       </div>
@@ -727,16 +685,6 @@
           <span class="mobile-menu-text">Sync Devices</span>
         </button>
       </div>
-
-      <!-- Bottom View Switcher & Demo Reset -->
-      <div class="mobile-drawer-footer">
-        <button class="btn btn-block" onclick="toggleDesktopMobileMode()" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0f274c; color: #ffd700; border: 2px solid #ffd700; font-weight: 700;">
-          <span id="viewModeToggleIcon">💻</span> <span id="viewModeToggleText">Switch to Desktop View</span>
-        </button>
-        <div style="text-align: center; margin-top: 12px; font-size: 0.72rem; color: #64748b;">
-          Haryana Cyber Helpline: <strong>1930</strong> | Emergency: <strong>112</strong>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -744,7 +692,7 @@
 
   <!-- SCRIPTS -->
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script src="js/data.js?v=20261112.1040"></script>
-  <script src="js/app.main.js?v=20261112.1040"></script>
+  <script src="js/data.js?v=20261117.1015"></script>
+  <script src="js/app.main.js?v=20261117.1015"></script>
 </body>
 </html>

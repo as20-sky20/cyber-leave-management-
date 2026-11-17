@@ -837,49 +837,19 @@ function resetDemoData() {
 // MOBILE APP CONTROLS & DEDICATED VIEW SYSTEM
 // ============================================================================
 function initViewMode() {
-  const savedView = localStorage.getItem("cyber_preferred_view") || "auto";
-  applyViewMode(savedView);
-
-  window.addEventListener("resize", () => {
-    const saved = localStorage.getItem("cyber_preferred_view") || "auto";
-    if (saved === "auto") {
-      updateToggleButtons(window.innerWidth <= 768);
-    }
-  });
+  localStorage.removeItem("cyber_preferred_view");
+  document.body.classList.remove("force-mobile-view");
+  document.body.classList.remove("force-desktop-view");
 }
 
 function applyViewMode(mode) {
-  const body = document.body;
-  if (mode === "mobile") {
-    body.classList.add("force-mobile-view");
-    body.classList.remove("force-desktop-view");
-    updateToggleButtons(true);
-  } else if (mode === "desktop") {
-    body.classList.add("force-desktop-view");
-    body.classList.remove("force-mobile-view");
-    updateToggleButtons(false);
-  } else {
-    body.classList.remove("force-mobile-view");
-    body.classList.remove("force-desktop-view");
-    const isMobileWidth = window.innerWidth <= 768;
-    updateToggleButtons(isMobileWidth);
-  }
+  document.body.classList.remove("force-mobile-view");
+  document.body.classList.remove("force-desktop-view");
 }
 
 function toggleDesktopMobileMode() {
-  const body = document.body;
-  const isCurrentlyMobile = body.classList.contains("force-mobile-view") || 
-    (!body.classList.contains("force-desktop-view") && window.innerWidth <= 768);
-
-  if (isCurrentlyMobile) {
-    localStorage.setItem("cyber_preferred_view", "desktop");
-    applyViewMode("desktop");
-    showToast("Switched to Desktop View", "info");
-  } else {
-    localStorage.setItem("cyber_preferred_view", "mobile");
-    applyViewMode("mobile");
-    showToast("Switched to Mobile View", "info");
-  }
+  document.body.classList.remove("force-mobile-view");
+  document.body.classList.remove("force-desktop-view");
 }
 
 function updateToggleButtons(isMobile) {
