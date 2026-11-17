@@ -2103,16 +2103,6 @@ function renderApplyLeave(container) {
 
   let html = `
     <div class="apply-leave-wrapper">
-      <div class="apply-leave-header">
-        <h2 class="apply-leave-title">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          Apply for Leave
-        </h2>
-        <button class="btn btn-outline btn-sm apply-my-leaves-btn" onclick="switchTab('my_leaves')">
-          My Applications
-        </button>
-      </div>
-
       <div class="apply-leave-card">
         <!-- COMPACT OFFICER STRIP -->
         <div class="apply-officer-strip">
