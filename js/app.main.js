@@ -2245,126 +2245,30 @@ function renderApplyLeave(container) {
             </div>
           </div>
 
-          <!-- SECTION 3: OPTIONAL PERMISSIONS & ATTACHMENT ACCORDION -->
-          <div class="apply-section-title">
-            <span>3. Additional Options (Optional)</span>
-          </div>
-
-          <div class="apply-optional-group">
-            <!-- 1. STATION LEAVE (OUT OF HQ) -->
-            <div class="opt-toggle-card">
-              <div class="opt-toggle-header">
-                <label class="opt-toggle-label">
-                  <input type="checkbox" id="stationLeaveCheck" onchange="toggleStationLeaveInputs()">
-                  <span>📍 Out-of-Station Leave (Leaving HQ)</span>
-                  <span class="opt-toggle-sub">Tap to specify destination</span>
-                </label>
+          <!-- SUPPORTING DOCUMENT / ATTACHMENT -->
+          <div class="form-group" style="margin-top: 6px; margin-bottom: 20px;">
+            <div class="mobile-attachment-card" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="flex-grow: 1;">
+                <div style="font-weight: 700; font-size: 0.88rem; color: #0f274c;">📎 Supporting Document / Medical Slip (Optional)</div>
+                <div style="font-size: 0.74rem; color: #64748b;">PDF, JPG, PNG (Max 5MB)</div>
               </div>
-              <div id="stationLeaveBox" style="display: none;" class="opt-toggle-body">
-                <div class="station-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                  <div>
-                    <label for="stationDestination" class="apply-field-label">Destination City &amp; State</label>
-                    <input type="text" id="stationDestination" class="form-control" placeholder="e.g. Rohtak / New Delhi">
-                  </div>
-                  <div>
-                    <label for="stationLocalPS" class="apply-field-label">Nearest Police Station</label>
-                    <input type="text" id="stationLocalPS" class="form-control" placeholder="e.g. PS Model Town">
-                  </div>
-                  <div>
-                    <label for="stationTravelMode" class="apply-field-label">Mode of Travel</label>
-                    <select id="stationTravelMode" class="form-control">
-                      <option value="Train (Indian Railways)">Train (Indian Railways)</option>
-                      <option value="Bus (State Roadways / Private)">Bus (State Roadways / Private)</option>
-                      <option value="Private Car (Four-Wheeler)">Private Car (Four-Wheeler)</option>
-                      <option value="Two-Wheeler (Motorcycle / Bike)">Two-Wheeler (Motorcycle / Bike)</option>
-                      <option value="Flight / Air Travel">Flight / Air Travel</option>
-                      <option value="Other Arrangement">Other Arrangement</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="stationFamilyContact" class="apply-field-label">Family Contact Person</label>
-                    <input type="text" id="stationFamilyContact" class="form-control" placeholder="e.g. Amit - Brother (98120XXXXX)">
-                  </div>
-                  <div style="grid-column: 1 / -1;">
-                    <label for="stationLeaveAddress" class="apply-field-label">Complete Address During Stay</label>
-                    <textarea id="stationLeaveAddress" class="form-control" rows="2" placeholder="Full house address, street &amp; village/city"></textarea>
-                  </div>
-                </div>
-                <small style="color: #b45309; font-size: 0.74rem; margin-top: 6px; display: block;">
-                  * Subject to sanction by SP Cyber Crime, Panchkula.
-                </small>
+              <div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('leaveAttachmentInput').click()" style="padding: 6px 14px; font-weight: 700; font-size: 0.82rem; background: #ffffff;">
+                  Upload File
+                </button>
               </div>
             </div>
-
-            <!-- 2. PREFIX & SUFFIX HOLIDAYS -->
-            <div class="opt-toggle-card">
-              <div class="opt-toggle-header">
-                <label class="opt-toggle-label">
-                  <input type="checkbox" id="prefixSuffixCheck" onchange="togglePrefixSuffix(this)">
-                  <span>🗓️ Add Prefix / Suffix Holidays (C-OFF)</span>
-                  <span class="opt-toggle-sub">Optional</span>
-                </label>
-              </div>
-              <div id="prefixSuffixFields" style="display: none;" class="opt-toggle-body">
-                <div class="mobile-dates-row">
-                  <div>
-                    <label for="prefixDaysInput" class="apply-field-label">Prefix Days (Before leave)</label>
-                    <input type="number" id="prefixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="0">
-                  </div>
-                  <div>
-                    <label for="suffixDaysInput" class="apply-field-label">Suffix Days (After leave)</label>
-                    <input type="number" id="suffixDaysInput" class="form-control" min="0" max="7" value="0" onchange="calculateLeaveDays()" placeholder="0">
-                  </div>
+            <input type="file" id="leaveAttachmentInput" style="display: none;" accept=".pdf,image/*,.doc,.docx" onchange="handleAttachmentSelect(event)">
+            <div id="attachmentPrompt" style="display: none;"></div>
+            <div id="attachmentPreviewBox" style="display: none; padding: 10px 14px; border: 1px dashed #cbd5e1; border-top: none; background: #ffffff; border-radius: 0 0 8px 8px;" class="attachment-preview-card" onclick="event.stopPropagation()">
+              <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                <span style="font-size: 1.2rem;">📄</span>
+                <div style="text-align: left; overflow: hidden;">
+                  <strong id="attachmentFileName" style="font-size: 0.85rem; color: #0f274c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></strong>
+                  <div id="attachmentFileSize" style="font-size: 0.72rem; color: #64748b;"></div>
                 </div>
               </div>
-            </div>
-
-            <!-- 3. COURT EVIDENCE / SUMMONS -->
-            <div class="opt-toggle-card">
-              <div class="opt-toggle-header">
-                <label class="opt-toggle-label">
-                  <input type="checkbox" id="courtEvidenceCheck" onchange="toggleCourtCaseFields(this)">
-                  <span>⚖️ Court Evidence / Summons Scheduled</span>
-                  <span class="opt-toggle-sub">Optional</span>
-                </label>
-              </div>
-              <div id="courtCaseFields" style="display: none;" class="opt-toggle-body">
-                <div class="form-group" style="margin-bottom: 8px;">
-                  <label for="courtCaseDetails" class="apply-field-label">Court &amp; Case / FIR Details</label>
-                  <input type="text" id="courtCaseDetails" class="form-control" placeholder="e.g. Session Court / FIR 112/2025, Hearing 15-Nov">
-                </div>
-                <div class="form-group">
-                  <label for="courtOfficerHandover" class="apply-field-label">Case Diary Handed Over To</label>
-                  <input type="text" id="courtOfficerHandover" class="form-control" placeholder="e.g. ASI Rajesh Kumar (312/PKL)">
-                </div>
-              </div>
-            </div>
-
-            <!-- 4. ATTACHMENT CARD -->
-            <div class="opt-toggle-card">
-              <div class="mobile-attachment-card">
-                <div style="flex-grow: 1;">
-                  <div style="font-weight: 700; font-size: 0.86rem; color: #0f274c;">📎 Supporting Document / Medical Slip</div>
-                  <div style="font-size: 0.74rem; color: #64748b;">PDF, JPG, PNG (Max 5MB)</div>
-                </div>
-                <div>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('leaveAttachmentInput').click()" style="padding: 6px 12px; font-weight: 700; font-size: 0.8rem;">
-                    Upload File
-                  </button>
-                </div>
-              </div>
-              <input type="file" id="leaveAttachmentInput" style="display: none;" accept=".pdf,image/*,.doc,.docx" onchange="handleAttachmentSelect(event)">
-              <div id="attachmentPrompt" style="display: none;"></div>
-              <div id="attachmentPreviewBox" style="display: none; padding: 10px 14px; border-top: 1px dashed #cbd5e1; background: #ffffff;" class="attachment-preview-card" onclick="event.stopPropagation()">
-                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                  <span style="font-size: 1.2rem;">📄</span>
-                  <div style="text-align: left; overflow: hidden;">
-                    <strong id="attachmentFileName" style="font-size: 0.85rem; color: #0f274c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></strong>
-                    <div id="attachmentFileSize" style="font-size: 0.72rem; color: #64748b;"></div>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>
-              </div>
+              <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>
             </div>
           </div>
 
