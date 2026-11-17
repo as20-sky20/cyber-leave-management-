@@ -1,9 +1,16 @@
 
 // ==========================================
-// LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP & MOBILE)
+// LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP & MOBILE AUTO-HOVER)
 // ==========================================
 
+let sidebarHoverCloseTimer = null;
+let isSidebarHoverOpen = false;
+
 function toggleSidebarNav() {
+  if (sidebarHoverCloseTimer) {
+    clearTimeout(sidebarHoverCloseTimer);
+    sidebarHoverCloseTimer = null;
+  }
   const sidebar = document.getElementById("portalSidebarNav");
   const isMobile = window.innerWidth < 992 || document.body.classList.contains("force-mobile-view");
 
@@ -11,27 +18,105 @@ function toggleSidebarNav() {
     if (sidebar && sidebar.classList.contains("mobile-open")) {
       closeSidebarNav();
     } else {
-      openSidebarNav();
+      openSidebarNav(false);
     }
   } else {
+    // Desktop: toggle between pinned wide open and auto-collapsed (hover to expand)
     document.body.classList.toggle("sidebar-collapsed");
+    const isCollapsed = document.body.classList.contains("sidebar-collapsed");
+    localStorage.setItem("cyber_sidebar_collapsed", isCollapsed ? "true" : "false");
+    if (!isCollapsed) {
+      document.body.classList.remove("sidebar-hover-active");
+      if (sidebar) sidebar.classList.remove("sidebar-hover-expanded");
+    }
   }
 }
 
-function openSidebarNav() {
+function openSidebarNav(isHover = false) {
+  if (sidebarHoverCloseTimer) {
+    clearTimeout(sidebarHoverCloseTimer);
+    sidebarHoverCloseTimer = null;
+  }
   const sidebar = document.getElementById("portalSidebarNav");
   const backdrop = document.getElementById("sidebarBackdrop");
-  if (sidebar) sidebar.classList.add("mobile-open");
-  if (backdrop) backdrop.classList.add("active");
-  document.body.classList.add("sidebar-open-lock");
+  const isMobile = window.innerWidth < 992 || document.body.classList.contains("force-mobile-view");
+
+  if (isMobile) {
+    if (sidebar) sidebar.classList.add("mobile-open");
+    if (backdrop) backdrop.classList.add("active");
+    if (!isHover) {
+      document.body.classList.add("sidebar-open-lock");
+    }
+  } else {
+    if (sidebar) sidebar.classList.add("sidebar-hover-expanded");
+    document.body.classList.add("sidebar-hover-active");
+  }
+  isSidebarHoverOpen = true;
 }
 
 function closeSidebarNav() {
+  if (sidebarHoverCloseTimer) {
+    clearTimeout(sidebarHoverCloseTimer);
+    sidebarHoverCloseTimer = null;
+  }
   const sidebar = document.getElementById("portalSidebarNav");
   const backdrop = document.getElementById("sidebarBackdrop");
-  if (sidebar) sidebar.classList.remove("mobile-open");
-  if (backdrop) backdrop.classList.remove("active");
+  if (sidebar) {
+    sidebar.classList.remove("mobile-open");
+    sidebar.classList.remove("sidebar-hover-expanded");
+  }
+  if (backdrop) {
+    backdrop.classList.remove("active");
+  }
   document.body.classList.remove("sidebar-open-lock");
+  document.body.classList.remove("sidebar-hover-active");
+  isSidebarHoverOpen = false;
+}
+
+function autoScheduleCloseSidebar(delay = 360) {
+  if (sidebarHoverCloseTimer) {
+    clearTimeout(sidebarHoverCloseTimer);
+  }
+  sidebarHoverCloseTimer = setTimeout(() => {
+    closeSidebarNav();
+  }, delay);
+}
+
+function initAutoHoverNavigation() {
+  const toggleBtn = document.getElementById("sidebarToggleBtn");
+  const sidebar = document.getElementById("portalSidebarNav");
+  const hoverZone = document.getElementById("sidebarHoverZone");
+
+  function onNavEnter() {
+    openSidebarNav(true);
+  }
+
+  function onNavLeave() {
+    autoScheduleCloseSidebar(360);
+  }
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("mouseenter", onNavEnter);
+    toggleBtn.addEventListener("mouseleave", onNavLeave);
+  }
+
+  if (sidebar) {
+    sidebar.addEventListener("mouseenter", onNavEnter);
+    sidebar.addEventListener("mouseleave", onNavLeave);
+  }
+
+  if (hoverZone) {
+    hoverZone.addEventListener("mouseenter", onNavEnter);
+    hoverZone.addEventListener("mouseleave", onNavLeave);
+  }
+
+  // Desktop default: start in collapsed mode so hover-to-open works effortlessly
+  if (window.innerWidth >= 992) {
+    const saved = localStorage.getItem("cyber_sidebar_collapsed");
+    if (saved !== "false") {
+      document.body.classList.add("sidebar-collapsed");
+    }
+  }
 }
 
 function openSidebarOfficerProfile() {
@@ -6077,6 +6162,8 @@ function closeModals() {
 
 // Setup Event Listeners
 function setupEventListeners() {
+  initAutoHoverNavigation();
+
   // Navigation tabs
   document.querySelectorAll(".nav-tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {

@@ -245,6 +245,18 @@ body {
   background: var(--bg-light);
 }
 
+/* AUTO-HOVER NAVIGATION SENSING ZONE (LEFT SCREEN EDGE) */
+.sidebar-hover-zone {
+  position: fixed;
+  top: 55px;
+  left: 0;
+  width: 16px;
+  height: calc(100vh - 55px);
+  z-index: 1010;
+  background: transparent;
+  pointer-events: auto;
+}
+
 /* Sidebar Backdrop (for Mobile Drawer mode) */
 .sidebar-backdrop {
   display: none;
@@ -2132,7 +2144,8 @@ table.data-table tr:hover {
     visibility: hidden !important;
     pointer-events: none !important;
   }
-  body:not(.force-desktop-view) .sidebar-nav.nav-bar.mobile-open {
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar.mobile-open,
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar.sidebar-hover-expanded {
     transform: translateX(0) !important;
     visibility: visible !important;
     pointer-events: auto !important;
@@ -4233,11 +4246,13 @@ body.force-mobile-view .mobile-card-actions .btn {
     display: none !important;
   }
 
-  /* Desktop collapsed sidebar mode */
+  /* Desktop collapsed sidebar mode & Auto-Expand on Mouse Hover */
   body.sidebar-collapsed .sidebar-nav.nav-bar {
     width: 68px !important;
     min-width: 68px !important;
     padding: 14px 6px !important;
+    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s ease !important;
+    overflow-x: hidden;
   }
 
   body.sidebar-collapsed .sidebar-brand-title,
@@ -4245,7 +4260,7 @@ body.force-mobile-view .mobile-card-actions .btn {
   body.sidebar-collapsed .nav-tab-btn span,
   body.sidebar-collapsed .sidebar-user-details,
   body.sidebar-collapsed .sidebar-sync-btn span {
-    display: none !important;
+    display: none;
   }
 
   body.sidebar-collapsed .nav-tab-btn {
@@ -4257,6 +4272,49 @@ body.force-mobile-view .mobile-card-actions .btn {
     position: absolute !important;
     top: 4px !important;
     right: 4px !important;
+  }
+
+  /* When mouse hovers over collapsed sidebar, it smoothly expands to full 260px */
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded,
+  body.sidebar-hover-active .sidebar-nav.nav-bar {
+    width: 260px !important;
+    min-width: 260px !important;
+    padding: 14px 10px !important;
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.45) !important;
+    z-index: 1050 !important;
+  }
+
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .sidebar-brand-title,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .sidebar-brand-title,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .sidebar-brand-title,
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .sidebar-apply-btn span,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .sidebar-apply-btn span,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .sidebar-apply-btn span,
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .nav-tab-btn span,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .nav-tab-btn span,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .nav-tab-btn span,
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .sidebar-user-details,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .sidebar-user-details,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .sidebar-user-details,
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .sidebar-sync-btn span,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .sidebar-sync-btn span,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .sidebar-sync-btn span {
+    display: inline !important;
+  }
+
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .sidebar-apply-btn,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .sidebar-apply-btn,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .sidebar-apply-btn {
+    justify-content: center !important;
+    padding: 10px 14px !important;
+  }
+
+  body.sidebar-collapsed .sidebar-nav.nav-bar:hover .nav-tab-btn,
+  body.sidebar-collapsed .sidebar-nav.nav-bar.sidebar-hover-expanded .nav-tab-btn,
+  body.sidebar-hover-active .sidebar-nav.nav-bar .nav-tab-btn {
+    justify-content: flex-start !important;
+    padding: 10px 14px !important;
   }
 }
 
