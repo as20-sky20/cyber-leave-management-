@@ -2929,6 +2929,9 @@ function renderInchargeDesk(container) {
           <div style="font-size: 0.88rem; color: #64748b;">No pending leave applications for ${branchName}. All applications from your branch personnel have been reviewed and disposed.</div>
         </div>
       ` : `
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
+        </div>
         <div class="responsive-table">
           <table class="data-table">
             <thead>
@@ -3012,6 +3015,9 @@ function renderInchargeDesk(container) {
           No previous processed leave applications found for ${branchName}.
         </div>
       ` : `
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
+        </div>
         <div class="responsive-table">
           <table class="data-table">
             <thead>
@@ -3136,6 +3142,9 @@ function renderSPDesk(container) {
           <div style="font-size: 0.86rem; color: #64748b;">No leave applications currently pending for SP sanction.</div>
         </div>
       ` : `
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
+        </div>
         <div class="responsive-table">
           <table class="data-table">
             <thead>
@@ -3223,6 +3232,9 @@ function renderSPDesk(container) {
           <div style="font-size: 0.85rem; color: #64748b;">No fresh applications awaiting branch review.</div>
         </div>
       ` : `
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
+        </div>
         <div class="responsive-table">
           <table class="data-table">
             <thead>
@@ -3322,7 +3334,7 @@ function openMasterRegisterWithFilter(status) {
 }
 
 // ==========================================
-// VIEW 6: ALL 13 BRANCHES VIEW
+// VIEW 6: ALL 13 BRANCHES VIEW (TABULAR FORMAT)
 // ==========================================
 function renderBranchesView(container) {
   const user = AppState.currentUser;
@@ -3335,77 +3347,212 @@ function renderBranchesView(container) {
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
           13 Cyber Wings deployment is restricted strictly to the <strong>Superintendent of Police (SP Cyber)</strong>.
         </p>
-        <button class="btn btn-primary" onclick="switchTab(\'dashboard\')">Return to Dashboard</button>
+        <button class="btn btn-primary" onclick="switchTab('dashboard')">Return to Dashboard</button>
       </div>
     `;
     return;
   }
+
+  // Calculate totals
+  const totalBranches = AppState.branches.length;
+  const totalPersonnel = AppState.users.length;
+  const today = new Date().toISOString().split("T")[0];
+  const totalOnLeave = AppState.leaves.filter(l => l.status === "APPROVED" && l.fromDate <= today && l.toDate >= today).length;
+  const totalOnDuty = Math.max(0, totalPersonnel - totalOnLeave);
 
   let html = `
     <div class="page-header">
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-          Cyber Crime Branches & Strength Deployment (13 Cyber Units)
+          13 Cyber Wings & Branch Deployment Roster
         </h2>
-        <p>Overview of all 13 Cyber Wings and personnel deployment</p>
+        <p>Comprehensive operational status and personnel deployment table across all 13 specialized Cyber Crime branches</p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-outline" onclick="exportBranchesToCSV()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export Wings CSV
+        </button>
+        <button class="btn btn-primary" onclick="switchTab('directory')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+          Staff Directory &rarr;
+        </button>
       </div>
     </div>
 
-    <div class="branches-grid">
-      ${AppState.branches.map(branch => {
-        // Find incharge for this branch
-        const incharge = AppState.users.find(u => u.branchId === branch.id && (u.role === "branch_incharge" || u.isApprover));
-        const branchMembers = AppState.users.filter(u => u.branchId === branch.id);
-        const onLeaveCount = AppState.leaves.filter(l => {
-          if (l.branchId !== branch.id || l.status !== "APPROVED") return false;
-          const today = new Date().toISOString().split("T")[0];
-          return l.fromDate <= today && l.toDate >= today;
-        }).length;
-        const onDutyCount = Math.max(0, branchMembers.length - onLeaveCount);
+    <!-- SUMMARY METRICS -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(15, 39, 76, 0.1); color: #0f274c;">🏢</div>
+        <div class="stat-number">${totalBranches}</div>
+        <div class="stat-title">Cyber Wings</div>
+        <div class="stat-subtext">Active specialized units</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(30, 58, 138, 0.1); color: #1e3a8a;">👥</div>
+        <div class="stat-number">${totalPersonnel}</div>
+        <div class="stat-title">Total Personnel</div>
+        <div class="stat-subtext">Posted cyber officers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(22, 163, 74, 0.1); color: #16a34a;">🟢</div>
+        <div class="stat-number" style="color: #16a34a;">${totalOnDuty}</div>
+        <div class="stat-title">Present / On Duty</div>
+        <div class="stat-subtext">Effective deployed strength</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">🔴</div>
+        <div class="stat-number" style="color: #dc2626;">${totalOnLeave}</div>
+        <div class="stat-title">On Sanctioned Leave</div>
+        <div class="stat-subtext">Absent with permission</div>
+      </div>
+    </div>
 
-        return `
-          <div class="branch-card">
-            <div>
-              <div class="branch-card-header">
-                <div class="branch-icon-box">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
-                </div>
-                <div class="branch-info">
-                  <h4>${branch.name}</h4>
-                  <div class="branch-code" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">CODE: ${branch.id.toUpperCase()}</div>
-                </div>
-              </div>
+    <div class="card-table-wrap">
+      <div class="table-toolbar">
+        <div class="table-title">
+          13 Specialized Cyber Crime Branches Table
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="branchesSearchInput" class="search-input" placeholder="Search Wing name, code or incharge..." oninput="filterBranchesTable()" style="min-width: 250px;">
+        </div>
+      </div>
 
-              <div class="branch-incharge-line">
-                Incharge: <strong>${incharge ? `${incharge.name} (${incharge.rank})` : "Under Posting"}</strong><br>
-                <small style="color: #64748b;">Mobile: ${incharge ? incharge.mobile : "-"}</small>
-              </div>
-            </div>
+      <div class="table-scroll-hint">
+        <span>👉 Swipe table horizontally to see all columns</span>
+      </div>
 
-            <div>
-              <div class="branch-stats-pills">
-                <div class="branch-stat-item">
-                  <div class="val">${branchMembers.length}</div>
-                  <div class="lbl">Total Strength</div>
-                </div>
-                <div class="branch-stat-item">
-                  <div class="val" style="color: #16a34a;">${onDutyCount}</div>
-                  <div class="lbl">On Duty</div>
-                </div>
-                <div class="branch-stat-item">
-                  <div class="val" style="color: #dc2626;">${onLeaveCount}</div>
-                  <div class="lbl">On Leave</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("")}
+      <div class="responsive-table">
+        <table class="data-table" id="branchesTable">
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center;">Sr.</th>
+              <th style="width: 90px;">Wing Code</th>
+              <th>Cyber Branch / Wing Name</th>
+              <th>Branch Incharge Officer</th>
+              <th>Incharge Contact</th>
+              <th style="text-align: center;">Total Strength</th>
+              <th style="text-align: center;">On Duty</th>
+              <th style="text-align: center;">On Leave</th>
+              <th style="text-align: center;">Status</th>
+              <th style="text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="branchesTableBody">
+            ${AppState.branches.map((branch, index) => {
+              const incharge = AppState.users.find(u => u.branchId === branch.id && (u.role === "branch_incharge" || u.isApprover));
+              const branchMembers = AppState.users.filter(u => u.branchId === branch.id);
+              const onLeaveCount = AppState.leaves.filter(l => {
+                if (l.branchId !== branch.id || l.status !== "APPROVED") return false;
+                return l.fromDate <= today && l.toDate >= today;
+              }).length;
+              const onDutyCount = Math.max(0, branchMembers.length - onLeaveCount);
+
+              return `
+                <tr data-branch-code="${branch.id}" data-branch-name="${branch.name}">
+                  <td style="text-align: center; font-weight: 700; color: #64748b;">${index + 1}</td>
+                  <td><span class="badge" style="background: #0f274c; color: #ffd700; font-weight: 700; padding: 4px 8px; border-radius: 6px;">${branch.id.toUpperCase()}</span></td>
+                  <td>
+                    <div style="font-weight: 700; color: #0f274c; font-size: 0.9rem;">${branch.name}</div>
+                    <small style="color: #64748b;">HQ: State Cyber Crime, Panchkula</small>
+                  </td>
+                  <td>
+                    ${incharge ? `
+                      <div style="font-weight: 700; color: #1e293b;">${incharge.name}</div>
+                      <small style="color: #64748b;">${incharge.rank} (${incharge.beltNo})</small>
+                    ` : `<span style="color: #dc2626; font-weight: 600;">Under Posting</span>`}
+                  </td>
+                  <td>
+                    ${incharge && incharge.mobile ? `
+                      <a href="tel:${incharge.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${incharge.mobile}</a>
+                    ` : `<span style="color: #94a3b8;">-</span>`}
+                  </td>
+                  <td style="text-align: center;">
+                    <span style="font-weight: 800; font-size: 0.95rem; color: #0f274c;">${branchMembers.length}</span> Personnel
+                  </td>
+                  <td style="text-align: center;">
+                    <span class="status-badge approved" style="padding: 2px 8px; font-size: 0.72rem;">${onDutyCount} Present</span>
+                  </td>
+                  <td style="text-align: center;">
+                    ${onLeaveCount > 0 ? `
+                      <span class="status-badge rejected" style="padding: 2px 8px; font-size: 0.72rem;">${onLeaveCount} Leave</span>
+                    ` : `<span style="color: #64748b; font-weight: 600;">0</span>`}
+                  </td>
+                  <td style="text-align: center;">
+                    <span class="status-badge approved" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-size: 0.72rem;">Active Unit</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 10px; font-size: 0.78rem;">
+                      Roster &rarr;
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 
   container.innerHTML = html;
+}
+
+function filterBranchesTable() {
+  const searchVal = document.getElementById("branchesSearchInput")?.value.toLowerCase().trim() || "";
+  const tbody = document.getElementById("branchesTableBody");
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll("tr");
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    if (!searchVal || text.includes(searchVal)) {
+      r.style.display = "";
+    } else {
+      r.style.display = "none";
+    }
+  });
+}
+
+function viewBranchInDirectory(branchId) {
+  switchTab("directory");
+  setTimeout(() => {
+    const branchFilter = document.getElementById("directoryBranchFilter");
+    if (branchFilter) {
+      branchFilter.value = branchId;
+      filterDirectoryTable();
+    }
+  }, 120);
+}
+
+function exportBranchesToCSV() {
+  let csv = "\uFEFF"; // UTF-8 BOM for Microsoft Excel
+  csv += "Sr,Wing Code,Cyber Branch Name,Incharge Name,Incharge Rank,Incharge Mobile,Total Strength,On Duty,On Leave,Status\n";
+  const today = new Date().toISOString().split("T")[0];
+
+  AppState.branches.forEach((b, idx) => {
+    const incharge = AppState.users.find(u => u.branchId === b.id && (u.role === "branch_incharge" || u.isApprover));
+    const members = AppState.users.filter(u => u.branchId === b.id);
+    const onLeave = AppState.leaves.filter(l => l.branchId === b.id && l.status === "APPROVED" && l.fromDate <= today && l.toDate >= today).length;
+    const onDuty = Math.max(0, members.length - onLeave);
+
+    const inchargeName = incharge ? incharge.name.replace(/"/g, '""') : "Under Posting";
+    const inchargeRank = incharge ? incharge.rank.replace(/"/g, '""') : "";
+    const inchargeMob = incharge ? incharge.mobile : "";
+
+    csv += `"${idx + 1}","${b.id.toUpperCase()}","${b.name.replace(/"/g, '""')}","${inchargeName}","${inchargeRank}","${inchargeMob}","${members.length}","${onDuty}","${onLeave}","Active Unit"\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Cyber_Police_13_Wings_Roster_${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("13 Wings Table exported to Excel CSV.", "success");
 }
 
 // ==========================================
@@ -3488,6 +3635,9 @@ function renderMasterRegister(container) {
           <div style="font-size: 0.86rem; color: #64748b;">No leave records found in the system.</div>
         </div>
       ` : `
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
+        </div>
         <div class="responsive-table">
           <table class="data-table" id="masterTable">
             <thead>
@@ -4228,14 +4378,18 @@ function renderPersonnelDirectory(container) {
             ? `Total Strength: <strong>${displayedUsers.length} Officers / Personnel</strong> (All 13 Branches)` 
             : `Branch Strength: <strong>${displayedUsers.length} Personnel</strong> [${userBranchName}]`}
         </div>
-        ${isSP ? `
-          <div>
-            <select id="directoryBranchFilter" class="select-filter" onchange="filterDirectoryTable(this.value)">
-              <option value="">-- View All 13 Branches --</option>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="directorySearchInput" class="search-input" placeholder="Search by Name, Belt No., Rank..." oninput="filterDirectoryTable()" style="min-width: 240px;">
+          ${isSP ? `
+            <select id="directoryBranchFilter" class="select-filter" onchange="filterDirectoryTable()">
+              <option value="">-- All 13 Branches --</option>
               ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
             </select>
-          </div>
-        ` : ''}
+          ` : ''}
+        </div>
+      </div>
+      <div class="table-scroll-hint">
+        <span>👉 Swipe table horizontally to see all columns</span>
       </div>
       <div class="responsive-table">
         <table class="data-table" id="directoryTable">
@@ -4289,12 +4443,16 @@ function renderPersonnelDirectory(container) {
   container.innerHTML = html;
 }
 
-function filterDirectoryTable(branchId) {
+function filterDirectoryTable() {
+  const searchVal = document.getElementById("directorySearchInput")?.value.toLowerCase().trim() || "";
+  const branchVal = document.getElementById("directoryBranchFilter")?.value || "";
   const tbody = document.getElementById("directoryTableBody");
   if (!tbody) return;
   const rows = tbody.querySelectorAll("tr");
   rows.forEach(r => {
-    if (!branchId || r.dataset.branch === branchId) {
+    const branchMatch = !branchVal || r.dataset.branch === branchVal;
+    const textMatch = !searchVal || r.textContent.toLowerCase().includes(searchVal);
+    if (branchMatch && textMatch) {
       r.style.display = "";
     } else {
       r.style.display = "none";

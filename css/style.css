@@ -1021,11 +1021,11 @@ table.data-table {
 }
 
 table.data-table th {
-  background: #f1f5f9;
-  color: var(--text-secondary);
+  background: #0f274c;
+  color: #ffffff;
   font-weight: 700;
-  padding: 12px 16px;
-  border-bottom: 2px solid var(--border-color);
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--police-gold, #cba135);
   white-space: nowrap;
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -1033,14 +1033,37 @@ table.data-table th {
 }
 
 table.data-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border-light);
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
   color: var(--text-primary);
   vertical-align: middle;
 }
 
-table.data-table tr:hover {
+table.data-table tbody tr:nth-child(even) {
   background-color: #f8fafc;
+}
+
+table.data-table tr:hover {
+  background-color: #eff6ff;
+}
+
+.table-scroll-hint {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  margin: 8px 16px 4px;
+  border: 1px solid #e2e8f0;
+}
+@media (max-width: 991px) {
+  .table-scroll-hint {
+    display: inline-flex !important;
+  }
 }
 
 /* STATUS BADGES */
@@ -2607,166 +2630,112 @@ table.data-table tr:hover {
   }
 
   /* =====================================================================
-     CARD-BASED MOBILE VIEW FOR DATA TABLES
-     (No horizontal scrolling required! Beautiful thumb-friendly cards)
+     OFFICIAL POLICE DATA TABLE VIEW (RESPONSIVE HORIZONTAL SCROLL)
+     Preserves true table structure with clear headers and row data!
      ===================================================================== */
   body:not(.force-desktop-view) .responsive-table {
-    overflow-x: visible !important;
-    width: 100% !important;
-  }
-
-  body:not(.force-desktop-view) .data-table,
-  body:not(.force-desktop-view) .data-table thead,
-  body:not(.force-desktop-view) .data-table tbody,
-  body:not(.force-desktop-view) .data-table th,
-  body:not(.force-desktop-view) .data-table td,
-  body:not(.force-desktop-view) .data-table tr {
     display: block !important;
-  }
-
-  /* Hide table header row */
-  body:not(.force-desktop-view) .data-table thead tr {
-    position: absolute !important;
-    top: -9999px !important;
-    left: -9999px !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-
-  /* Each table row becomes a clean, elevated mobile card */
-  body:not(.force-desktop-view) .data-table tbody tr {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 12px !important;
-    padding: 12px 14px !important;
-    margin-bottom: 12px !important;
-    box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05) !important;
-    position: relative !important;
-    box-sizing: border-box !important;
     width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
   }
 
-  body:not(.force-desktop-view) .data-table tbody td {
-    padding: 7px 0 !important;
+  body:not(.force-desktop-view) table.data-table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 800px !important;
+    border-collapse: collapse !important;
+    text-align: left !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table thead {
+    display: table-header-group !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table thead tr {
+    display: table-row !important;
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    background: #0f274c !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table th {
+    display: table-cell !important;
+    background: #0f274c !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    padding: 12px 14px !important;
     border: none !important;
-    border-bottom: 1px dashed #f1f5f9 !important;
-    font-size: 0.86rem !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    text-align: right !important;
-    box-sizing: border-box !important;
-    gap: 8px !important;
-    word-break: break-word !important;
+    border-bottom: 2px solid var(--police-gold, #cba135) !important;
+    white-space: nowrap !important;
+    font-size: 0.78rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
   }
 
-  /* Field Title Label (Generated via data-label) */
-  body:not(.force-desktop-view) .data-table tbody td:before {
-    content: attr(data-label);
-    font-weight: 700;
+  body:not(.force-desktop-view) table.data-table tbody {
+    display: table-row-group !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table tbody tr {
+    display: table-row !important;
+    background: #ffffff !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: auto !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table tbody tr:hover {
+    background-color: #eff6ff !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table tbody td {
+    display: table-cell !important;
+    padding: 12px 14px !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 0.84rem !important;
+    color: #1e293b !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    gap: 0 !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table tbody td:before {
+    display: none !important;
+    content: none !important;
+  }
+
+  body:not(.force-desktop-view) .table-scroll-hint {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    background: #f1f5f9;
     color: #475569;
     font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    text-align: left;
-    margin-right: 8px;
-    flex-shrink: 0;
-    max-width: 44%;
-  }
-
-  body:not(.force-desktop-view) .data-table tbody td:not([data-label]):before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label=""]:before {
-    display: none !important;
-  }
-
-  /* Multi-line Fields displayed vertically with label on top */
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Ground / Reason"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel Details"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel & Branch"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Remarks"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Recommendation / Remarks"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Leave Period"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Period"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Contact Details"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Application ID"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Leave ID"],
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Station Leave"] {
-    display: block !important;
-    text-align: left !important;
-    max-width: 100% !important;
-  }
-
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Ground / Reason"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel Details"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel & Branch"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Personnel"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Remarks"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Incharge Recommendation / Remarks"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Relieving Handover"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Leave Period"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Period"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Contact Details"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Application ID"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Leave ID"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Station Leave"]:before {
-    display: block !important;
-    margin-bottom: 3px !important;
-    max-width: 100% !important;
-  }
-
-  /* Hide labels on action buttons and dedicated components */
-  body:not(.force-desktop-view) .data-table tbody td.mobile-card-actions:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label*="Action"]:before,
-  body:not(.force-desktop-view) .data-table tbody td[data-label="Details"]:before {
-    display: none !important;
-  }
-
-  /* Card Action Buttons: Full Width and Touch Friendly */
-  body:not(.force-desktop-view) .data-table tbody td:last-child {
-    border-bottom: none !important;
-    padding-top: 10px !important;
-    display: block !important;
-    text-align: left !important;
-  }
-
-  body:not(.force-desktop-view) .data-table tbody td:last-child:before {
-    display: none !important;
-  }
-
-  body:not(.force-desktop-view) .mobile-card-actions {
-    width: 100% !important;
-  }
-
-  body:not(.force-desktop-view) .mobile-card-actions > div {
-    width: 100% !important;
-    display: flex !important;
-    gap: 8px !important;
-    flex-wrap: wrap !important;
-  }
-
-  body:not(.force-desktop-view) .mobile-action-btn,
-  body:not(.force-desktop-view) .mobile-card-actions .btn {
-    flex: 1 1 auto !important;
-    padding: 9px 12px !important;
-    font-size: 0.86rem !important;
-    font-weight: 600 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 42px !important;
-    border-radius: 8px !important;
-  }
-
-  /* Empty state rows */
-  body:not(.force-desktop-view) .data-table tbody td[colspan] {
-    display: block !important;
-    text-align: center !important;
-    padding: 24px 10px !important;
-  }
-  body:not(.force-desktop-view) .data-table tbody td[colspan]:before {
-    display: none !important;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin: 0 14px 8px;
+    border: 1px solid #e2e8f0;
   }
 }
 
@@ -3299,99 +3268,73 @@ body.force-mobile-view .main-header > .header-actions > .btn-outline:not(.deskto
   display: none !important;
 }
 body.force-mobile-view .responsive-table {
-  overflow-x: visible !important;
-}
-body.force-mobile-view .data-table,
-body.force-mobile-view .data-table thead,
-body.force-mobile-view .data-table tbody,
-body.force-mobile-view .data-table th,
-body.force-mobile-view .data-table td,
-body.force-mobile-view .data-table tr {
   display: block !important;
-}
-body.force-mobile-view .data-table thead tr {
-  position: absolute !important;
-  top: -9999px !important;
-  left: -9999px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-body.force-mobile-view .data-table tbody tr {
-  background: #ffffff !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   border: 1px solid #e2e8f0 !important;
-  border-radius: 12px !important;
-  padding: 14px 16px !important;
-  margin-bottom: 12px !important;
-  box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05) !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
 }
-body.force-mobile-view .data-table tbody td {
-  padding: 7px 0 !important;
-  border: none !important;
-  border-bottom: 1px dashed #f1f5f9 !important;
-  font-size: 0.88rem !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  text-align: right !important;
-}
-body.force-mobile-view .data-table tbody td:before {
-  content: attr(data-label);
-  font-weight: 700;
-  color: #475569;
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  text-align: left;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
-body.force-mobile-view .data-table tbody td[data-label="Ground / Reason"],
-body.force-mobile-view .data-table tbody td[data-label="Personnel Details"],
-body.force-mobile-view .data-table tbody td[data-label="Personnel & Branch"],
-body.force-mobile-view .data-table tbody td[data-label="Personnel"],
-body.force-mobile-view .data-table tbody td[data-label="Incharge Remarks"],
-body.force-mobile-view .data-table tbody td[data-label="Incharge Recommendation / Remarks"],
-body.force-mobile-view .data-table tbody td[data-label="Relieving Handover"],
-body.force-mobile-view .data-table tbody td[data-label="Leave Period"],
-body.force-mobile-view .data-table tbody td[data-label="Period"],
-body.force-mobile-view .data-table tbody td[data-label="Application ID"],
-body.force-mobile-view .data-table tbody td[data-label="Leave ID"],
-body.force-mobile-view .data-table tbody td[data-label="Station Leave"] {
-  display: block !important;
+
+body.force-mobile-view table.data-table {
+  display: table !important;
+  width: 100% !important;
+  min-width: 800px !important;
+  border-collapse: collapse !important;
   text-align: left !important;
 }
 
-body.force-mobile-view .data-table tbody td.mobile-card-actions:before,
-body.force-mobile-view .data-table tbody td[data-label*="Action"]:before,
-body.force-mobile-view .data-table tbody td[data-label="Details"]:before {
+body.force-mobile-view table.data-table thead {
+  display: table-header-group !important;
+}
+
+body.force-mobile-view table.data-table thead tr {
+  display: table-row !important;
+  position: static !important;
+  background: #0f274c !important;
+}
+
+body.force-mobile-view table.data-table th {
+  display: table-cell !important;
+  background: #0f274c !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  padding: 12px 14px !important;
+  border-bottom: 2px solid var(--police-gold, #cba135) !important;
+  white-space: nowrap !important;
+  font-size: 0.78rem !important;
+  text-transform: uppercase !important;
+}
+
+body.force-mobile-view table.data-table tbody {
+  display: table-row-group !important;
+}
+
+body.force-mobile-view table.data-table tbody tr {
+  display: table-row !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body.force-mobile-view table.data-table tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+body.force-mobile-view table.data-table tbody td {
+  display: table-cell !important;
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  font-size: 0.84rem !important;
+  color: #1e293b !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+body.force-mobile-view table.data-table tbody td:before {
   display: none !important;
-}
-body.force-mobile-view .data-table tbody td:last-child {
-  border-bottom: none !important;
-  padding-top: 10px !important;
-  display: block !important;
-}
-body.force-mobile-view .data-table tbody td:last-child:before {
-  display: none !important;
-}
-body.force-mobile-view .mobile-card-actions {
-  width: 100% !important;
-}
-body.force-mobile-view .mobile-card-actions > div {
-  width: 100% !important;
-  display: flex !important;
-  gap: 8px !important;
-}
-body.force-mobile-view .mobile-action-btn,
-body.force-mobile-view .mobile-card-actions .btn {
-  flex: 1 1 auto !important;
-  padding: 10px 12px !important;
-  font-size: 0.88rem !important;
-  font-weight: 600 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 42px !important;
 }
 
 /* ADVANCED LEAVE APPLICATION STYLES */
