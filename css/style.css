@@ -270,7 +270,7 @@ body {
   }
 }
 
-/* Sidebar Backdrop (for Mobile Drawer mode) - ZERO BLUR */
+/* Sidebar Backdrop (for Mobile Drawer mode) - ZERO BLUR & SITS BEHIND SIDEBAR */
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -278,24 +278,26 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.55) !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
-  z-index: 1240 !important;
+  z-index: 1200 !important;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;
 }
 
 .sidebar-backdrop.active {
-  display: block;
-  opacity: 1;
-  pointer-events: auto;
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 body.sidebar-open-lock {
-  overflow: hidden !important;
+  overscroll-behavior: contain;
 }
 
 /* LEFT NAVIGATION BAR (SIDEBAR) - DARK BLUE INTERFACE */
@@ -2176,7 +2178,7 @@ table.data-table tr:hover {
     padding-bottom: 0 !important;
   }
 
-  /* Hide top desktop navigation on mobile */
+  /* Hide top desktop navigation on mobile - Slide drawer from left (Z-INDEX 1300 in front of BACKDROP 1200) */
   body:not(.force-desktop-view) .sidebar-nav.nav-bar {
     display: flex !important;
     position: fixed !important;
@@ -2186,7 +2188,7 @@ table.data-table tr:hover {
     width: 285px !important;
     max-width: 84vw !important;
     height: 100vh !important;
-    z-index: 1200 !important;
+    z-index: 1300 !important;
     background: #09172e !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45) !important;
@@ -2195,15 +2197,37 @@ table.data-table tr:hover {
     padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
     visibility: hidden !important;
     pointer-events: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
   }
   body:not(.force-desktop-view) .sidebar-nav.nav-bar.mobile-open,
   body:not(.force-desktop-view) .sidebar-nav.nav-bar.sidebar-hover-expanded {
     transform: translateX(0) !important;
     visibility: visible !important;
     pointer-events: auto !important;
+    z-index: 1300 !important;
+  }
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar * {
+    pointer-events: auto !important;
+  }
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar .nav-tab-btn,
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar .sidebar-apply-btn,
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar .sidebar-close-btn,
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar .sidebar-logout-btn,
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar .sidebar-user-card,
+  body:not(.force-desktop-view) .sidebar-nav.nav-bar .sidebar-sync-btn {
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: rgba(203, 161, 53, 0.4) !important;
   }
   body:not(.force-desktop-view) .sidebar-close-btn {
     display: flex !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 1350 !important;
   }
   body:not(.force-desktop-view) .sidebar-role-select-box {
     display: block !important;
@@ -2212,11 +2236,13 @@ table.data-table tr:hover {
     display: none !important;
     opacity: 0 !important;
     pointer-events: none !important;
+    z-index: 1200 !important;
   }
   body:not(.force-desktop-view) .sidebar-backdrop.active {
     display: block !important;
     opacity: 1 !important;
     pointer-events: auto !important;
+    z-index: 1200 !important;
   }
   body:not(.force-desktop-view) .mobile-floating-left-nav-btn {
     display: flex !important;
@@ -3398,14 +3424,18 @@ body.force-mobile-view .sidebar-nav.nav-bar {
   width: 285px !important;
   max-width: 84vw !important;
   height: 100vh !important;
-  z-index: 1250 !important;
+  z-index: 1300 !important;
   transform: translateX(-100%) !important;
   box-sizing: border-box !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
 }
 body.force-mobile-view .sidebar-nav.nav-bar.mobile-open {
   transform: translateX(0) !important;
   visibility: visible !important;
   pointer-events: auto !important;
+  z-index: 1300 !important;
 }
 body.force-mobile-view .app-container {
   margin-left: 0 !important;
@@ -3416,6 +3446,7 @@ body.force-mobile-view .sidebar-backdrop.active {
   display: block !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  z-index: 1200 !important;
 }
 body.force-mobile-view .mobile-floating-left-nav-btn {
   display: flex !important;

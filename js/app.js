@@ -66,12 +66,14 @@ function openSidebarNav(isHover = false) {
       sidebar.style.transform = "translateX(0)";
       sidebar.style.visibility = "visible";
       sidebar.style.pointerEvents = "auto";
+      sidebar.style.zIndex = "1300";
     }
     if (backdrop) {
       backdrop.classList.add("active");
       backdrop.style.display = "block";
       backdrop.style.opacity = "1";
       backdrop.style.pointerEvents = "auto";
+      backdrop.style.zIndex = "1200";
     }
     if (!isHover) {
       document.body.classList.add("sidebar-open-lock");
@@ -96,12 +98,14 @@ function closeSidebarNav() {
     sidebar.style.transform = "";
     sidebar.style.visibility = "";
     sidebar.style.pointerEvents = "";
+    sidebar.style.zIndex = "";
   }
   if (backdrop) {
     backdrop.classList.remove("active");
-    backdrop.style.display = "";
-    backdrop.style.opacity = "";
-    backdrop.style.pointerEvents = "";
+    backdrop.style.display = "none";
+    backdrop.style.opacity = "0";
+    backdrop.style.pointerEvents = "none";
+    backdrop.style.zIndex = "";
   }
   document.body.classList.remove("sidebar-open-lock");
   document.body.classList.remove("sidebar-hover-active");

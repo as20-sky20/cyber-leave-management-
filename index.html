@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261117.1245">
+  <link rel="stylesheet" href="css/style.css?v=20261117.1315">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -81,56 +81,56 @@
       <!-- SIDEBAR NAVIGATION LINKS -->
       <div class="sidebar-links-wrap">
         <!-- QUICK ACTION: APPLY LEAVE (Staff) -->
-        <button class="sidebar-apply-btn nav-tab-btn" data-tab="apply_leave" id="tabBtnApplyLeave">
+        <button class="sidebar-apply-btn nav-tab-btn" data-tab="apply_leave" id="tabBtnApplyLeave" onclick="switchTab('apply_leave')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>+ Apply New Leave</span>
         </button>
 
-        <button class="nav-tab-btn active" data-tab="dashboard">
+        <button class="nav-tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           <span>Command Dashboard</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="notices" id="tabBtnNotices">
+        <button class="nav-tab-btn" data-tab="notices" id="tabBtnNotices" onclick="switchTab('notices')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span>Notice Board & Orders</span>
           <span class="tab-badge" id="noticesBadge" style="display: none;">0</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="my_leaves" id="tabBtnMyLeaves">
+        <button class="nav-tab-btn" data-tab="my_leaves" id="tabBtnMyLeaves" onclick="switchTab('my_leaves')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
           <span>My Leaves</span>
           <span class="tab-badge" id="myLeavesBadge" style="display: none;">0</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="incharge_desk" id="tabBtnIncharge">
+        <button class="nav-tab-btn" data-tab="incharge_desk" id="tabBtnIncharge" onclick="switchTab('incharge_desk')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
           <span>Branch Incharge Desk</span>
           <span class="tab-badge" id="inchargeBadge" style="display: none;">0</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="sp_desk" id="tabBtnSP">
+        <button class="nav-tab-btn" data-tab="sp_desk" id="tabBtnSP" onclick="switchTab('sp_desk')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           <span>SP Cyber Sanction Desk</span>
           <span class="tab-badge" id="spBadge" style="display: none;">0</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="daily_sitrep" id="tabBtnSitrep" style="display: none;">
+        <button class="nav-tab-btn" data-tab="daily_sitrep" id="tabBtnSitrep" style="display: none;" onclick="switchTab('daily_sitrep')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           <span>Daily SITREP & Attendance</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="master_register" id="tabBtnRegister" style="display: none;">
+        <button class="nav-tab-btn" data-tab="master_register" id="tabBtnRegister" style="display: none;" onclick="switchTab('master_register')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           <span>Master Leave Register</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="directory" id="tabBtnDirectory">
+        <button class="nav-tab-btn" data-tab="directory" id="tabBtnDirectory" onclick="switchTab('directory')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           <span>Personnel Directory</span>
         </button>
 
-        <button class="nav-tab-btn" data-tab="branches" id="tabBtnBranches" style="display: none;">
+        <button class="nav-tab-btn" data-tab="branches" id="tabBtnBranches" style="display: none;" onclick="switchTab('branches')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"></path></svg>
           <span>13 Cyber Wings</span>
         </button>
@@ -695,7 +695,7 @@
 
   <!-- SCRIPTS -->
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script src="js/data.js?v=20261117.1245"></script>
-  <script src="js/app.main.js?v=20261117.1245"></script>
+  <script src="js/data.js?v=20261117.1315"></script>
+  <script src="js/app.main.js?v=20261117.1315"></script>
 </body>
 </html>
