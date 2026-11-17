@@ -2535,18 +2535,29 @@ table.data-table tr:hover {
   }
 
   /* DAILY SITREP & OFFICIAL SANCTION SLIP ON MOBILE */
+  body:not(.force-desktop-view) .sitrep-header-main {
+    display: none !important;
+  }
   body:not(.force-desktop-view) .sitrep-toolbar-row {
-    padding: 12px 14px !important;
+    padding: 8px 10px !important;
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    gap: 8px !important;
   }
   body:not(.force-desktop-view) .sitrep-toolbar-controls {
     width: 100% !important;
     align-items: stretch !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    gap: 8px !important;
   }
   body:not(.force-desktop-view) .sitrep-date-control-group {
     width: 100% !important;
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 8px !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
   body:not(.force-desktop-view) .sitrep-date-input-wrap {
     width: 100% !important;
@@ -2727,11 +2738,15 @@ table.data-table tr:hover {
     box-sizing: border-box !important;
   }
 
+  body:not(.force-desktop-view) table.data-table:not(.mobile-table-compact) {
+    min-width: 680px !important;
+  }
+
   body:not(.force-desktop-view) table.data-table.mobile-table-compact {
     min-width: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    table-layout: fixed !important;
+    table-layout: auto !important;
     box-sizing: border-box !important;
   }
 
@@ -3116,8 +3131,8 @@ body.force-desktop-view table.data-table thead tr {
   padding: 0 !important;
   margin: 0 !important;
 }
-body.force-desktop-view table.data-table th,
-body.force-desktop-view table.data-table thead th {
+body.force-desktop-view table.data-table th:not(.col-mobile-only),
+body.force-desktop-view table.data-table thead th:not(.col-mobile-only) {
   display: table-cell !important;
   background: #f1f5f9 !important;
   color: #334155 !important;
@@ -3150,7 +3165,7 @@ body.force-desktop-view table.data-table tbody tr {
 body.force-desktop-view table.data-table tbody tr:hover {
   background: #f8fafc !important;
 }
-body.force-desktop-view table.data-table tbody td {
+body.force-desktop-view table.data-table tbody td:not(.col-mobile-only) {
   display: table-cell !important;
   padding: 12px 14px !important;
   border: none !important;
@@ -3207,10 +3222,10 @@ body.force-desktop-view table.data-table tbody td[colspan] {
 }
 
 /* ==========================================================================
-   DESKTOP SCREEN VIEW TABLE RULES (>= 769px)
+   DESKTOP SCREEN VIEW TABLE RULES (>= 992px)
    Guarantees horizontal tabular presentation on all desktop & laptop screens
    ========================================================================== */
-@media (min-width: 769px) {
+@media (min-width: 992px) {
   body:not(.force-mobile-view) .responsive-table {
     overflow-x: hidden !important;
     width: 100% !important;
@@ -3244,8 +3259,8 @@ body.force-desktop-view table.data-table tbody td[colspan] {
     padding: 0 !important;
     margin: 0 !important;
   }
-  body:not(.force-mobile-view) table.data-table th,
-  body:not(.force-mobile-view) table.data-table thead th {
+  body:not(.force-mobile-view) table.data-table th:not(.col-mobile-only),
+  body:not(.force-mobile-view) table.data-table thead th:not(.col-mobile-only) {
     display: table-cell !important;
     background: #0f274c !important;
     color: #ffffff !important;
@@ -3282,7 +3297,7 @@ body.force-desktop-view table.data-table tbody td[colspan] {
   body:not(.force-mobile-view) table.data-table tbody tr:hover {
     background: #f8fafc !important;
   }
-  body:not(.force-mobile-view) table.data-table tbody td {
+  body:not(.force-mobile-view) table.data-table tbody td:not(.col-mobile-only) {
     display: table-cell !important;
     padding: 10px 8px !important;
     border: none !important;
@@ -3524,11 +3539,15 @@ body.force-mobile-view table.data-table {
   box-sizing: border-box !important;
 }
 
+body.force-mobile-view table.data-table:not(.mobile-table-compact) {
+  min-width: 680px !important;
+}
+
 body.force-mobile-view table.data-table.mobile-table-compact {
   min-width: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
-  table-layout: fixed !important;
+  table-layout: auto !important;
   box-sizing: border-box !important;
 }
 
@@ -3631,12 +3650,20 @@ body.force-mobile-view .table-filters .select-filter {
    RESPONSIVE TABLE COLUMN VISIBILITY (MOBILE 100% VS DESKTOP MULTI-COLUMN)
    Universal Zero-Horizontal-Scroll Architecture for All Mobiles, Tablets & Laptops!
    ========================================================================== */
-@media (max-width: 1024px) {
+@media (max-width: 991px) {
   body:not(.force-desktop-view) table.data-table th.col-desktop-only,
   body:not(.force-desktop-view) table.data-table td.col-desktop-only,
+  body:not(.force-desktop-view) table.data-table tr th.col-desktop-only,
+  body:not(.force-desktop-view) table.data-table tr td.col-desktop-only,
+  body:not(.force-desktop-view) table.data-table tbody td.col-desktop-only,
+  body:not(.force-desktop-view) table.data-table thead th.col-desktop-only,
   body:not(.force-desktop-view) .col-desktop-only,
   body.force-mobile-view table.data-table th.col-desktop-only,
   body.force-mobile-view table.data-table td.col-desktop-only,
+  body.force-mobile-view table.data-table tr th.col-desktop-only,
+  body.force-mobile-view table.data-table tr td.col-desktop-only,
+  body.force-mobile-view table.data-table tbody td.col-desktop-only,
+  body.force-mobile-view table.data-table thead th.col-desktop-only,
   body.force-mobile-view .col-desktop-only,
   body table.data-table th.col-desktop-only,
   body table.data-table td.col-desktop-only,
@@ -3648,6 +3675,7 @@ body.force-mobile-view .table-filters .select-filter {
     display: none !important;
     width: 0 !important;
     max-width: 0 !important;
+    min-width: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
@@ -3655,6 +3683,8 @@ body.force-mobile-view .table-filters .select-filter {
     visibility: collapse !important;
     font-size: 0 !important;
     line-height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   body:not(.force-desktop-view) table.data-table th.col-mobile-only,
@@ -3674,14 +3704,25 @@ body.force-mobile-view .table-filters .select-filter {
   }
 
   .responsive-table {
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
+  .responsive-table.mobile-fit-100 {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  table.data-table:not(.mobile-table-compact) {
+    min-width: 680px !important;
+  }
+
   table.data-table.mobile-table-compact {
-    table-layout: fixed !important;
+    table-layout: auto !important;
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
@@ -3689,9 +3730,13 @@ body.force-mobile-view .table-filters .select-filter {
   }
 }
 
-@media (min-width: 1025px) {
+@media (min-width: 992px) {
   body:not(.force-mobile-view) table.data-table th.col-mobile-only,
   body:not(.force-mobile-view) table.data-table td.col-mobile-only,
+  body:not(.force-mobile-view) table.data-table tr th.col-mobile-only,
+  body:not(.force-mobile-view) table.data-table tr td.col-mobile-only,
+  body:not(.force-mobile-view) table.data-table tbody td.col-mobile-only,
+  body:not(.force-mobile-view) table.data-table thead th.col-mobile-only,
   body:not(.force-mobile-view) .col-mobile-only,
   table.data-table th.col-mobile-only,
   table.data-table td.col-mobile-only,
@@ -3699,6 +3744,7 @@ body.force-mobile-view .table-filters .select-filter {
     display: none !important;
     width: 0 !important;
     max-width: 0 !important;
+    min-width: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
@@ -3706,6 +3752,8 @@ body.force-mobile-view .table-filters .select-filter {
     visibility: collapse !important;
     font-size: 0 !important;
     line-height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   body:not(.force-mobile-view) table.data-table th.col-desktop-only,
@@ -3745,10 +3793,15 @@ body.force-mobile-view .table-filters .select-filter {
 
 body.force-mobile-view table.data-table th.col-desktop-only,
 body.force-mobile-view table.data-table td.col-desktop-only,
+body.force-mobile-view table.data-table tr th.col-desktop-only,
+body.force-mobile-view table.data-table tr td.col-desktop-only,
+body.force-mobile-view table.data-table tbody td.col-desktop-only,
+body.force-mobile-view table.data-table thead th.col-desktop-only,
 body.force-mobile-view .col-desktop-only {
   display: none !important;
   width: 0 !important;
   max-width: 0 !important;
+  min-width: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
   border: none !important;
@@ -3756,6 +3809,8 @@ body.force-mobile-view .col-desktop-only {
   visibility: collapse !important;
   font-size: 0 !important;
   line-height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 body.force-mobile-view table.data-table th.col-mobile-only,
@@ -3772,11 +3827,25 @@ body.force-desktop-view .col-desktop-only {
 
 body.force-desktop-view table.data-table th.col-mobile-only,
 body.force-desktop-view table.data-table td.col-mobile-only,
+body.force-desktop-view table.data-table tr th.col-mobile-only,
+body.force-desktop-view table.data-table tr td.col-mobile-only,
+body.force-desktop-view table.data-table tbody td.col-mobile-only,
+body.force-desktop-view table.data-table thead th.col-mobile-only,
 body.force-desktop-view .col-mobile-only {
   display: none !important;
   width: 0 !important;
   max-width: 0 !important;
+  min-width: 0 !important;
   padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  visibility: collapse !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
   margin: 0 !important;
   border: none !important;
   overflow: hidden !important;
@@ -6087,17 +6156,30 @@ body.force-mobile-view .vdesk-incharge-note {
 /* ==========================================================================
    FORCE-MOBILE-VIEW OVERRIDES FOR SITREP & PDF/PRINT
    ========================================================================== */
+body.force-mobile-view .sitrep-header-main {
+  display: none !important;
+}
 body.force-mobile-view .sitrep-toolbar-row {
-  padding: 12px 14px !important;
+  padding: 8px 10px !important;
+  margin-top: 0 !important;
+  margin-bottom: 8px !important;
+  gap: 8px !important;
 }
 body.force-mobile-view .sitrep-toolbar-controls {
   width: 100% !important;
   align-items: stretch !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  gap: 8px !important;
 }
 body.force-mobile-view .sitrep-date-control-group {
   width: 100% !important;
   flex-direction: column !important;
   align-items: stretch !important;
+  gap: 8px !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
   gap: 8px !important;
 }
 body.force-mobile-view .sitrep-date-input-wrap {
