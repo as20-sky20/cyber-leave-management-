@@ -2225,22 +2225,9 @@ function renderApplyLeave(container) {
             <textarea id="leaveReason" class="form-control" rows="2" required placeholder="e.g. Urgent domestic affairs, family obligation, personal work"></textarea>
           </div>
 
-          <!-- HANDOVER & EMERGENCY CONTACT IN COMPACT 2-COL -->
-          <div class="mobile-contact-row" style="margin-bottom: 14px;">
-            <div class="form-group">
-              <label for="handoverOfficer" class="apply-field-label">Charge Handover To</label>
-              <select id="handoverOfficer" class="form-control">
-                <option value="">-- Relieving Officer --</option>
-                ${sameBranchMembers.map(m => `<option value="${m.name} (${m.beltNo})">${m.name} - ${m.rank} (${m.beltNo})</option>`).join("")}
-                <option value="Branch Incharge">Branch Incharge</option>
-                <option value="Other Arrangement">Other Arrangement</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="emergencyMobile" class="apply-field-label">Emergency Mobile <span class="required">*</span></label>
-              <input type="tel" id="emergencyMobile" class="form-control" value="${user.mobile}" required placeholder="10-digit mobile">
-            </div>
-          </div>
+          <!-- HIDDEN DEFAULTS FOR HANDOVER & EMERGENCY MOBILE -->
+          <input type="hidden" id="handoverOfficer" value="Branch Incharge">
+          <input type="hidden" id="emergencyMobile" value="${user.mobile || ''}">
 
           <!-- SUPPORTING DOCUMENT / ATTACHMENT -->
           <div class="form-group" style="margin-top: 6px; margin-bottom: 20px;">
@@ -2340,7 +2327,7 @@ function clearSelectedAttachment(e) {
 
 function handleLeaveBranchChange(branchId) {
   const handoverSelect = document.getElementById("handoverOfficer");
-  if (handoverSelect) {
+  if (handoverSelect && handoverSelect.tagName === 'SELECT') {
     const branchMembers = AppState.users.filter(u => u.branchId === branchId && u.id !== AppState.currentUser.id);
     handoverSelect.innerHTML = `
       <option value="">-- Select Relieving Officer --</option>
