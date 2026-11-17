@@ -1833,33 +1833,33 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
         </td>
 
         <!-- MOBILE CONSOLIDATED 3 COLUMNS (Fits 100% Phone Screen) -->
-        <td class="col-mobile-only" style="vertical-align: top;">
+        <td class="col-mobile-only" style="width: 42%; vertical-align: top; padding: 10px 8px;">
           <div style="font-weight: 700; color: #0f274c; font-size: 0.82rem; line-height: 1.25;">${leave.applicantName}</div>
-          <div style="font-size: 0.72rem; color: #475569;">${leave.rank} <span style="color:#64748b;">(${leave.beltNo})</span></div>
-          <div style="margin-top: 3px;">
-            <span class="branch-tag" style="font-size: 0.66rem; padding: 1px 4px;">${leave.branchName}</span>
+          <div style="font-size: 0.72rem; color: #475569; margin-top: 1px;">${leave.rank} <span style="color:#64748b;">(${leave.beltNo})</span></div>
+          <div style="margin-top: 2px;">
+            <span class="branch-tag" style="font-size: 0.66rem; padding: 1px 4px; display: inline-block;">${leave.branchName}</span>
           </div>
           <div style="font-size: 0.68rem; color: #64748b; margin-top: 2px; font-family: monospace;">#${leave.id}</div>
         </td>
-        <td class="col-mobile-only" style="vertical-align: top;">
+        <td class="col-mobile-only" style="width: 38%; vertical-align: top; padding: 10px 8px;">
           <div style="font-weight: 700; color: #0f274c; font-size: 0.78rem;">
             ${leave.leaveType} <span style="font-size: 0.74rem; color: #1e3a8a;">(${leave.totalDays}d)</span>
           </div>
           <div style="font-size: 0.71rem; color: #334155; margin-top: 1px;">
             ${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}
           </div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
+          <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px; line-height: 1.25;" title="${leave.reason}">
             ${leave.reason}
           </div>
           ${leave.attachment ? `
-            <div style="margin-top: 2px;">
+            <div style="margin-top: 3px;">
               <a href="javascript:void(0)" onclick="viewAttachment('${leave.id}')" style="font-size: 0.68rem; color: #2563eb; text-decoration: underline; font-weight: 600;">📎 Doc</a>
             </div>
           ` : ''}
         </td>
-        <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+        <td class="col-mobile-only" style="width: 20%; text-align: center; vertical-align: top; padding: 10px 4px;">
           <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-            <div style="font-size: 0.66rem;">${statusBadge}</div>
+            <div style="font-size: 0.66rem; width: 100%;">${statusBadge}</div>
             <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Details</button>
             ${leave.status === "APPROVED" ? `
               <button class="btn btn-primary btn-sm" onclick="openSanctionSlipModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Slip</button>
@@ -1927,21 +1927,21 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
       </td>
 
       <!-- MOBILE CONSOLIDATED 3 COLUMNS (Fits 100% Phone Screen) -->
-      <td class="col-mobile-only" style="vertical-align: top;">
+      <td class="col-mobile-only" style="width: 34%; vertical-align: top; padding: 10px 8px;">
         <div style="font-weight: 700; color: #0f274c; font-size: 0.8rem; font-family: monospace;">#${leave.id}</div>
         <div style="font-size: 0.69rem; color: #64748b;">${leave.appliedAt}</div>
         <div style="margin-top: 3px; font-weight: 700; color: #1e3a8a; font-size: 0.76rem;">${leave.leaveType}</div>
       </td>
-      <td class="col-mobile-only" style="vertical-align: top;">
+      <td class="col-mobile-only" style="width: 42%; vertical-align: top; padding: 10px 8px;">
         <div style="font-weight: 700; font-size: 0.76rem; color: #0f274c;">${leave.totalDays} Days</div>
         <div style="font-size: 0.71rem; color: #334155; margin-top: 1px;">${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}</div>
-        <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
+        <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px; line-height: 1.25;" title="${leave.reason}">
           ${leave.reason}
         </div>
       </td>
-      <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+      <td class="col-mobile-only" style="width: 24%; text-align: center; vertical-align: top; padding: 10px 4px;">
         <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-          <div style="font-size: 0.66rem;">${statusBadge}</div>
+          <div style="font-size: 0.66rem; width: 100%;">${statusBadge}</div>
           <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Details</button>
           ${leave.status === "APPROVED" ? `
             <button class="btn btn-primary btn-sm" onclick="openSanctionSlipModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Slip</button>
@@ -2949,9 +2949,9 @@ function renderMyLeaves(container) {
                 <th class="col-desktop-only">Action</th>
 
                 <!-- MOBILE 3 CONSOLIDATED COLUMNS -->
-                <th class="col-mobile-only">Application & Type</th>
-                <th class="col-mobile-only">Period & Days</th>
-                <th class="col-mobile-only" style="text-align: center;">Status & Action</th>
+                <th class="col-mobile-only" style="width: 34%;">Application & Type</th>
+                <th class="col-mobile-only" style="width: 42%;">Period & Days</th>
+                <th class="col-mobile-only" style="width: 24%; text-align: center;">Status & Action</th>
               </tr>
             </thead>
             <tbody>
@@ -3565,9 +3565,9 @@ function renderBranchesView(container) {
               <th class="col-desktop-only" style="text-align: center;">Action</th>
 
               <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
-              <th class="col-mobile-only">Cyber Branch & Incharge</th>
-              <th class="col-mobile-only" style="text-align: center;">Strength</th>
-              <th class="col-mobile-only" style="text-align: center;">Action</th>
+              <th class="col-mobile-only" style="width: 50%;">Cyber Branch & Incharge</th>
+              <th class="col-mobile-only" style="width: 32%; text-align: center;">Strength</th>
+              <th class="col-mobile-only" style="width: 18%; text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody id="branchesTableBody">
@@ -3621,29 +3621,29 @@ function renderBranchesView(container) {
                   </td>
 
                   <!-- MOBILE CONSOLIDATED 3 CELLS (Fits 100% Phone Screen) -->
-                  <td class="col-mobile-only" style="vertical-align: top;">
+                  <td class="col-mobile-only" style="width: 50%; vertical-align: top; padding: 10px 8px;">
                     <div style="font-weight: 700; color: #0f274c; font-size: 0.83rem; line-height: 1.25;">
                       ${branch.name}
-                      <span class="badge" style="background: #0f274c; color: #ffd700; font-size: 0.63rem; padding: 1px 5px; border-radius: 4px; margin-left: 3px;">${branch.id.toUpperCase()}</span>
+                      <span class="badge" style="background: #0f274c; color: #ffd700; font-size: 0.63rem; padding: 1px 5px; border-radius: 4px; margin-left: 3px; display: inline-block;">${branch.id.toUpperCase()}</span>
                     </div>
                     <div style="font-size: 0.73rem; color: #334155; margin-top: 3px;">
                       ${incharge ? `👤 <strong>${incharge.name}</strong> <span style="color:#64748b;">(${incharge.rank})</span>` : `<span style="color: #dc2626; font-weight: 600;">Under Posting</span>`}
                     </div>
                     ${incharge && incharge.mobile ? `
                       <div style="font-size: 0.71rem; margin-top: 2px;">
-                        <a href="tel:${incharge.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${incharge.mobile}</a>
+                        <a href="tel:${incharge.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600; white-space: nowrap;">📞 ${incharge.mobile}</a>
                       </div>
                     ` : ''}
                   </td>
-                  <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+                  <td class="col-mobile-only" style="width: 32%; text-align: center; vertical-align: top; padding: 10px 8px;">
                     <div style="font-weight: 700; color: #15803d; font-size: 0.75rem; white-space: nowrap;">🟢 ${onDutyCount} Duty</div>
                     <div style="font-weight: 600; color: ${onLeaveCount > 0 ? '#dc2626' : '#64748b'}; font-size: 0.71rem; white-space: nowrap; margin-top: 2px;">
                       ${onLeaveCount > 0 ? `🔴 ${onLeaveCount} Leave` : '⚪ 0 Leave'}
                     </div>
                     <div style="font-size: 0.67rem; color: #64748b; margin-top: 2px;">Tot: ${branchMembers.length}</div>
                   </td>
-                  <td class="col-mobile-only" style="text-align: center; vertical-align: middle;">
-                    <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 7px; font-size: 0.72rem; white-space: nowrap; border-color: #0f274c; color: #0f274c;">
+                  <td class="col-mobile-only" style="width: 18%; text-align: center; vertical-align: middle; padding: 10px 4px;">
+                    <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 6px; font-size: 0.72rem; white-space: nowrap; border-color: #0f274c; color: #0f274c; width: 100%; font-weight: 600;">
                       Roster &rarr;
                     </button>
                   </td>
@@ -3814,9 +3814,9 @@ function renderMasterRegister(container) {
                 <th class="col-desktop-only">Action / Order</th>
 
                 <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
-                <th class="col-mobile-only">Personnel & ID</th>
-                <th class="col-mobile-only">Leave & Period</th>
-                <th class="col-mobile-only" style="text-align: center;">Status & Action</th>
+                <th class="col-mobile-only" style="width: 42%;">Personnel & ID</th>
+                <th class="col-mobile-only" style="width: 38%;">Leave & Period</th>
+                <th class="col-mobile-only" style="width: 20%; text-align: center;">Status & Action</th>
               </tr>
             </thead>
             <tbody id="masterTableBody">
@@ -4573,9 +4573,9 @@ function renderPersonnelDirectory(container) {
               <th class="col-desktop-only">Action / Security</th>
 
               <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
-              <th class="col-mobile-only">Officer Details</th>
-              <th class="col-mobile-only">Branch & Leaves</th>
-              <th class="col-mobile-only" style="text-align: center;">Action</th>
+              <th class="col-mobile-only" style="width: 48%;">Officer Details</th>
+              <th class="col-mobile-only" style="width: 36%;">Branch & Leaves</th>
+              <th class="col-mobile-only" style="width: 16%; text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody id="directoryTableBody">
@@ -4605,30 +4605,30 @@ function renderPersonnelDirectory(container) {
                     </div>
                   </td>
 
-                  <!-- MOBILE CONSOLIDATED 3 CELLS (Fits 100% Screen) -->
-                  <td class="col-mobile-only" style="vertical-align: top;">
-                    <div style="font-weight: 700; color: #0f274c; font-size: 0.83rem;">${u.name}</div>
-                    <div style="font-size: 0.72rem; color: #334155;">${u.rank} <span style="color:#64748b;">(${u.beltNo})</span></div>
-                    <div style="margin-top: 2px;">
-                      <span class="badge" style="background: #f1f5f9; color: #0f274c; font-size: 0.65rem; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 4px;">${getRoleDisplay(u.role)}</span>
+                  <!-- MOBILE CONSOLIDATED 3 CELLS (Fits 100% Phone Screen) -->
+                  <td class="col-mobile-only" style="width: 48%; vertical-align: top; padding: 10px 8px;">
+                    <div style="font-weight: 700; color: #0f274c; font-size: 0.84rem; line-height: 1.25;">${u.name}</div>
+                    <div style="font-size: 0.72rem; color: #334155; margin-top: 2px;">${u.rank} <span style="color:#64748b;">(${u.beltNo})</span></div>
+                    <div style="margin-top: 3px;">
+                      <span class="badge" style="background: #f1f5f9; color: #0f274c; font-size: 0.65rem; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">${getRoleDisplay(u.role)}</span>
                     </div>
                   </td>
-                  <td class="col-mobile-only" style="vertical-align: top;">
-                    <div style="font-size: 0.74rem; font-weight: 600; color: #1e293b;">
-                      <span class="branch-tag" style="font-size: 0.68rem; padding: 1px 4px;">${b ? b.name : u.branchId}</span>
+                  <td class="col-mobile-only" style="width: 36%; vertical-align: top; padding: 10px 8px;">
+                    <div>
+                      <span class="branch-tag" style="font-size: 0.68rem; padding: 1px 5px; display: inline-block;">${b ? b.name : u.branchId}</span>
                     </div>
-                    <div style="font-size: 0.71rem; color: #0f274c; font-weight: 700; margin-top: 3px;">
+                    <div style="font-size: 0.72rem; color: #0f274c; font-weight: 700; margin-top: 3px;">
                       CL: ${u.leaveBalances?.CL ?? 0}d | EL: ${u.leaveBalances?.EL ?? 0}d
                     </div>
                     ${u.mobile ? `
-                      <div style="font-size: 0.7rem; margin-top: 2px;">
-                        <a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${u.mobile}</a>
+                      <div style="font-size: 0.7rem; margin-top: 3px;">
+                        <a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600; white-space: nowrap;">📞 ${u.mobile}</a>
                       </div>
                     ` : ''}
                   </td>
-                  <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+                  <td class="col-mobile-only" style="width: 16%; text-align: center; vertical-align: top; padding: 10px 4px;">
                     <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-                      <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">🔑 PIN</button>
+                      <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password" style="padding: 4px 6px; font-size: 0.7rem; width: 100%; white-space: nowrap; font-weight: 600;">🔑 PIN</button>
                       ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5; padding: 2px 6px; font-size: 0.68rem; width: 100%;" title="Remove Official">🗑️</button>` : ''}
                     </div>
                   </td>

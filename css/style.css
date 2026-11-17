@@ -2681,7 +2681,7 @@ table.data-table tr:hover {
     background: #0f274c !important;
   }
 
-  body:not(.force-desktop-view) table.data-table th {
+  body:not(.force-desktop-view) table.data-table th:not(.col-desktop-only) {
     display: table-cell !important;
     background: #0f274c !important;
     color: #ffffff !important;
@@ -2695,11 +2695,12 @@ table.data-table tr:hover {
     letter-spacing: 0.5px !important;
   }
 
-  body:not(.force-desktop-view) table.data-table.mobile-table-compact th {
+  body:not(.force-desktop-view) table.data-table.mobile-table-compact th:not(.col-desktop-only) {
     padding: 8px 6px !important;
     font-size: 0.74rem !important;
     white-space: normal !important;
-    word-break: break-word !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
   }
 
   body:not(.force-desktop-view) table.data-table tbody {
@@ -2726,7 +2727,7 @@ table.data-table tr:hover {
     background-color: #eff6ff !important;
   }
 
-  body:not(.force-desktop-view) table.data-table tbody td {
+  body:not(.force-desktop-view) table.data-table tbody td:not(.col-desktop-only) {
     display: table-cell !important;
     padding: 12px 14px !important;
     border: none !important;
@@ -2740,11 +2741,12 @@ table.data-table tr:hover {
     gap: 0 !important;
   }
 
-  body:not(.force-desktop-view) table.data-table.mobile-table-compact tbody td {
+  body:not(.force-desktop-view) table.data-table.mobile-table-compact tbody td:not(.col-desktop-only) {
     padding: 8px 6px !important;
     font-size: 0.76rem !important;
     white-space: normal !important;
-    word-break: break-word !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
     line-height: 1.35 !important;
   }
 
@@ -3358,7 +3360,7 @@ body.force-mobile-view table.data-table thead tr {
   background: #0f274c !important;
 }
 
-body.force-mobile-view table.data-table th {
+body.force-mobile-view table.data-table th:not(.col-desktop-only) {
   display: table-cell !important;
   background: #0f274c !important;
   color: #ffffff !important;
@@ -3370,11 +3372,12 @@ body.force-mobile-view table.data-table th {
   text-transform: uppercase !important;
 }
 
-body.force-mobile-view table.data-table.mobile-table-compact th {
+body.force-mobile-view table.data-table.mobile-table-compact th:not(.col-desktop-only) {
   padding: 8px 6px !important;
   font-size: 0.74rem !important;
   white-space: normal !important;
-  word-break: break-word !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
 }
 
 body.force-mobile-view table.data-table tbody {
@@ -3391,7 +3394,7 @@ body.force-mobile-view table.data-table tbody tr:nth-child(even) {
   background-color: #f8fafc !important;
 }
 
-body.force-mobile-view table.data-table tbody td {
+body.force-mobile-view table.data-table tbody td:not(.col-desktop-only) {
   display: table-cell !important;
   padding: 12px 14px !important;
   border-bottom: 1px solid #e2e8f0 !important;
@@ -3401,11 +3404,12 @@ body.force-mobile-view table.data-table tbody td {
   white-space: nowrap !important;
 }
 
-body.force-mobile-view table.data-table.mobile-table-compact tbody td {
+body.force-mobile-view table.data-table.mobile-table-compact tbody td:not(.col-desktop-only) {
   padding: 8px 6px !important;
   font-size: 0.76rem !important;
   white-space: normal !important;
-  word-break: break-word !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
   line-height: 1.35 !important;
 }
 
@@ -3434,55 +3438,127 @@ body.force-mobile-view .table-filters .select-filter {
 
 /* ==========================================================================
    RESPONSIVE TABLE COLUMN VISIBILITY (MOBILE 100% VS DESKTOP MULTI-COLUMN)
+   Bulletproof Specificity to Guarantee Desktop Cols Disappear on Mobile!
    ========================================================================== */
-@media (max-width: 768px) {
-  .col-desktop-only,
+@media (max-width: 991px) {
+  body:not(.force-desktop-view) table.data-table th.col-desktop-only,
+  body:not(.force-desktop-view) table.data-table td.col-desktop-only,
+  body:not(.force-desktop-view) .col-desktop-only,
+  body.force-mobile-view table.data-table th.col-desktop-only,
+  body.force-mobile-view table.data-table td.col-desktop-only,
+  body.force-mobile-view .col-desktop-only,
+  body table.data-table th.col-desktop-only,
+  body table.data-table td.col-desktop-only,
+  table.data-table th.col-desktop-only,
+  table.data-table td.col-desktop-only,
   th.col-desktop-only,
-  td.col-desktop-only {
+  td.col-desktop-only,
+  .col-desktop-only {
     display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    visibility: collapse !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
   }
-  .col-mobile-only,
+
+  body:not(.force-desktop-view) table.data-table th.col-mobile-only,
+  body:not(.force-desktop-view) table.data-table td.col-mobile-only,
+  body:not(.force-desktop-view) .col-mobile-only,
+  body.force-mobile-view table.data-table th.col-mobile-only,
+  body.force-mobile-view table.data-table td.col-mobile-only,
+  body.force-mobile-view .col-mobile-only,
+  body table.data-table th.col-mobile-only,
+  body table.data-table td.col-mobile-only,
+  table.data-table th.col-mobile-only,
+  table.data-table td.col-mobile-only,
   th.col-mobile-only,
-  td.col-mobile-only {
+  td.col-mobile-only,
+  .col-mobile-only {
+    display: table-cell !important;
+  }
+
+  table.data-table.mobile-table-compact {
+    table-layout: fixed !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 992px) {
+  body:not(.force-mobile-view) table.data-table th.col-mobile-only,
+  body:not(.force-mobile-view) table.data-table td.col-mobile-only,
+  body:not(.force-mobile-view) .col-mobile-only,
+  table.data-table th.col-mobile-only,
+  table.data-table td.col-mobile-only,
+  .col-mobile-only {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    visibility: collapse !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  body:not(.force-mobile-view) table.data-table th.col-desktop-only,
+  body:not(.force-mobile-view) table.data-table td.col-desktop-only,
+  body:not(.force-mobile-view) .col-desktop-only,
+  table.data-table th.col-desktop-only,
+  table.data-table td.col-desktop-only,
+  .col-desktop-only {
     display: table-cell !important;
   }
 }
 
-@media (min-width: 769px) {
-  .col-mobile-only,
-  th.col-mobile-only,
-  td.col-mobile-only {
-    display: none !important;
-  }
-  .col-desktop-only,
-  th.col-desktop-only,
-  td.col-desktop-only {
-    display: table-cell !important;
-  }
-}
-
-body.force-mobile-view .col-desktop-only,
-body.force-mobile-view th.col-desktop-only,
-body.force-mobile-view td.col-desktop-only {
+body.force-mobile-view table.data-table th.col-desktop-only,
+body.force-mobile-view table.data-table td.col-desktop-only,
+body.force-mobile-view .col-desktop-only {
   display: none !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  visibility: collapse !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
 }
 
-body.force-mobile-view .col-mobile-only,
-body.force-mobile-view th.col-mobile-only,
-body.force-mobile-view td.col-mobile-only {
+body.force-mobile-view table.data-table th.col-mobile-only,
+body.force-mobile-view table.data-table td.col-mobile-only,
+body.force-mobile-view .col-mobile-only {
   display: table-cell !important;
 }
 
-body.force-desktop-view .col-desktop-only,
-body.force-desktop-view th.col-desktop-only,
-body.force-desktop-view td.col-desktop-only {
+body.force-desktop-view table.data-table th.col-desktop-only,
+body.force-desktop-view table.data-table td.col-desktop-only,
+body.force-desktop-view .col-desktop-only {
   display: table-cell !important;
 }
 
-body.force-desktop-view .col-mobile-only,
-body.force-desktop-view th.col-mobile-only,
-body.force-desktop-view td.col-mobile-only {
+body.force-desktop-view table.data-table th.col-mobile-only,
+body.force-desktop-view table.data-table td.col-mobile-only,
+body.force-desktop-view .col-mobile-only {
   display: none !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  visibility: collapse !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
 }
 
 /* ADVANCED LEAVE APPLICATION STYLES */
