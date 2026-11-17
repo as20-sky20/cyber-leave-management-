@@ -90,14 +90,19 @@ body {
 .main-header {
   background: linear-gradient(135deg, var(--police-blue-dark) 0%, var(--police-blue) 100%);
   color: white;
-  padding: 16px 24px;
+  padding: 10px 24px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--shadow-md);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1100 !important;
+  box-sizing: border-box !important;
 }
 
 .header-brand {
@@ -238,11 +243,13 @@ body {
 .portal-body-layout {
   display: flex;
   flex-direction: row;
-  min-height: calc(100vh - 110px);
+  min-height: calc(100vh - 64px);
   width: 100%;
   position: relative;
   align-items: stretch;
   background: var(--bg-light);
+  padding-top: 64px !important;
+  box-sizing: border-box !important;
 }
 
 /* AUTO-HOVER NAVIGATION SENSING ZONE (LEFT SCREEN EDGE - MOUSE ONLY) */
@@ -253,10 +260,10 @@ body {
   .sidebar-hover-zone {
     display: block;
     position: fixed;
-    top: 60px;
+    top: 64px;
     left: 0;
     width: 14px;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 64px);
     z-index: 998;
     background: transparent;
     pointer-events: auto;
@@ -273,7 +280,7 @@ body {
   bottom: 0;
   background: rgba(15, 39, 76, 0.55);
   backdrop-filter: blur(2px);
-  z-index: 1040;
+  z-index: 1240 !important;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -301,13 +308,15 @@ body.sidebar-open-lock {
   padding: 14px 10px;
   gap: 4px;
   box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
-  position: sticky;
-  top: 0;
-  height: calc(100vh - 65px);
-  overflow-y: auto;
-  z-index: 100;
+  position: fixed !important;
+  top: 64px !important;
+  left: 0 !important;
+  height: calc(100vh - 64px) !important;
+  overflow-y: auto !important;
+  z-index: 990 !important;
   flex-shrink: 0;
   transition: width 0.25s ease, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box !important;
 }
 
 /* Sidebar Header (Mobile & Brand) */
@@ -2227,20 +2236,39 @@ table.data-table tr:hover {
   }
 
   body:not(.force-desktop-view) .main-header {
-    padding: 8px 12px !important;
+    height: 54px !important;
+    padding: 6px 12px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1100 !important;
+    box-sizing: border-box !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 8px !important;
+  }
+  body:not(.force-desktop-view) .portal-body-layout {
+    padding-top: 54px !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-height: calc(100vh - 54px) !important;
+    box-sizing: border-box !important;
   }
   body:not(.force-desktop-view) .header-brand {
     gap: 8px !important;
     align-items: center !important;
   }
   body:not(.force-desktop-view) .police-badge-logo {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+  body:not(.force-desktop-view) .police-badge-logo svg {
+    width: 20px !important;
+    height: 20px !important;
   }
   body:not(.force-desktop-view) .brand-text h1 {
     font-size: 0.94rem !important;
@@ -2288,7 +2316,11 @@ table.data-table tr:hover {
 
   /* Container & Layout */
   body:not(.force-desktop-view) .app-container {
-    padding: 12px 10px !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 10px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-desktop-view) .page-header {
@@ -2808,7 +2840,15 @@ table.data-table tr:hover {
    ========================================================================== */
 @media (max-width: 480px) {
   body:not(.force-desktop-view) .main-header {
-    padding: 8px 10px !important;
+    height: 54px !important;
+    padding: 6px 10px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1100 !important;
+    box-sizing: border-box !important;
   }
   body:not(.force-desktop-view) .police-badge-logo {
     width: 32px !important;
@@ -2970,6 +3010,39 @@ body.force-desktop-view {
   max-width: 100% !important;
   overflow-x: hidden !important;
   padding-bottom: 0 !important;
+}
+body.force-desktop-view .main-header {
+  height: 64px !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1100 !important;
+  box-sizing: border-box !important;
+}
+body.force-desktop-view .portal-body-layout {
+  padding-top: 64px !important;
+  flex-direction: row !important;
+  box-sizing: border-box !important;
+}
+body.force-desktop-view .sidebar-nav.nav-bar {
+  display: flex !important;
+  transform: none !important;
+  position: fixed !important;
+  top: 64px !important;
+  left: 0 !important;
+  width: 260px !important;
+  min-width: 260px !important;
+  height: calc(100vh - 64px) !important;
+  overflow-y: auto !important;
+  z-index: 990 !important;
+  box-sizing: border-box !important;
+}
+body.force-desktop-view .app-container {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  box-sizing: border-box !important;
 }
 body.force-desktop-view .nav-bar {
   display: flex !important;
@@ -3295,6 +3368,46 @@ body.force-mobile-view .sidebar-backdrop {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+body.force-mobile-view .main-header {
+  height: 54px !important;
+  padding: 6px 12px !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1100 !important;
+  box-sizing: border-box !important;
+}
+body.force-mobile-view .portal-body-layout {
+  padding-top: 54px !important;
+  margin-left: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.force-mobile-view .sidebar-nav.nav-bar {
+  display: flex !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 285px !important;
+  max-width: 84vw !important;
+  height: 100vh !important;
+  z-index: 1250 !important;
+  transform: translateX(-100%) !important;
+  box-sizing: border-box !important;
+}
+body.force-mobile-view .sidebar-nav.nav-bar.mobile-open {
+  transform: translateX(0) !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+body.force-mobile-view .app-container {
+  margin-left: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 body.force-mobile-view .sidebar-backdrop.active {
   display: block !important;
@@ -4486,16 +4599,44 @@ body.force-desktop-view .col-mobile-only {
    DESKTOP VIEW LEFT SIDEBAR (STICKY & COLLAPSIBLE)
    ========================================================================== */
 @media (min-width: 992px) {
+  body:not(.force-mobile-view) .main-header {
+    height: 64px !important;
+    padding: 10px 24px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1100 !important;
+    box-sizing: border-box !important;
+  }
+
   body:not(.force-mobile-view) .portal-body-layout {
     flex-direction: row !important;
+    padding-top: 64px !important;
+    min-height: calc(100vh - 64px) !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-mobile-view) .sidebar-nav.nav-bar {
     display: flex !important;
     transform: none !important;
-    position: sticky !important;
-    top: 0 !important;
-    height: calc(100vh - 105px) !important;
+    position: fixed !important;
+    top: 64px !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    height: calc(100vh - 64px) !important;
+    overflow-y: auto !important;
+    z-index: 990 !important;
+    box-sizing: border-box !important;
+  }
+
+  body:not(.force-mobile-view) .app-container {
+    margin-left: 260px !important;
+    width: calc(100% - 260px) !important;
+    box-sizing: border-box !important;
   }
 
   body:not(.force-mobile-view) .sidebar-close-btn {
@@ -4518,6 +4659,15 @@ body.force-desktop-view .col-mobile-only {
   body.sidebar-collapsed .sidebar-nav.nav-bar {
     width: 68px !important;
     min-width: 68px !important;
+    padding: 14px 6px !important;
+    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s ease !important;
+    overflow-x: hidden;
+  }
+
+  body.sidebar-collapsed .app-container {
+    margin-left: 68px !important;
+    width: calc(100% - 68px) !important;
+  }
     padding: 14px 6px !important;
     transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s ease !important;
     overflow-x: hidden;
