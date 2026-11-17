@@ -483,7 +483,12 @@ function compactLeaveForSync(l) {
 async function syncWithOfficeDatabase() {
   updateSyncIndicator(false, "Syncing...");
 
-  // 1. First try Local Office LAN Server (if running via start_server.ps1)
+  // 1. Broadcast our leaves if we have any so other devices receive them
+  if (AppState.leaves && AppState.leaves.length > 0) {
+    await broadcastFullDatabaseSnapshot();
+  }
+
+  // 2. First try Local Office LAN Server (if running via start_server.ps1)
   try {
     const res = await fetch("/api/data", { cache: "no-store" });
     if (res.ok) {
@@ -507,12 +512,12 @@ async function syncWithOfficeDatabase() {
     // Local server not available, fall through to Cloud sync
   }
 
-  // 2. Poll Cloud Live Sync History
+  // 3. Poll Cloud Live Sync History
   await pollLiveSyncHistory();
   updateSyncIndicator(true, "Live Cloud Sync Online");
   closeSidebarNav();
   renderApp();
-  showToast("Multi-Device Cloud Sync refreshed.", "success");
+  showToast("Multi-Device Cloud Sync refreshed. All data synchronized!", "success");
 }
 
 // Start Live Cross-Device Real-Time Sync (SSE + Periodic Polling)
@@ -520,13 +525,21 @@ function startLiveSync() {
   pollLiveSyncHistory();
   connectLiveSSE();
 
-  // Background refresh every 30 seconds to maintain sync without flood
+  // If we have leaves, broadcast snapshot with retain so newly opening devices catch up
+  if (AppState.leaves && AppState.leaves.length > 0) {
+    broadcastFullDatabaseSnapshot();
+  } else {
+    // If we have no leaves, ask other online devices to share their state
+    broadcastLiveAction({ action: "REQUEST_STATE_SYNC" });
+  }
+
+  // Background refresh every 20 seconds to maintain sync without flood
   setInterval(() => {
     if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
       connectLiveSSE();
     }
     pollLiveSyncHistory();
-  }, 30000);
+  }, 20000);
 }
 
 function connectLiveSSE() {
@@ -630,15 +643,44 @@ async function broadcastLiveAction(actionPayload) {
 
     const bodyText = JSON.stringify(actionPayload);
 
-    // Uses text/plain to guarantee zero CORS preflight issues across all browsers
+    // Uses text/plain and X-Retain to guarantee delivery to online and newly opening devices
     await fetch(LIVE_SYNC_PUB_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
+      headers: { 
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Retain": "1"
+      },
       body: bodyText
     });
     updateSyncIndicator(true, "Live Cloud Sync Online");
   } catch (err) {
     console.warn("Could not broadcast live action", err);
+  }
+}
+
+// Broadcast complete state snapshot so newly loaded mobile phones or PCs instantly catch up
+async function broadcastFullDatabaseSnapshot() {
+  if (!AppState.leaves || AppState.leaves.length === 0) return;
+  try {
+    const compactLeaves = AppState.leaves.map(compactLeaveForSync);
+    const payload = {
+      action: "FULL_DATABASE_SNAPSHOT",
+      clientId: getClientId(),
+      timestamp: Date.now(),
+      leaves: compactLeaves,
+      notices: AppState.notices || []
+    };
+    const bodyText = JSON.stringify(payload);
+    await fetch(LIVE_SYNC_PUB_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Retain": "1"
+      },
+      body: bodyText
+    });
+  } catch (err) {
+    console.warn("Could not broadcast full snapshot", err);
   }
 }
 
@@ -652,6 +694,52 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
   }
 
   let hasChanged = false;
+
+  // 0. FULL DATABASE SNAPSHOT RECEIVED (SYNC FROM ANOTHER COMPUTER/PHONE)
+  if (payload.action === "FULL_DATABASE_SNAPSHOT" && Array.isArray(payload.leaves)) {
+    payload.leaves.forEach(incomingLeave => {
+      const existingIndex = AppState.leaves.findIndex(l => l.id === incomingLeave.id);
+      if (existingIndex === -1) {
+        AppState.leaves.unshift(incomingLeave);
+        hasChanged = true;
+      } else {
+        const existing = AppState.leaves[existingIndex];
+        if (incomingLeave.status !== existing.status || incomingLeave.totalDays !== existing.totalDays) {
+          AppState.leaves[existingIndex] = { ...existing, ...incomingLeave };
+          hasChanged = true;
+        }
+      }
+    });
+
+    if (Array.isArray(payload.notices)) {
+      payload.notices.forEach(n => {
+        if (!AppState.notices) AppState.notices = [];
+        if (!AppState.notices.some(ex => ex.id === n.id)) {
+          AppState.notices.unshift(n);
+          hasChanged = true;
+        }
+      });
+    }
+
+    if (hasChanged) {
+      recalculateAllUserLeaveBalances();
+      saveToLocalStorageOnly();
+      renderNavigationTabs();
+      renderApp();
+      if (!isInitialSync) {
+        showToast("Synchronized data across devices!", "success");
+      }
+    }
+    return;
+  }
+
+  // 0.1 HANDSHAKE REQUEST FOR SYNC (NEW DEVICE JUST OPENED)
+  else if (payload.action === "REQUEST_STATE_SYNC") {
+    if (AppState.leaves && AppState.leaves.length > 0) {
+      broadcastFullDatabaseSnapshot();
+    }
+    return;
+  }
 
   // 1. NEW LEAVE APPLIED ON ANOTHER COMPUTER/MOBILE
   if (payload.action === "NEW_LEAVE" && payload.leave) {
@@ -846,6 +934,8 @@ function saveData() {
   if (isLanServerConnected) {
     pushDataToOfficeServer();
   }
+  // Also push snapshot to cloud with retain so mobile & other PCs stay 100% in sync
+  broadcastFullDatabaseSnapshot();
 }
 
 function saveToLocalStorageOnly() {
