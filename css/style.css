@@ -2645,12 +2645,26 @@ table.data-table tr:hover {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
   }
 
+  /* Compact 100% Mobile Table - Fits entire phone screen width with NO horizontal scroll */
+  body:not(.force-desktop-view) .responsive-table.mobile-fit-100 {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
   body:not(.force-desktop-view) table.data-table {
     display: table !important;
     width: 100% !important;
     min-width: 800px !important;
     border-collapse: collapse !important;
     text-align: left !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table.mobile-table-compact {
+    min-width: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
   }
 
   body:not(.force-desktop-view) table.data-table thead {
@@ -2679,6 +2693,13 @@ table.data-table tr:hover {
     font-size: 0.78rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
+  }
+
+  body:not(.force-desktop-view) table.data-table.mobile-table-compact th {
+    padding: 8px 6px !important;
+    font-size: 0.74rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
   }
 
   body:not(.force-desktop-view) table.data-table tbody {
@@ -2719,6 +2740,14 @@ table.data-table tr:hover {
     gap: 0 !important;
   }
 
+  body:not(.force-desktop-view) table.data-table.mobile-table-compact tbody td {
+    padding: 8px 6px !important;
+    font-size: 0.76rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.35 !important;
+  }
+
   body:not(.force-desktop-view) table.data-table tbody td:before {
     display: none !important;
     content: none !important;
@@ -2736,6 +2765,25 @@ table.data-table tr:hover {
     border-radius: 6px;
     margin: 0 14px 8px;
     border: 1px solid #e2e8f0;
+  }
+
+  body:not(.force-desktop-view) .table-scroll-hint.mobile-hidden {
+    display: none !important;
+  }
+
+  body:not(.force-desktop-view) .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  body:not(.force-desktop-view) .table-toolbar .search-input,
+  body:not(.force-desktop-view) .table-filters .search-input,
+  body:not(.force-desktop-view) .table-filters .select-filter {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
 
@@ -3279,12 +3327,25 @@ body.force-mobile-view .responsive-table {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
 }
 
+body.force-mobile-view .responsive-table.mobile-fit-100 {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 body.force-mobile-view table.data-table {
   display: table !important;
   width: 100% !important;
   min-width: 800px !important;
   border-collapse: collapse !important;
   text-align: left !important;
+}
+
+body.force-mobile-view table.data-table.mobile-table-compact {
+  min-width: 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
 }
 
 body.force-mobile-view table.data-table thead {
@@ -3307,6 +3368,13 @@ body.force-mobile-view table.data-table th {
   white-space: nowrap !important;
   font-size: 0.78rem !important;
   text-transform: uppercase !important;
+}
+
+body.force-mobile-view table.data-table.mobile-table-compact th {
+  padding: 8px 6px !important;
+  font-size: 0.74rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
 }
 
 body.force-mobile-view table.data-table tbody {
@@ -3333,7 +3401,87 @@ body.force-mobile-view table.data-table tbody td {
   white-space: nowrap !important;
 }
 
+body.force-mobile-view table.data-table.mobile-table-compact tbody td {
+  padding: 8px 6px !important;
+  font-size: 0.76rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  line-height: 1.35 !important;
+}
+
 body.force-mobile-view table.data-table tbody td:before {
+  display: none !important;
+}
+
+body.force-mobile-view .table-scroll-hint.mobile-hidden {
+  display: none !important;
+}
+
+body.force-mobile-view .table-toolbar {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+}
+
+body.force-mobile-view .table-toolbar .search-input,
+body.force-mobile-view .table-filters .search-input,
+body.force-mobile-view .table-filters .select-filter {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE TABLE COLUMN VISIBILITY (MOBILE 100% VS DESKTOP MULTI-COLUMN)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .col-desktop-only,
+  th.col-desktop-only,
+  td.col-desktop-only {
+    display: none !important;
+  }
+  .col-mobile-only,
+  th.col-mobile-only,
+  td.col-mobile-only {
+    display: table-cell !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .col-mobile-only,
+  th.col-mobile-only,
+  td.col-mobile-only {
+    display: none !important;
+  }
+  .col-desktop-only,
+  th.col-desktop-only,
+  td.col-desktop-only {
+    display: table-cell !important;
+  }
+}
+
+body.force-mobile-view .col-desktop-only,
+body.force-mobile-view th.col-desktop-only,
+body.force-mobile-view td.col-desktop-only {
+  display: none !important;
+}
+
+body.force-mobile-view .col-mobile-only,
+body.force-mobile-view th.col-mobile-only,
+body.force-mobile-view td.col-mobile-only {
+  display: table-cell !important;
+}
+
+body.force-desktop-view .col-desktop-only,
+body.force-desktop-view th.col-desktop-only,
+body.force-desktop-view td.col-desktop-only {
+  display: table-cell !important;
+}
+
+body.force-desktop-view .col-mobile-only,
+body.force-desktop-view th.col-mobile-only,
+body.force-desktop-view td.col-mobile-only {
   display: none !important;
 }
 

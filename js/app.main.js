@@ -1769,29 +1769,125 @@ function renderDashboard(container) {
 // Table row renderer
 function renderLeaveTableRow(leave, showApplicantInfo = false) {
   const statusBadge = getStatusBadge(leave.status);
-  const applicantInfoHtml = showApplicantInfo ? `
-    <td data-label="Personnel Details">
-      <strong>${leave.applicantName}</strong><br>
-      <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
-      <span class="branch-tag">${leave.branchName}</span>
-    </td>
-  ` : "";
 
+  if (showApplicantInfo) {
+    // ----------------------------------------------------
+    // MASTER REGISTER ROW (Desktop 9 Cols + Mobile 3 Cols)
+    // ----------------------------------------------------
+    return `
+      <tr class="leave-card-row">
+        <!-- DESKTOP 9 COLUMNS -->
+        <td class="col-desktop-only" data-label="Application ID">
+          <div style="font-weight: 700; color: #0f274c;">${leave.id}</div>
+          <small style="color: #64748b;">${leave.appliedAt}</small>
+        </td>
+        <td class="col-desktop-only" data-label="Personnel Details">
+          <strong>${leave.applicantName}</strong><br>
+          <small style="color: #64748b;">${leave.rank} (${leave.beltNo})</small><br>
+          <span class="branch-tag">${leave.branchName}</span>
+        </td>
+        <td class="col-desktop-only" data-label="Leave Type">
+          <span style="font-weight: 700; color: #0f274c;">${leave.leaveType}</span><br>
+          <small style="color: #64748b;">${leave.leaveTypeName.split("(")[0]}</small>
+        </td>
+        <td class="col-desktop-only" data-label="Leave Period">
+          <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong>
+        </td>
+        <td class="col-desktop-only" data-label="Total Days">
+          <span style="font-weight: 700; font-size: 1.05rem;">${leave.totalDays}</span> Days
+          ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
+            <br><span class="curtailed-badge" title="Original Application: ${leave.originalDays} Days (${formatDate(leave.fromDate)} - ${formatDate(leave.originalToDate)})">
+              Curtailed: ${leave.originalDays}→${leave.totalDays} Days
+            </span>
+          ` : ''}
+        </td>
+        <td class="col-desktop-only" data-label="Ground / Reason" style="max-width: 220px;">
+          <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
+            ${leave.reason}
+          </div>
+          ${leave.attachment ? `
+            <div style="margin-top: 4px;">
+              <a href="javascript:void(0)" onclick="viewAttachment('${leave.id}')" style="font-size: 0.72rem; color: #2563eb; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                📎 ${leave.attachment.name}
+              </a>
+            </div>
+          ` : ''}
+        </td>
+        <td class="col-desktop-only" data-label="Station Leave">
+          ${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
+        </td>
+        <td class="col-desktop-only" data-label="Status">${statusBadge}</td>
+        <td class="col-desktop-only" data-label="Actions" class="mobile-card-actions">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">Details</button>
+            ${leave.attachment ? `
+              <button class="btn btn-outline btn-sm" onclick="viewAttachment('${leave.id}')" title="View Attachment" style="color: #2563eb; padding: 4px 7px;">📎</button>
+            ` : ''}
+            ${leave.status === "APPROVED" ? `
+              <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openSanctionSlipModal('${leave.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Order Slip
+              </button>
+            ` : ""}
+          </div>
+        </td>
+
+        <!-- MOBILE CONSOLIDATED 3 COLUMNS (Fits 100% Phone Screen) -->
+        <td class="col-mobile-only" style="vertical-align: top;">
+          <div style="font-weight: 700; color: #0f274c; font-size: 0.82rem; line-height: 1.25;">${leave.applicantName}</div>
+          <div style="font-size: 0.72rem; color: #475569;">${leave.rank} <span style="color:#64748b;">(${leave.beltNo})</span></div>
+          <div style="margin-top: 3px;">
+            <span class="branch-tag" style="font-size: 0.66rem; padding: 1px 4px;">${leave.branchName}</span>
+          </div>
+          <div style="font-size: 0.68rem; color: #64748b; margin-top: 2px; font-family: monospace;">#${leave.id}</div>
+        </td>
+        <td class="col-mobile-only" style="vertical-align: top;">
+          <div style="font-weight: 700; color: #0f274c; font-size: 0.78rem;">
+            ${leave.leaveType} <span style="font-size: 0.74rem; color: #1e3a8a;">(${leave.totalDays}d)</span>
+          </div>
+          <div style="font-size: 0.71rem; color: #334155; margin-top: 1px;">
+            ${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}
+          </div>
+          <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
+            ${leave.reason}
+          </div>
+          ${leave.attachment ? `
+            <div style="margin-top: 2px;">
+              <a href="javascript:void(0)" onclick="viewAttachment('${leave.id}')" style="font-size: 0.68rem; color: #2563eb; text-decoration: underline; font-weight: 600;">📎 Doc</a>
+            </div>
+          ` : ''}
+        </td>
+        <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+          <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+            <div style="font-size: 0.66rem;">${statusBadge}</div>
+            <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Details</button>
+            ${leave.status === "APPROVED" ? `
+              <button class="btn btn-primary btn-sm" onclick="openSanctionSlipModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Slip</button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  // ----------------------------------------------------
+  // MY LEAVE APPLICATIONS ROW (Desktop 8 Cols + Mobile 3 Cols)
+  // ----------------------------------------------------
   return `
     <tr class="leave-card-row">
-      <td data-label="Application ID">
+      <!-- DESKTOP 8 COLUMNS -->
+      <td class="col-desktop-only" data-label="Application ID">
         <div style="font-weight: 700; color: #0f274c;">${leave.id}</div>
         <small style="color: #64748b;">${leave.appliedAt}</small>
       </td>
-      ${applicantInfoHtml}
-      <td data-label="Leave Type">
+      <td class="col-desktop-only" data-label="Leave Type">
         <span style="font-weight: 700; color: #0f274c;">${leave.leaveType}</span><br>
         <small style="color: #64748b;">${leave.leaveTypeName.split("(")[0]}</small>
       </td>
-      <td data-label="Leave Period">
+      <td class="col-desktop-only" data-label="Leave Period">
         <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong>
       </td>
-      <td data-label="Total Days">
+      <td class="col-desktop-only" data-label="Total Days">
         <span style="font-weight: 700; font-size: 1.05rem;">${leave.totalDays}</span> Days
         ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
           <br><span class="curtailed-badge" title="Original Application: ${leave.originalDays} Days (${formatDate(leave.fromDate)} - ${formatDate(leave.originalToDate)})">
@@ -1799,7 +1895,7 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
           </span>
         ` : ''}
       </td>
-      <td data-label="Ground / Reason" style="max-width: 220px;">
+      <td class="col-desktop-only" data-label="Ground / Reason" style="max-width: 220px;">
         <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
           ${leave.reason}
         </div>
@@ -1811,11 +1907,11 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
           </div>
         ` : ''}
       </td>
-      <td data-label="Station Leave">
+      <td class="col-desktop-only" data-label="Station Leave">
         ${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 600;">✓ Permitted</span>' : '<span style="color: #64748b;">-</span>'}
       </td>
-      <td data-label="Status">${statusBadge}</td>
-      <td data-label="Actions" class="mobile-card-actions">
+      <td class="col-desktop-only" data-label="Status">${statusBadge}</td>
+      <td class="col-desktop-only" data-label="Actions" class="mobile-card-actions">
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
           <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">Details</button>
           ${leave.attachment ? `
@@ -1827,6 +1923,29 @@ function renderLeaveTableRow(leave, showApplicantInfo = false) {
               Order Slip
             </button>
           ` : ""}
+        </div>
+      </td>
+
+      <!-- MOBILE CONSOLIDATED 3 COLUMNS (Fits 100% Phone Screen) -->
+      <td class="col-mobile-only" style="vertical-align: top;">
+        <div style="font-weight: 700; color: #0f274c; font-size: 0.8rem; font-family: monospace;">#${leave.id}</div>
+        <div style="font-size: 0.69rem; color: #64748b;">${leave.appliedAt}</div>
+        <div style="margin-top: 3px; font-weight: 700; color: #1e3a8a; font-size: 0.76rem;">${leave.leaveType}</div>
+      </td>
+      <td class="col-mobile-only" style="vertical-align: top;">
+        <div style="font-weight: 700; font-size: 0.76rem; color: #0f274c;">${leave.totalDays} Days</div>
+        <div style="font-size: 0.71rem; color: #334155; margin-top: 1px;">${formatDate(leave.fromDate)} - ${formatDate(leave.toDate)}</div>
+        <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${leave.reason}">
+          ${leave.reason}
+        </div>
+      </td>
+      <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+          <div style="font-size: 0.66rem;">${statusBadge}</div>
+          <button class="btn btn-outline btn-sm" onclick="openLeaveDetailsModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Details</button>
+          ${leave.status === "APPROVED" ? `
+            <button class="btn btn-primary btn-sm" onclick="openSanctionSlipModal('${leave.id}')" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">Slip</button>
+          ` : ''}
         </div>
       </td>
     </tr>
@@ -2815,18 +2934,24 @@ function renderMyLeaves(container) {
       </div>
     ` : `
       <div class="card-table-wrap">
-        <div class="responsive-table">
-          <table class="data-table">
+        <div class="responsive-table mobile-fit-100">
+          <table class="data-table mobile-table-compact">
             <thead>
               <tr>
-                <th>Application ID</th>
-                <th>Leave Type</th>
-                <th>Period</th>
-                <th>Days</th>
-                <th>Ground / Reason</th>
-                <th>Station Leave</th>
-                <th>Current Status</th>
-                <th>Action</th>
+                <!-- DESKTOP 8 COLUMNS -->
+                <th class="col-desktop-only">Application ID</th>
+                <th class="col-desktop-only">Leave Type</th>
+                <th class="col-desktop-only">Period</th>
+                <th class="col-desktop-only">Days</th>
+                <th class="col-desktop-only">Ground / Reason</th>
+                <th class="col-desktop-only">Station Leave</th>
+                <th class="col-desktop-only">Current Status</th>
+                <th class="col-desktop-only">Action</th>
+
+                <!-- MOBILE 3 CONSOLIDATED COLUMNS -->
+                <th class="col-mobile-only">Application & Type</th>
+                <th class="col-mobile-only">Period & Days</th>
+                <th class="col-mobile-only" style="text-align: center;">Status & Action</th>
               </tr>
             </thead>
             <tbody>
@@ -3419,24 +3544,30 @@ function renderBranchesView(container) {
         </div>
       </div>
 
-      <div class="table-scroll-hint">
+      <div class="table-scroll-hint mobile-hidden">
         <span>👉 Swipe table horizontally to see all columns</span>
       </div>
 
-      <div class="responsive-table">
-        <table class="data-table" id="branchesTable">
+      <div class="responsive-table mobile-fit-100">
+        <table class="data-table mobile-table-compact" id="branchesTable">
           <thead>
             <tr>
-              <th style="width: 50px; text-align: center;">Sr.</th>
-              <th style="width: 90px;">Wing Code</th>
-              <th>Cyber Branch / Wing Name</th>
-              <th>Branch Incharge Officer</th>
-              <th>Incharge Contact</th>
-              <th style="text-align: center;">Total Strength</th>
-              <th style="text-align: center;">On Duty</th>
-              <th style="text-align: center;">On Leave</th>
-              <th style="text-align: center;">Status</th>
-              <th style="text-align: center;">Action</th>
+              <!-- DESKTOP 10 COLUMNS -->
+              <th class="col-desktop-only" style="width: 50px; text-align: center;">Sr.</th>
+              <th class="col-desktop-only" style="width: 90px;">Wing Code</th>
+              <th class="col-desktop-only">Cyber Branch / Wing Name</th>
+              <th class="col-desktop-only">Branch Incharge Officer</th>
+              <th class="col-desktop-only">Incharge Contact</th>
+              <th class="col-desktop-only" style="text-align: center;">Total Strength</th>
+              <th class="col-desktop-only" style="text-align: center;">On Duty</th>
+              <th class="col-desktop-only" style="text-align: center;">On Leave</th>
+              <th class="col-desktop-only" style="text-align: center;">Status</th>
+              <th class="col-desktop-only" style="text-align: center;">Action</th>
+
+              <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
+              <th class="col-mobile-only">Cyber Branch & Incharge</th>
+              <th class="col-mobile-only" style="text-align: center;">Strength</th>
+              <th class="col-mobile-only" style="text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody id="branchesTableBody">
@@ -3451,39 +3582,68 @@ function renderBranchesView(container) {
 
               return `
                 <tr data-branch-code="${branch.id}" data-branch-name="${branch.name}">
-                  <td style="text-align: center; font-weight: 700; color: #64748b;">${index + 1}</td>
-                  <td><span class="badge" style="background: #0f274c; color: #ffd700; font-weight: 700; padding: 4px 8px; border-radius: 6px;">${branch.id.toUpperCase()}</span></td>
-                  <td>
+                  <!-- DESKTOP 10 CELLS -->
+                  <td class="col-desktop-only" style="text-align: center; font-weight: 700; color: #64748b;">${index + 1}</td>
+                  <td class="col-desktop-only"><span class="badge" style="background: #0f274c; color: #ffd700; font-weight: 700; padding: 4px 8px; border-radius: 6px;">${branch.id.toUpperCase()}</span></td>
+                  <td class="col-desktop-only">
                     <div style="font-weight: 700; color: #0f274c; font-size: 0.9rem;">${branch.name}</div>
                     <small style="color: #64748b;">HQ: State Cyber Crime, Panchkula</small>
                   </td>
-                  <td>
+                  <td class="col-desktop-only">
                     ${incharge ? `
                       <div style="font-weight: 700; color: #1e293b;">${incharge.name}</div>
                       <small style="color: #64748b;">${incharge.rank} (${incharge.beltNo})</small>
                     ` : `<span style="color: #dc2626; font-weight: 600;">Under Posting</span>`}
                   </td>
-                  <td>
+                  <td class="col-desktop-only">
                     ${incharge && incharge.mobile ? `
                       <a href="tel:${incharge.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${incharge.mobile}</a>
                     ` : `<span style="color: #94a3b8;">-</span>`}
                   </td>
-                  <td style="text-align: center;">
+                  <td class="col-desktop-only" style="text-align: center;">
                     <span style="font-weight: 800; font-size: 0.95rem; color: #0f274c;">${branchMembers.length}</span> Personnel
                   </td>
-                  <td style="text-align: center;">
+                  <td class="col-desktop-only" style="text-align: center;">
                     <span class="status-badge approved" style="padding: 2px 8px; font-size: 0.72rem;">${onDutyCount} Present</span>
                   </td>
-                  <td style="text-align: center;">
+                  <td class="col-desktop-only" style="text-align: center;">
                     ${onLeaveCount > 0 ? `
                       <span class="status-badge rejected" style="padding: 2px 8px; font-size: 0.72rem;">${onLeaveCount} Leave</span>
                     ` : `<span style="color: #64748b; font-weight: 600;">0</span>`}
                   </td>
-                  <td style="text-align: center;">
+                  <td class="col-desktop-only" style="text-align: center;">
                     <span class="status-badge approved" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-size: 0.72rem;">Active Unit</span>
                   </td>
-                  <td style="text-align: center;">
+                  <td class="col-desktop-only" style="text-align: center;">
                     <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 10px; font-size: 0.78rem;">
+                      Roster &rarr;
+                    </button>
+                  </td>
+
+                  <!-- MOBILE CONSOLIDATED 3 CELLS (Fits 100% Phone Screen) -->
+                  <td class="col-mobile-only" style="vertical-align: top;">
+                    <div style="font-weight: 700; color: #0f274c; font-size: 0.83rem; line-height: 1.25;">
+                      ${branch.name}
+                      <span class="badge" style="background: #0f274c; color: #ffd700; font-size: 0.63rem; padding: 1px 5px; border-radius: 4px; margin-left: 3px;">${branch.id.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size: 0.73rem; color: #334155; margin-top: 3px;">
+                      ${incharge ? `👤 <strong>${incharge.name}</strong> <span style="color:#64748b;">(${incharge.rank})</span>` : `<span style="color: #dc2626; font-weight: 600;">Under Posting</span>`}
+                    </div>
+                    ${incharge && incharge.mobile ? `
+                      <div style="font-size: 0.71rem; margin-top: 2px;">
+                        <a href="tel:${incharge.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${incharge.mobile}</a>
+                      </div>
+                    ` : ''}
+                  </td>
+                  <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+                    <div style="font-weight: 700; color: #15803d; font-size: 0.75rem; white-space: nowrap;">🟢 ${onDutyCount} Duty</div>
+                    <div style="font-weight: 600; color: ${onLeaveCount > 0 ? '#dc2626' : '#64748b'}; font-size: 0.71rem; white-space: nowrap; margin-top: 2px;">
+                      ${onLeaveCount > 0 ? `🔴 ${onLeaveCount} Leave` : '⚪ 0 Leave'}
+                    </div>
+                    <div style="font-size: 0.67rem; color: #64748b; margin-top: 2px;">Tot: ${branchMembers.length}</div>
+                  </td>
+                  <td class="col-mobile-only" style="text-align: center; vertical-align: middle;">
+                    <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 7px; font-size: 0.72rem; white-space: nowrap; border-color: #0f274c; color: #0f274c;">
                       Roster &rarr;
                     </button>
                   </td>
@@ -3635,22 +3795,28 @@ function renderMasterRegister(container) {
           <div style="font-size: 0.86rem; color: #64748b;">No leave records found in the system.</div>
         </div>
       ` : `
-        <div class="table-scroll-hint">
+        <div class="table-scroll-hint mobile-hidden">
           <span>👉 Swipe table horizontally to see all columns</span>
         </div>
-        <div class="responsive-table">
-          <table class="data-table" id="masterTable">
+        <div class="responsive-table mobile-fit-100">
+          <table class="data-table mobile-table-compact" id="masterTable">
             <thead>
               <tr>
-                <th>ID & Applied Date</th>
-                <th>Personnel Details</th>
-                <th>Leave Type</th>
-                <th>Period</th>
-                <th>Days</th>
-                <th>Ground / Reason</th>
-                <th>Station Leave</th>
-                <th>Current Status</th>
-                <th>Action / Order</th>
+                <!-- DESKTOP 9 COLUMNS -->
+                <th class="col-desktop-only">ID & Applied Date</th>
+                <th class="col-desktop-only">Personnel Details</th>
+                <th class="col-desktop-only">Leave Type</th>
+                <th class="col-desktop-only">Period</th>
+                <th class="col-desktop-only">Days</th>
+                <th class="col-desktop-only">Ground / Reason</th>
+                <th class="col-desktop-only">Station Leave</th>
+                <th class="col-desktop-only">Current Status</th>
+                <th class="col-desktop-only">Action / Order</th>
+
+                <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
+                <th class="col-mobile-only">Personnel & ID</th>
+                <th class="col-mobile-only">Leave & Period</th>
+                <th class="col-mobile-only" style="text-align: center;">Status & Action</th>
               </tr>
             </thead>
             <tbody id="masterTableBody">
@@ -3685,7 +3851,7 @@ function filterRegisterTable() {
   const tbody = document.getElementById("masterTableBody");
   if (tbody) {
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">No records match the selected filter criteria.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">No records match the selected filter criteria.</td></tr>`;
     } else {
       tbody.innerHTML = filtered.map(l => renderLeaveTableRow(l, true)).join("");
     }
@@ -4388,28 +4554,34 @@ function renderPersonnelDirectory(container) {
           ` : ''}
         </div>
       </div>
-      <div class="table-scroll-hint">
+      <div class="table-scroll-hint mobile-hidden">
         <span>👉 Swipe table horizontally to see all columns</span>
       </div>
-      <div class="responsive-table">
-        <table class="data-table" id="directoryTable">
+      <div class="responsive-table mobile-fit-100">
+        <table class="data-table mobile-table-compact" id="directoryTable">
           <thead>
             <tr>
-              <th>ID / Belt No.</th>
-              <th>Name</th>
-              <th>Rank</th>
-              <th>Branch</th>
-              <th>System Role</th>
-              <th>Contact</th>
-              <th>CL Balance</th>
-              <th>EL Balance</th>
-              <th>Action / Security</th>
+              <!-- DESKTOP 9 COLUMNS -->
+              <th class="col-desktop-only">ID / Belt No.</th>
+              <th class="col-desktop-only">Name</th>
+              <th class="col-desktop-only">Rank</th>
+              <th class="col-desktop-only">Branch</th>
+              <th class="col-desktop-only">System Role</th>
+              <th class="col-desktop-only">Contact</th>
+              <th class="col-desktop-only">CL Balance</th>
+              <th class="col-desktop-only">EL Balance</th>
+              <th class="col-desktop-only">Action / Security</th>
+
+              <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
+              <th class="col-mobile-only">Officer Details</th>
+              <th class="col-mobile-only">Branch & Leaves</th>
+              <th class="col-mobile-only" style="text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody id="directoryTableBody">
             ${displayedUsers.length === 0 ? `
               <tr>
-                <td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">
+                <td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">
                   No personnel records found for this branch.
                 </td>
               </tr>
@@ -4417,18 +4589,47 @@ function renderPersonnelDirectory(container) {
               const b = AppState.branches.find(br => br.id === u.branchId);
               return `
                 <tr class="leave-card-row" data-branch="${u.branchId}">
-                  <td data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
-                  <td data-label="Officer Name"><strong>${u.name}</strong></td>
-                  <td data-label="Rank">${u.rank}</td>
-                  <td data-label="Cyber Branch"><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
-                  <td data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
-                  <td data-label="Contact Details"><small>${u.mobile}<br>${u.email}</small></td>
-                  <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
-                  <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
-                  <td data-label="Action / Security">
+                  <!-- DESKTOP 9 CELLS -->
+                  <td class="col-desktop-only" data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
+                  <td class="col-desktop-only" data-label="Officer Name"><strong>${u.name}</strong></td>
+                  <td class="col-desktop-only" data-label="Rank">${u.rank}</td>
+                  <td class="col-desktop-only" data-label="Cyber Branch"><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
+                  <td class="col-desktop-only" data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
+                  <td class="col-desktop-only" data-label="Contact Details"><small>${u.mobile}<br>${u.email}</small></td>
+                  <td class="col-desktop-only" data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
+                  <td class="col-desktop-only" data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
+                  <td class="col-desktop-only" data-label="Action / Security">
                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
                       <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
                       ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5;" title="Remove Official">🗑️</button>` : ''}
+                    </div>
+                  </td>
+
+                  <!-- MOBILE CONSOLIDATED 3 CELLS (Fits 100% Screen) -->
+                  <td class="col-mobile-only" style="vertical-align: top;">
+                    <div style="font-weight: 700; color: #0f274c; font-size: 0.83rem;">${u.name}</div>
+                    <div style="font-size: 0.72rem; color: #334155;">${u.rank} <span style="color:#64748b;">(${u.beltNo})</span></div>
+                    <div style="margin-top: 2px;">
+                      <span class="badge" style="background: #f1f5f9; color: #0f274c; font-size: 0.65rem; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 4px;">${getRoleDisplay(u.role)}</span>
+                    </div>
+                  </td>
+                  <td class="col-mobile-only" style="vertical-align: top;">
+                    <div style="font-size: 0.74rem; font-weight: 600; color: #1e293b;">
+                      <span class="branch-tag" style="font-size: 0.68rem; padding: 1px 4px;">${b ? b.name : u.branchId}</span>
+                    </div>
+                    <div style="font-size: 0.71rem; color: #0f274c; font-weight: 700; margin-top: 3px;">
+                      CL: ${u.leaveBalances?.CL ?? 0}d | EL: ${u.leaveBalances?.EL ?? 0}d
+                    </div>
+                    ${u.mobile ? `
+                      <div style="font-size: 0.7rem; margin-top: 2px;">
+                        <a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${u.mobile}</a>
+                      </div>
+                    ` : ''}
+                  </td>
+                  <td class="col-mobile-only" style="text-align: center; vertical-align: top;">
+                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                      <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password" style="padding: 2px 6px; font-size: 0.68rem; width: 100%; white-space: nowrap;">🔑 PIN</button>
+                      ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5; padding: 2px 6px; font-size: 0.68rem; width: 100%;" title="Remove Official">🗑️</button>` : ''}
                     </div>
                   </td>
                 </tr>
