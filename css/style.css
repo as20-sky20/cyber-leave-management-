@@ -5931,6 +5931,41 @@ body.force-mobile-view .vdesk-incharge-note {
   min-width: 170px;
 }
 
+.apply-branch-badge-permanent {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.apply-branch-badge-permanent .branch-icon {
+  font-size: 0.95rem;
+}
+
+.apply-branch-badge-permanent .branch-text {
+  color: #ffffff;
+}
+
+.apply-branch-badge-permanent .badge-tag {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 2px;
+  text-transform: uppercase;
+}
+
 .apply-branch-select {
   background: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
@@ -6124,6 +6159,14 @@ body.force-mobile-view .vdesk-incharge-note {
     min-width: unset !important;
   }
   
+  .apply-branch-badge-permanent {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: space-between !important;
+    font-size: 0.82rem !important;
+    padding: 7px 10px !important;
+  }
+
   .apply-branch-select {
     width: 100% !important;
   }

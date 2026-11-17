@@ -2124,15 +2124,13 @@ function renderApplyLeave(container) {
             </div>
           </div>
           <div class="apply-branch-pill-box">
-            <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; text-transform: uppercase; font-weight: 700;">Assigned Branch *</div>
-            <select id="leaveBranchSelect" class="form-control form-control-sm apply-branch-select" required onchange="handleLeaveBranchChange(this.value)">
-              <option value="">-- Select Branch --</option>
-              ${AppState.branches.map(b => `
-                <option value="${b.id}" ${b.id === user.branchId ? 'selected' : ''}>
-                  ${b.name}
-                </option>
-              `).join("")}
-            </select>
+            <div style="font-size: 0.68rem; color: #cbd5e1; margin-bottom: 3px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px;">Assigned Wing</div>
+            <div class="apply-branch-badge-permanent">
+              <span class="branch-icon">🏛️</span>
+              <span class="branch-text">${branchName || 'State Cyber HQ'}</span>
+              <span class="badge-tag">PERMANENT</span>
+            </div>
+            <input type="hidden" id="leaveBranchSelect" value="${user.branchId || ''}">
           </div>
         </div>
 
