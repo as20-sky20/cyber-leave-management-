@@ -1,16 +1,35 @@
 
 // ==========================================
-// LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP & MOBILE AUTO-HOVER)
+// LEFT SIDEBAR NAVIGATION CONTROLS (DESKTOP AUTO-HOVER & MOBILE TOUCH)
 // ==========================================
 
 let sidebarHoverCloseTimer = null;
 let isSidebarHoverOpen = false;
+let isTouchInteraction = false;
+let lastSidebarToggleTime = 0;
 
-function toggleSidebarNav() {
+window.addEventListener('touchstart', function() {
+  isTouchInteraction = true;
   if (sidebarHoverCloseTimer) {
     clearTimeout(sidebarHoverCloseTimer);
     sidebarHoverCloseTimer = null;
   }
+  setTimeout(function() { isTouchInteraction = false; }, 800);
+}, { passive: true });
+
+function toggleSidebarNav(e) {
+  if (e) {
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    const now = Date.now();
+    if (now - lastSidebarToggleTime < 280) return;
+    lastSidebarToggleTime = now;
+  }
+  if (sidebarHoverCloseTimer) {
+    clearTimeout(sidebarHoverCloseTimer);
+    sidebarHoverCloseTimer = null;
+  }
+
   const sidebar = document.getElementById("portalSidebarNav");
   const isMobile = window.innerWidth < 992 || document.body.classList.contains("force-mobile-view");
 
@@ -42,8 +61,18 @@ function openSidebarNav(isHover = false) {
   const isMobile = window.innerWidth < 992 || document.body.classList.contains("force-mobile-view");
 
   if (isMobile) {
-    if (sidebar) sidebar.classList.add("mobile-open");
-    if (backdrop) backdrop.classList.add("active");
+    if (sidebar) {
+      sidebar.classList.add("mobile-open");
+      sidebar.style.transform = "translateX(0)";
+      sidebar.style.visibility = "visible";
+      sidebar.style.pointerEvents = "auto";
+    }
+    if (backdrop) {
+      backdrop.classList.add("active");
+      backdrop.style.display = "block";
+      backdrop.style.opacity = "1";
+      backdrop.style.pointerEvents = "auto";
+    }
     if (!isHover) {
       document.body.classList.add("sidebar-open-lock");
     }
@@ -64,9 +93,15 @@ function closeSidebarNav() {
   if (sidebar) {
     sidebar.classList.remove("mobile-open");
     sidebar.classList.remove("sidebar-hover-expanded");
+    sidebar.style.transform = "";
+    sidebar.style.visibility = "";
+    sidebar.style.pointerEvents = "";
   }
   if (backdrop) {
     backdrop.classList.remove("active");
+    backdrop.style.display = "";
+    backdrop.style.opacity = "";
+    backdrop.style.pointerEvents = "";
   }
   document.body.classList.remove("sidebar-open-lock");
   document.body.classList.remove("sidebar-hover-active");
@@ -87,34 +122,48 @@ function initAutoHoverNavigation() {
   const sidebar = document.getElementById("portalSidebarNav");
   const hoverZone = document.getElementById("sidebarHoverZone");
 
-  function onNavEnter() {
-    openSidebarNav(true);
-  }
-
-  function onNavLeave() {
-    autoScheduleCloseSidebar(360);
-  }
-
+  // On touch/mobile devices, bind explicit touchend on toggle button for instant 0ms tap response
   if (toggleBtn) {
-    toggleBtn.addEventListener("mouseenter", onNavEnter);
-    toggleBtn.addEventListener("mouseleave", onNavLeave);
+    toggleBtn.addEventListener("touchend", function(e) {
+      toggleSidebarNav(e);
+    }, { passive: false });
   }
 
-  if (sidebar) {
-    sidebar.addEventListener("mouseenter", onNavEnter);
-    sidebar.addEventListener("mouseleave", onNavLeave);
-  }
+  // ONLY attach mouseenter / mouseleave if device actually supports fine-pointer hover (Mouse / Trackpad)
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  if (hoverZone) {
-    hoverZone.addEventListener("mouseenter", onNavEnter);
-    hoverZone.addEventListener("mouseleave", onNavLeave);
-  }
+  if (canHover) {
+    function onNavEnter(e) {
+      if (isTouchInteraction) return;
+      openSidebarNav(true);
+    }
 
-  // Desktop default: start in collapsed mode so hover-to-open works effortlessly
-  if (window.innerWidth >= 992) {
-    const saved = localStorage.getItem("cyber_sidebar_collapsed");
-    if (saved !== "false") {
-      document.body.classList.add("sidebar-collapsed");
+    function onNavLeave(e) {
+      if (isTouchInteraction) return;
+      autoScheduleCloseSidebar(360);
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("mouseenter", onNavEnter);
+      toggleBtn.addEventListener("mouseleave", onNavLeave);
+    }
+
+    if (sidebar) {
+      sidebar.addEventListener("mouseenter", onNavEnter);
+      sidebar.addEventListener("mouseleave", onNavLeave);
+    }
+
+    if (hoverZone) {
+      hoverZone.addEventListener("mouseenter", onNavEnter);
+      hoverZone.addEventListener("mouseleave", onNavLeave);
+    }
+
+    // Desktop default: start in collapsed mode so hover-to-open works effortlessly
+    if (window.innerWidth >= 992) {
+      const saved = localStorage.getItem("cyber_sidebar_collapsed");
+      if (saved !== "false") {
+        document.body.classList.add("sidebar-collapsed");
+      }
     }
   }
 }

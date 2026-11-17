@@ -245,16 +245,22 @@ body {
   background: var(--bg-light);
 }
 
-/* AUTO-HOVER NAVIGATION SENSING ZONE (LEFT SCREEN EDGE) */
+/* AUTO-HOVER NAVIGATION SENSING ZONE (LEFT SCREEN EDGE - MOUSE ONLY) */
 .sidebar-hover-zone {
-  position: fixed;
-  top: 55px;
-  left: 0;
-  width: 16px;
-  height: calc(100vh - 55px);
-  z-index: 1010;
-  background: transparent;
-  pointer-events: auto;
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-hover-zone {
+    display: block;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 14px;
+    height: calc(100vh - 60px);
+    z-index: 998;
+    background: transparent;
+    pointer-events: auto;
+  }
 }
 
 /* Sidebar Backdrop (for Mobile Drawer mode) */
@@ -559,20 +565,31 @@ body.sidebar-open-lock {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   color: #ffffff;
   cursor: pointer;
   margin-right: 8px;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  z-index: 105;
+}
+
+.sidebar-toggle-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
 }
 
 .sidebar-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.25);
   border-color: #ffd700;
   color: #ffd700;
 }
