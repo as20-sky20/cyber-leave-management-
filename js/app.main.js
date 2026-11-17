@@ -2124,11 +2124,10 @@ function renderApplyLeave(container) {
             </div>
           </div>
           <div class="apply-branch-pill-box">
-            <div style="font-size: 0.68rem; color: #cbd5e1; margin-bottom: 3px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px;">Assigned Wing</div>
+            <div style="font-size: 0.68rem; color: #cbd5e1; margin-bottom: 3px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px;">Assigned Branch</div>
             <div class="apply-branch-badge-permanent">
               <span class="branch-icon">🏛️</span>
               <span class="branch-text">${branchName || 'State Cyber HQ'}</span>
-              <span class="badge-tag">PERMANENT</span>
             </div>
             <input type="hidden" id="leaveBranchSelect" value="${user.branchId || ''}">
           </div>

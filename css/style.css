@@ -6162,7 +6162,7 @@ body.force-mobile-view .vdesk-incharge-note {
   .apply-branch-badge-permanent {
     width: 100% !important;
     box-sizing: border-box !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     font-size: 0.82rem !important;
     padding: 7px 10px !important;
   }
