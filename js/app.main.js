@@ -3613,13 +3613,7 @@ function openTodayOnLeaveDetails(branchIdFilter = null) {
     return;
   }
 
-  if (todaysLeaves.length === 1) {
-    // Exactly 1 person on leave - directly open their complete Leave Details Modal!
-    openLeaveDetailsModal(todaysLeaves[0].id);
-    return;
-  }
-
-  // Multiple officers on leave - show dedicated roster modal
+  // Always show clean roster table modal (do NOT open full data details modal)
   openTodaysOnLeaveModal(todaysLeaves, branchIdFilter);
 }
 
@@ -3645,12 +3639,12 @@ function openTodaysOnLeaveModal(leavesList, branchIdFilter = null) {
   }
 
   modalBody.innerHTML = `
-    <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 1.4rem;">📅</span>
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.25rem;">📅</span>
         <div>
-          <strong style="color: #854d0e; font-size: 0.95rem;">${leavesList.length} Official(s) Currently On Sanctioned Leave Today</strong>
-          <div style="font-size: 0.8rem; color: #713f12;">Report Date: <strong>${dateFormatted}</strong> &bull; Haryana State Cyber Crime Headquarters</div>
+          <strong style="color: #1e40af; font-size: 0.92rem;">${leavesList.length} Official(s) Currently On Sanctioned Leave Today</strong>
+          <div style="font-size: 0.78rem; color: #475569;">Report Date: <strong>${dateFormatted}</strong> &bull; Haryana State Cyber Crime Headquarters</div>
         </div>
       </div>
       <button class="btn btn-outline btn-sm" onclick="closeModals(); switchTab('daily_sitrep');" style="background: #fff; font-weight: 600;">
@@ -3658,72 +3652,81 @@ function openTodaysOnLeaveModal(leavesList, branchIdFilter = null) {
       </button>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      ${leavesList.map((leave, idx) => {
-        const applicant = (AppState.users || []).find(u => u.id === leave.applicantId);
-        const contactMobile = applicant?.mobile || leave.emergencyContact || "-";
-        return `
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-              <div>
-                <div style="font-size: 1.05rem; font-weight: 800; color: #0f274c;">
-                  ${idx + 1}. ${leave.applicantName}
-                  <span style="font-size: 0.82rem; font-weight: 600; color: #64748b; margin-left: 4px;">(${leave.rank})</span>
-                </div>
-                <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">
-                  Belt No: <strong>${leave.beltNo}</strong> &bull;
-                  <span class="branch-tag" style="font-size: 0.75rem; padding: 2px 7px;">${leave.branchName}</span>
-                </div>
-              </div>
+    <div class="responsive-table">
+      <table class="data-table mobile-table-compact">
+        <thead>
+          <tr>
+            <!-- DESKTOP COLUMNS -->
+            <th class="col-desktop-only" style="width: 5%;">#</th>
+            <th class="col-desktop-only" style="width: 26%;">Personnel Details</th>
+            <th class="col-desktop-only" style="width: 18%;">Branch / Wing</th>
+            <th class="col-desktop-only" style="width: 12%;">Leave Type</th>
+            <th class="col-desktop-only" style="width: 18%;">Sanctioned Period</th>
+            <th class="col-desktop-only" style="width: 8%; text-align: center;">Days</th>
+            <th class="col-desktop-only" style="width: 13%; text-align: center;">Action</th>
 
-              <div style="text-align: right;">
-                <span class="status-badge approved" style="font-size: 0.74rem;">✓ Sanctioned Active</span>
-                <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px;">App ID: <strong>${leave.id}</strong></div>
-              </div>
-            </div>
+            <!-- MOBILE CONSOLIDATED COLUMNS -->
+            <th class="col-mobile-only" style="width: 45%;">Personnel &amp; Wing</th>
+            <th class="col-mobile-only" style="width: 37%;">Leave &amp; Period</th>
+            <th class="col-mobile-only" style="width: 18%; text-align: center;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${leavesList.map((leave, idx) => {
+            const applicant = (AppState.users || []).find(u => u.id === leave.applicantId);
+            return `
+              <tr>
+                <!-- DESKTOP CELLS -->
+                <td class="col-desktop-only" style="text-align: center; font-weight: 700; color: #64748b;">${idx + 1}</td>
+                <td class="col-desktop-only">
+                  <div style="font-weight: 700; color: #0f274c; font-size: 0.92rem;">${leave.applicantName}</div>
+                  <div style="font-size: 0.78rem; color: #64748b;">${leave.rank} (${leave.beltNo})</div>
+                  ${leave.reason ? `<div style="font-size: 0.74rem; color: #475569; margin-top: 2px;"><em>"${leave.reason}"</em></div>` : ''}
+                </td>
+                <td class="col-desktop-only">
+                  <span class="branch-tag" style="font-size: 0.76rem;">${leave.branchName}</span>
+                </td>
+                <td class="col-desktop-only">
+                  <span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span>
+                  <small style="display: block; color: #64748b;">${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small>
+                </td>
+                <td class="col-desktop-only">
+                  <span style="font-weight: 600; color: #1e293b; font-size: 0.85rem;">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+                </td>
+                <td class="col-desktop-only" style="text-align: center;">
+                  <span class="days-badge" style="font-size: 0.8rem; padding: 2px 8px;"><strong>${leave.totalDays}</strong>d</span>
+                </td>
+                <td class="col-desktop-only" style="text-align: center;">
+                  <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${leave.id}')" style="font-size: 0.76rem; padding: 3px 8px;">
+                    Details
+                  </button>
+                </td>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; background: #f8fafc; padding: 10px 12px; border-radius: 6px; font-size: 0.84rem;">
-              <div>
-                <span style="color: #64748b; font-size: 0.75rem;">Leave Type:</span><br>
-                <strong style="color: #0f274c;">${leave.leaveTypeName || leave.leaveType}</strong>
-              </div>
-              <div>
-                <span style="color: #64748b; font-size: 0.75rem;">Sanctioned Period:</span><br>
-                <strong>${formatDate(leave.fromDate)}</strong> to <strong>${formatDate(leave.toDate)}</strong>
-                <span style="color: #b45309; font-weight: 700;">(${leave.totalDays} Days)</span>
-              </div>
-              <div>
-                <span style="color: #64748b; font-size: 0.75rem;">Station Leave:</span><br>
-                ${leave.stationLeave ? `
-                  <span style="color: #b45309; font-weight: 700;">📍 Out of Station</span><br>
-                  <small style="color: #475569;">${leave.stationDestination || leave.stationLeaveAddress || 'Sanctioned Destination'}</small>
-                ` : `<span style="color: #64748b;">Stationed at HQ</span>`}
-              </div>
-              <div>
-                <span style="color: #64748b; font-size: 0.75rem;">Emergency Contact:</span><br>
-                ${contactMobile !== '-' ? `
-                  <a href="tel:${contactMobile}" style="color: #2563eb; text-decoration: none; font-weight: 700;">📞 ${contactMobile}</a>
-                ` : `<span style="color: #94a3b8;">Not provided</span>`}
-              </div>
-            </div>
-
-            ${leave.reason ? `
-              <div style="margin-top: 8px; font-size: 0.82rem; color: #334155;">
-                <span style="color: #64748b; font-size: 0.75rem;">Reason:</span> <em>"${leave.reason}"</em>
-              </div>
-            ` : ''}
-
-            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap;">
-              <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${leave.id}')" style="font-size: 0.78rem; padding: 4px 12px; font-weight: 600;">
-                🔍 View Full Details
-              </button>
-              <button class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${leave.id}')" style="font-size: 0.78rem; padding: 4px 12px; font-weight: 600;">
-                📄 Official Sanction Slip
-              </button>
-            </div>
-          </div>
-        `;
-      }).join("")}
+                <!-- MOBILE CONSOLIDATED CELLS -->
+                <td class="col-mobile-only" style="vertical-align: top; padding: 8px 6px;">
+                  <div style="font-weight: 700; color: #0f274c; font-size: 0.82rem;">${leave.applicantName}</div>
+                  <div style="font-size: 0.72rem; color: #475569;">${leave.rank} (${leave.beltNo})</div>
+                  <span class="branch-tag" style="font-size: 0.68rem; padding: 1px 5px; margin-top: 3px; display: inline-block;">${leave.branchName}</span>
+                </td>
+                <td class="col-mobile-only" style="vertical-align: top; padding: 8px 6px;">
+                  <div style="font-weight: 700; color: #1e3a8a; font-size: 0.78rem;">
+                    ${leave.leaveType} <span style="color: #b45309;">(${leave.totalDays} Days)</span>
+                  </div>
+                  <div style="font-size: 0.72rem; color: #334155; margin-top: 2px;">
+                    ${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}
+                  </div>
+                  ${leave.reason ? `<div style="font-size: 0.68rem; color: #64748b; margin-top: 2px; line-height: 1.2;">"${leave.reason}"</div>` : ''}
+                </td>
+                <td class="col-mobile-only" style="vertical-align: middle; text-align: center; padding: 8px 4px;">
+                  <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${leave.id}')" style="font-size: 0.72rem; padding: 3px 6px;">
+                    Details
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
     </div>
   `;
 
