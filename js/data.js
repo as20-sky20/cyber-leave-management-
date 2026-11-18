@@ -346,7 +346,7 @@ const DEFAULT_NOTICES = [
 // OFFICIAL HARYANA GOVT HOLIDAY CALENDAR 2026
 // (Published by Department of Information, Public Relations & Languages, Haryana)
 // ==========================================
-const HARYANA_GOVT_HOLIDAYS_2026 = [
+var HARYANA_GOVT_HOLIDAYS_2026 = [
   // --- JANUARY ---
   {
     id: "HOL-2026-01",
@@ -1031,4 +1031,11 @@ const HARYANA_GOVT_HOLIDAYS_2026 = [
     monthHindi: "दिसम्बर"
   }
 ];
+
+if (typeof window !== "undefined") {
+  window.HARYANA_GOVT_HOLIDAYS_2026 = HARYANA_GOVT_HOLIDAYS_2026;
+}
+if (typeof globalThis !== "undefined") {
+  globalThis.HARYANA_GOVT_HOLIDAYS_2026 = HARYANA_GOVT_HOLIDAYS_2026;
+}
 

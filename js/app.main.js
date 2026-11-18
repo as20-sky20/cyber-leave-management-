@@ -186,6 +186,7 @@ const AppState = {
   leaves: [],
   branches: [],
   notices: [],
+  holidays: [],
   currentUser: null,
   activeTab: "dashboard",
   selectedLeaveForAction: null,
@@ -198,7 +199,9 @@ let lanSyncPollingId = null;
 
 // Initialize Application
 function initApp() {
+  AppState.holidays = getHaryanaGovtHolidays();
   loadFromLocalStorage();
+  AppState.holidays = getHaryanaGovtHolidays();
   recalculateAllUserLeaveBalances();
   initViewMode();
   populateUserSwitcher();
@@ -4992,10 +4995,23 @@ function filterDirectoryTable() {
 // ==========================================
 // VIEW: HARYANA GOVT OFFICIAL HOLIDAYS CALENDAR 2026
 // ==========================================
+function getHaryanaGovtHolidays() {
+  if (typeof HARYANA_GOVT_HOLIDAYS_2026 !== "undefined" && Array.isArray(HARYANA_GOVT_HOLIDAYS_2026) && HARYANA_GOVT_HOLIDAYS_2026.length > 0) {
+    return HARYANA_GOVT_HOLIDAYS_2026;
+  }
+  if (typeof window !== "undefined" && Array.isArray(window.HARYANA_GOVT_HOLIDAYS_2026) && window.HARYANA_GOVT_HOLIDAYS_2026.length > 0) {
+    return window.HARYANA_GOVT_HOLIDAYS_2026;
+  }
+  if (typeof globalThis !== "undefined" && Array.isArray(globalThis.HARYANA_GOVT_HOLIDAYS_2026) && globalThis.HARYANA_GOVT_HOLIDAYS_2026.length > 0) {
+    return globalThis.HARYANA_GOVT_HOLIDAYS_2026;
+  }
+  return [];
+}
+
 let currentHolidayFilterType = "ALL";
 
 function renderHolidaysCalendar(container) {
-  const holidays = window.HARYANA_GOVT_HOLIDAYS_2026 || [];
+  const holidays = (AppState.holidays && AppState.holidays.length > 0) ? AppState.holidays : getHaryanaGovtHolidays();
   const gazettedCount = holidays.filter(h => h.type === "GAZETTED").length;
   const restrictedCount = holidays.filter(h => h.type === "RESTRICTED").length;
 
