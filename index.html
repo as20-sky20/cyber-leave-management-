@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261118.1427">
+  <link rel="stylesheet" href="css/style.css?v=20261118.1438">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body>
@@ -207,6 +207,26 @@
       </div>
       <div class="modal-footer" id="todaysOnLeaveModalFooter">
         <button class="btn btn-outline" onclick="closeModals()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.2 UPCOMING GAZETTED HOLIDAYS (GH) MODAL -->
+  <div class="modal-overlay" id="upcomingGHModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span id="upcomingGHModalTitle">Upcoming Official Gazetted Holidays (GH 2026)</span>
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <div class="modal-body" id="upcomingGHModalBody">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
+        <button class="btn btn-primary" onclick="closeModals(); switchTab('holidays'); setHolidayFilter('GAZETTED');">View All 39 GH &rarr;</button>
       </div>
     </div>
   </div>
@@ -724,7 +744,7 @@
 
   <!-- SCRIPTS -->
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script src="js/data.js?v=20261118.1427"></script>
-  <script src="js/app.main.js?v=20261118.1427"></script>
+  <script src="js/data.js?v=20261118.1438"></script>
+  <script src="js/app.main.js?v=20261118.1438"></script>
 </body>
 </html>

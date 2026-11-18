@@ -1725,11 +1725,17 @@ function renderDashboard(container) {
             <div class="days-count" style="color: #dc2626;">${spPendingLeaves.length}</div>
             <div class="days-label">Open Desk &rarr;</div>
           </div>
-          <div class="leave-pill-item" onclick="switchTab('holidays')" title="Click to view Official Haryana Govt Gazetted Holidays (GH) 2026">
+          <div class="leave-pill-item" onclick="switchTab('holidays'); setHolidayFilter('GAZETTED');" title="Click to view Official Haryana Govt Gazetted Holidays (GH) 2026">
             <div class="type-code">GH-2026</div>
             <div class="type-name">Gazetted Leaves</div>
             <div class="days-count" style="color: #0f274c;">39 GH</div>
-            <div class="days-label">View GH List &rarr;</div>
+            <div class="days-label">All 39 GH &rarr;</div>
+          </div>
+          <div class="leave-pill-item" onclick="openUpcomingGHModal()" title="Click to open Upcoming Gazetted Holidays (GH) Modal">
+            <div class="type-code">UPCOMING</div>
+            <div class="type-name">Next GH Leaves</div>
+            <div class="days-count" style="color: #6b21a8;">Upcoming</div>
+            <div class="days-label">Open Upcoming &rarr;</div>
           </div>
         </div>
       </div>
@@ -1883,7 +1889,10 @@ function renderDashboard(container) {
           </div>
         </div>
       </div>
-      <div style="display: flex; gap: 8px; align-items: center;">
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); openUpcomingGHModal()" style="border-color: #9333ea; color: #6b21a8; background: #fff; font-weight: 600;">
+          ⚡ Upcoming GH
+        </button>
         <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); switchTab('holidays')">
           View GH List &rarr;
         </button>
@@ -5016,18 +5025,21 @@ function renderHolidaysCalendar(container) {
   const rhHolidays = allHolidays.filter(h => h.type === "RESTRICTED");
 
   // User requirement: "only gh show kro list m"
+  const todayStr = new Date().toISOString().split("T")[0];
+  const upcomingGHHolidays = ghHolidays.filter(h => h.date >= todayStr);
+  const upcomingGHCount = upcomingGHHolidays.length;
+
   let displayedHolidays = ghHolidays;
   if (currentHolidayFilterType === "ALL") {
     displayedHolidays = allHolidays;
   } else if (currentHolidayFilterType === "RESTRICTED") {
     displayedHolidays = rhHolidays;
+  } else if (currentHolidayFilterType === "UPCOMING_GH") {
+    displayedHolidays = (upcomingGHHolidays.length > 0 ? upcomingGHHolidays : ghHolidays);
   } else {
     currentHolidayFilterType = "GAZETTED";
     displayedHolidays = ghHolidays;
   }
-
-  const todayStr = new Date().toISOString().split("T")[0];
-  const upcomingGHCount = ghHolidays.filter(h => h.date >= todayStr).length;
 
   const months = [
     { num: "01", name: "January", hindi: "जनवरी" },
@@ -5057,9 +5069,12 @@ function renderHolidaysCalendar(container) {
         </p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <a href="assets/Haryana_Govt_Calendar_2026.pdf" target="_blank" download="Haryana_Govt_Calendar_2026.pdf" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+        <button class="btn btn-primary" onclick="openUpcomingGHModal()" style="background: #7e22ce; border-color: #6b21a8; display: inline-flex; align-items: center; gap: 6px;">
+          ⚡ Open Upcoming GH
+        </button>
+        <a href="assets/Haryana_Govt_Calendar_2026.pdf" target="_blank" download="Haryana_Govt_Calendar_2026.pdf" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Download Official PDF (3 MB)
+          Download PDF (3 MB)
         </a>
         <button class="btn btn-outline" onclick="window.print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -5084,17 +5099,17 @@ function renderHolidaysCalendar(container) {
         </div>
       </div>
 
-      <div class="kpi-card kpi-purple" onclick="filterByUpcomingGH()" style="cursor: pointer; padding: 14px 16px;">
+      <div class="kpi-card ${currentHolidayFilterType === 'UPCOMING_GH' ? 'kpi-purple active-kpi-border' : 'kpi-purple'}" onclick="setHolidayFilter('UPCOMING_GH')" style="cursor: pointer; padding: 14px 16px; border: 2px solid ${currentHolidayFilterType === 'UPCOMING_GH' ? '#9333ea' : '#e9d5ff'};">
         <div class="kpi-card-head">
           <span class="kpi-title">Upcoming Gazetted (GH)</span>
-          <span class="kpi-tag" style="background: #f3e8ff; color: #7e22ce;">Remaining</span>
+          <span class="kpi-tag" style="background: #f3e8ff; color: #7e22ce;">${upcomingGHCount} Remaining</span>
         </div>
         <div class="kpi-card-value">
           <span class="kpi-num" style="color: #6b21a8;">${upcomingGHCount}</span>
           <span class="kpi-unit">Days</span>
         </div>
-        <div class="kpi-card-footer" style="color: #6b21a8;">
-          Filter Upcoming from Today &rarr;
+        <div class="kpi-card-footer" style="color: #6b21a8; font-weight: 700;">
+          ${currentHolidayFilterType === 'UPCOMING_GH' ? '✓ Showing Upcoming GH &bull; Active' : '⚡ Click to Open Upcoming GH &rarr;'}
         </div>
       </div>
 
@@ -5141,7 +5156,9 @@ function renderHolidaysCalendar(container) {
     <div class="card-table-wrap">
       <div class="table-toolbar" style="flex-wrap: wrap; gap: 10px;">
         <div class="table-title" id="holidaysTableCountTitle">
-          ${currentHolidayFilterType === 'GAZETTED' 
+          ${currentHolidayFilterType === 'UPCOMING_GH'
+            ? `Showing <strong>${displayedHolidays.length} Upcoming Gazetted Holidays (GH)</strong> (Starting from Today - ${formatDate(todayStr)})`
+            : currentHolidayFilterType === 'GAZETTED' 
             ? `Showing <strong>${displayedHolidays.length} Official Gazetted Holidays (GH)</strong> (राजपत्रित अवकाश 2026)`
             : currentHolidayFilterType === 'RESTRICTED'
             ? `Showing <strong>${displayedHolidays.length} Restricted Holidays (RH)</strong> (प्रतिबंधित अवकाश 2026)`
@@ -5155,6 +5172,7 @@ function renderHolidaysCalendar(container) {
           </select>
           <select id="holidayTypeFilter" class="select-filter" onchange="handleHolidayTypeChange(this.value)">
             <option value="GAZETTED" ${currentHolidayFilterType === 'GAZETTED' ? 'selected' : ''}>Only Gazetted Holidays (GH - राजपत्रित) [39]</option>
+            <option value="UPCOMING_GH" ${currentHolidayFilterType === 'UPCOMING_GH' ? 'selected' : ''}>Upcoming Gazetted Holidays (GH) [${upcomingGHCount}]</option>
             <option value="RESTRICTED" ${currentHolidayFilterType === 'RESTRICTED' ? 'selected' : ''}>Restricted Holidays (RH - प्रतिबंधित) [21]</option>
             <option value="ALL" ${currentHolidayFilterType === 'ALL' ? 'selected' : ''}>All Holidays (GH + RH) [60]</option>
           </select>
@@ -5215,10 +5233,10 @@ function renderHolidaysCalendar(container) {
                   <td style="text-align: center;">
                     ${isToday ? `
                       <span style="background: #dcfce7; color: #15803d; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; border: 1px solid #86efac;">TODAY</span>
-                    ` : isPast ? `
-                      <span style="background: #f1f5f9; color: #64748b; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px;">Passed</span>
+                    ` : daysDiff > 0 ? `
+                      <span style="background: #f3e8ff; color: #7e22ce; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; border: 1px solid #e9d5ff;">In ${daysDiff} Days</span>
                     ` : `
-                      <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">Upcoming</span>
+                      <span style="background: #f1f5f9; color: #64748b; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px;">Passed</span>
                     `}
                   </td>
                 </tr>
@@ -5248,25 +5266,99 @@ function setHolidayFilter(type) {
 }
 
 function filterByUpcomingGH() {
-  currentHolidayFilterType = "GAZETTED";
-  setHolidayFilter("GAZETTED");
-  const todayStr = new Date().toISOString().split("T")[0];
-  const tbody = document.getElementById("holidaysTableBody");
-  if (!tbody) return;
-  const rows = tbody.querySelectorAll("tr");
-  let count = 0;
-  rows.forEach(r => {
-    if (r.dataset.date >= todayStr) {
-      r.style.display = "";
-      count++;
-    } else {
-      r.style.display = "none";
-    }
-  });
-  const countTitle = document.getElementById("holidaysTableCountTitle");
-  if (countTitle) {
-    countTitle.innerHTML = `Showing <strong>${count} Upcoming Gazetted Holidays (GH)</strong> (From Today)`;
+  setHolidayFilter("UPCOMING_GH");
+}
+
+function openUpcomingGHModal() {
+  const modal = document.getElementById("upcomingGHModal");
+  const modalBody = document.getElementById("upcomingGHModalBody");
+  const modalTitle = document.getElementById("upcomingGHModalTitle");
+  if (!modal || !modalBody) {
+    AppState.activeTab = "holidays";
+    currentHolidayFilterType = "UPCOMING_GH";
+    renderApp();
+    return;
   }
+
+  const allHolidays = (AppState.holidays && AppState.holidays.length > 0) ? AppState.holidays : getHaryanaGovtHolidays();
+  const ghHolidays = allHolidays.filter(h => h.type === "GAZETTED");
+  const todayStr = new Date().toISOString().split("T")[0];
+  let upcoming = ghHolidays.filter(h => h.date >= todayStr);
+
+  if (upcoming.length === 0) {
+    upcoming = ghHolidays.slice(0, 10);
+  }
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `Upcoming Official Gazetted Holidays (GH 2026) &bull; ${upcoming.length} Left`;
+  }
+
+  modalBody.innerHTML = `
+    <div style="background: #f3e8ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.4rem;">📅</span>
+        <div>
+          <strong style="color: #6b21a8; font-size: 0.95rem;">आगामी राजपत्रित अवकाश (Upcoming Gazetted Holidays - GH)</strong>
+          <div style="font-size: 0.78rem; color: #475569;">हरियाणा सरकार आधिकारिक कैलेंडर 2026 &bull; कुल ${upcoming.length} आगामी अवकाश शेष</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="closeModals(); switchTab('holidays'); setHolidayFilter('GAZETTED');" style="background: #fff; font-weight: 600;">
+        View All 39 GH &rarr;
+      </button>
+    </div>
+
+    <div class="responsive-table">
+      <table class="data-table mobile-table-compact">
+        <thead>
+          <tr>
+            <th style="width: 50px; text-align: center;">#</th>
+            <th style="min-width: 140px;">Date &amp; Day</th>
+            <th style="min-width: 220px;">Gazetted Holiday Name</th>
+            <th style="min-width: 110px; text-align: center;">Category</th>
+            <th style="min-width: 120px; text-align: center;">Countdown</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${upcoming.map((h, idx) => {
+            const isToday = h.date === todayStr;
+            const dObj = new Date(h.date + "T00:00:00");
+            const formattedDate = dObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+            const daysDiff = Math.ceil((dObj - new Date(todayStr + "T00:00:00")) / (1000 * 60 * 60 * 24));
+
+            return `
+              <tr>
+                <td style="text-align: center; font-weight: 700; color: #6b21a8;">${idx + 1}</td>
+                <td>
+                  <div style="font-weight: 700; color: #0f274c; font-size: 0.92rem;">${formattedDate}</div>
+                  <div style="font-size: 0.76rem; color: #64748b;">${h.hindiDay} &bull; ${h.day}</div>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: #1e293b; font-size: 0.94rem;">${h.name}</div>
+                  <div style="font-size: 0.8rem; color: #475569;">${h.englishName}</div>
+                </td>
+                <td style="text-align: center;">
+                  <span class="status-badge approved" style="font-size: 0.74rem; padding: 3px 8px; font-weight: 700; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                    राजपत्रित (GH)
+                  </span>
+                </td>
+                <td style="text-align: center;">
+                  ${isToday ? `
+                    <span style="background: #dcfce7; color: #15803d; font-size: 0.74rem; font-weight: 800; padding: 3px 8px; border-radius: 9999px; border: 1px solid #86efac;">TODAY</span>
+                  ` : daysDiff > 0 ? `
+                    <span style="background: #f3e8ff; color: #7e22ce; font-size: 0.74rem; font-weight: 700; padding: 3px 8px; border-radius: 9999px; border: 1px solid #e9d5ff;">In ${daysDiff} Days</span>
+                  ` : `
+                    <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.74rem; font-weight: 600; padding: 3px 8px; border-radius: 9999px;">Upcoming</span>
+                  `}
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  modal.classList.add("active");
 }
 
 function filterHolidaysTable() {
