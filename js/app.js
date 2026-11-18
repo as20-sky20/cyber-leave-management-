@@ -343,13 +343,16 @@ function loadFromLocalStorage() {
     // Always recalculate exact non-duplicative leave balances
     recalculateAllUserLeaveBalances();
 
-    // Use sessionStorage so every fresh browser visit lands on the Police Login Page
-    const sessionUserId = sessionStorage.getItem("cyber_police_current_user_id");
-    if (sessionUserId) {
-      AppState.currentUser = AppState.users.find(u => u.id === sessionUserId) || null;
+    // Maintain active officer session across refreshes; default to SP Cyber (Mayank Gupta, IPS)
+    const storedUserId = sessionStorage.getItem("cyber_police_current_user_id") || localStorage.getItem("cyber_police_current_user_id");
+    if (storedUserId) {
+      AppState.currentUser = AppState.users.find(u => u.id === storedUserId) || AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
     } else {
-      AppState.currentUser = null;
-      localStorage.removeItem("cyber_police_current_user_id");
+      AppState.currentUser = AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
+    }
+    if (AppState.currentUser) {
+      sessionStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
+      localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
     }
   } catch (e) {
     console.error("Error loading data from localStorage, reverting to defaults", e);
@@ -357,7 +360,7 @@ function loadFromLocalStorage() {
     AppState.users = DEFAULT_USERS;
     AppState.leaves = DEFAULT_LEAVES;
     AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
-    AppState.currentUser = null;
+    AppState.currentUser = AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
     recalculateAllUserLeaveBalances();
   }
 }
@@ -1276,12 +1279,6 @@ function switchTab(tabId) {
 
   if (tabId === "incharge_desk" && !isBranchIncharge) {
     showToast("Branch Incharge Desk is restricted to Branch Incharges.", "error");
-    return;
-  }
-
-  const isAuthorized = user && (user.role === "branch_incharge" || user.role === "sp_cyber" || user.role === "admin");
-  if (tabId === "directory" && !isAuthorized) {
-    showToast("Personnel Directory is restricted to Branch Incharges and SP Cyber.", "error");
     return;
   }
 
@@ -4827,28 +4824,14 @@ function renderPersonnelDirectory(container) {
   const user = AppState.currentUser;
   const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   const isBranchIncharge = user && (user.role === "branch_incharge");
-  const isAuthorized = isSP || isBranchIncharge;
+  const canManage = isSP || isBranchIncharge;
 
-  if (!isAuthorized) {
-    container.innerHTML = `
-      <div style="background: #fff; border-radius: 12px; border: 1px solid #fee2e2; padding: 40px 24px; text-align: center; max-width: 600px; margin: 40px auto; box-shadow: var(--shadow-sm);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.6rem;">🔒</div>
-        <h3 style="color: #991b1b; font-size: 1.2rem; margin-bottom: 8px;">Access Restricted</h3>
-        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-          Personnel Staff Directory is restricted to authorized <strong>Branch Incharges</strong> and the <strong>Superintendent of Police (SP Cyber)</strong>.
-        </p>
-        <button class="btn btn-primary" onclick="switchTab('dashboard')">Return to Dashboard</button>
-      </div>
-    `;
-    return;
-  }
-
-  const userBranch = AppState.branches.find(b => b.id === user.branchId);
+  const userBranch = user ? AppState.branches.find(b => b.id === user.branchId) : null;
   const userBranchName = userBranch ? userBranch.name : "Your Branch";
 
-  // If SP / Reader: Show full directory of all 13 branches.
-  // If Branch Incharge: Show ONLY members belonging to their own branch.
-  const displayedUsers = isSP 
+  // If SP / Reader or general viewing: Show full directory of all 13 branches.
+  // If Branch Incharge: Show their own branch or all.
+  const displayedUsers = (isSP || !isBranchIncharge) 
     ? AppState.users 
     : AppState.users.filter(u => u.branchId === user.branchId);
 
@@ -4857,10 +4840,10 @@ function renderPersonnelDirectory(container) {
       <div class="page-title-group">
         <h2>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          ${isSP ? 'State Cyber Crime Central Staff Directory' : `Branch Personnel Directory | ${userBranchName}`}
+          ${isSP || !isBranchIncharge ? 'State Cyber Crime Central Staff Directory' : `Branch Personnel Directory | ${userBranchName}`}
         </h2>
         <p>
-          ${isSP 
+          ${isSP || !isBranchIncharge 
             ? 'Complete personnel directory across all 13 specialized Cyber Crime branches' 
             : `Roster of police officers and personnel posted in <strong>${userBranchName}</strong>`}
         </p>
@@ -4870,23 +4853,24 @@ function renderPersonnelDirectory(container) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Download Staff CSV
         </button>
+        ${canManage ? `
         <button class="btn btn-primary" onclick="openAddUserModal()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           ${isSP ? '+ Add Personnel / Member' : `+ Add Branch Member`}
-        </button>
+        </button>` : ''}
       </div>
     </div>
 
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-title">
-          ${isSP 
+          ${isSP || !isBranchIncharge 
             ? `Total Strength: <strong>${displayedUsers.length} Officers / Personnel</strong> (All 13 Branches)` 
             : `Branch Strength: <strong>${displayedUsers.length} Personnel</strong> [${userBranchName}]`}
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
           <input type="text" id="directorySearchInput" class="search-input" placeholder="Search by Name, Belt No., Rank..." oninput="filterDirectoryTable()" style="min-width: 240px;">
-          ${isSP ? `
+          ${(isSP || !isBranchIncharge) ? `
             <select id="directoryBranchFilter" class="select-filter" onchange="filterDirectoryTable()">
               <option value="">-- All 13 Branches --</option>
               ${AppState.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}
@@ -5144,7 +5128,7 @@ function renderHolidaysCalendar(container) {
 
     <!-- POLICE LEAVE ADVISORY BANNER -->
     <div style="background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 12px;">
-      <span style="font-size: 1.25rem; line-height: 1;">🛡️</span>
+      <span style="font-size: 1.25rem; line-height: 1;">📅</span>
       <div style="font-size: 0.82rem; color: #166534; line-height: 1.5;">
         <strong>हरियाणा सरकार आधिकारिक राजपत्रित अवकाश (Gazetted Holidays - GH):</strong>
         सूची में केवल आधिकारिक <strong>39 राजपत्रित अवकाश (GH)</strong> प्रदर्शित हैं। ये सभी सरकारी कार्यालयों में सार्वजनिक अवकाश होते हैं।
