@@ -1582,6 +1582,9 @@ function renderApp() {
     case "directory":
       renderPersonnelDirectory(container);
       break;
+    case "holidays":
+      renderHolidaysCalendar(container);
+      break;
     default:
       renderDashboard(container);
   }
@@ -1719,6 +1722,12 @@ function renderDashboard(container) {
             <div class="days-count" style="color: #dc2626;">${spPendingLeaves.length}</div>
             <div class="days-label">Open Desk &rarr;</div>
           </div>
+          <div class="leave-pill-item" onclick="switchTab('holidays')" title="Click to view Official Haryana Govt Holiday Calendar 2026">
+            <div class="type-code">CALENDAR</div>
+            <div class="type-name">Govt Holidays</div>
+            <div class="days-count" style="color: #0f274c;">2026</div>
+            <div class="days-label">View &amp; PDF &rarr;</div>
+          </div>
         </div>
       </div>
     `;
@@ -1852,6 +1861,29 @@ function renderDashboard(container) {
             </div>
           `;
         }).join('')}
+      </div>
+    </div>
+
+    <!-- GOVT HOLIDAY CALENDAR 2026 SHORTCUT BANNER -->
+    <div style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 18px; margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: var(--shadow-sm); cursor: pointer;" onclick="switchTab('holidays')">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);">
+          📅
+        </div>
+        <div>
+          <div style="font-weight: 700; color: #0f274c; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+            <span>हरियाणा सरकार आधिकारिक अवकाश कैलेंडर 2026</span>
+            <span style="background: #dbeafe; color: #1e40af; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">60 Holidays</span>
+          </div>
+          <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">
+            39 राजपत्रित (Gazetted) + 21 प्रतिबंधित (RH) अवकाश सूची एवं आधिकारिक पीडीएफ डाउनलोड
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); switchTab('holidays')">
+          View Calendar &rarr;
+        </button>
       </div>
     </div>
   `;
@@ -2146,6 +2178,10 @@ function renderApplyLeave(container) {
               }).join("")}
             </select>
             <small id="leaveTypeDesc" style="color: #64748b; font-size: 0.78rem; margin-top: 3px;"></small>
+            <div style="margin-top: 5px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+              <span style="font-size: 0.75rem; color: #64748b;">Plan leaves around Govt Holidays:</span>
+              <a href="javascript:void(0)" onclick="switchTab('holidays')" style="font-size: 0.75rem; color: #2563eb; font-weight: 600; text-decoration: underline;">📅 View Haryana Govt Official Holiday Calendar 2026 (Gazetted &amp; RH) &rarr;</a>
+            </div>
 
             <!-- MANDATORY MEDICAL ALERT -->
             <div id="medicalNoticeAlert" style="display: none; margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 6px; font-weight: 600; font-size: 0.82rem;">
@@ -4951,6 +4987,273 @@ function filterDirectoryTable() {
       r.style.display = "none";
     }
   });
+}
+
+// ==========================================
+// VIEW: HARYANA GOVT OFFICIAL HOLIDAYS CALENDAR 2026
+// ==========================================
+let currentHolidayFilterType = "ALL";
+
+function renderHolidaysCalendar(container) {
+  const holidays = window.HARYANA_GOVT_HOLIDAYS_2026 || [];
+  const gazettedCount = holidays.filter(h => h.type === "GAZETTED").length;
+  const restrictedCount = holidays.filter(h => h.type === "RESTRICTED").length;
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const upcomingCount = holidays.filter(h => h.date >= todayStr).length;
+
+  const months = [
+    { num: "01", name: "January", hindi: "जनवरी" },
+    { num: "02", name: "February", hindi: "फ़रवरी" },
+    { num: "03", name: "March", hindi: "मार्च" },
+    { num: "04", name: "April", hindi: "अप्रैल" },
+    { num: "05", name: "May", hindi: "मई" },
+    { num: "06", name: "June", hindi: "जून" },
+    { num: "07", name: "July", hindi: "जुलाई" },
+    { num: "08", name: "August", hindi: "अगस्त" },
+    { num: "09", name: "September", hindi: "सितम्बर" },
+    { num: "10", name: "October", hindi: "अक्टूबर" },
+    { num: "11", name: "November", hindi: "नवम्बर" },
+    { num: "12", name: "December", hindi: "दिसम्बर" }
+  ];
+
+  let html = `
+    <div class="view-header">
+      <div>
+        <h2 style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span>📅</span>
+          <span>हरियाणा सरकार आधिकारिक अवकाश कैलेंडर 2026</span>
+          <span style="font-size: 0.8rem; background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">Year 2026</span>
+        </h2>
+        <p style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">
+          Human Resources Department, Govt of Haryana (Notification No. 28/67/2008-1HR-I) &bull; State Cyber Crime, Panchkula
+        </p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="assets/Haryana_Govt_Calendar_2026.pdf" target="_blank" download="Haryana_Govt_Calendar_2026.pdf" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download Official PDF (3 MB)
+        </a>
+        <button class="btn btn-outline" onclick="window.print()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS / FILTER CHIPS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+      <div class="kpi-card ${currentHolidayFilterType === 'ALL' ? 'kpi-navy active-kpi-border' : 'kpi-navy'}" onclick="setHolidayFilter('ALL')" style="cursor: pointer; padding: 14px 16px;">
+        <div class="kpi-card-head">
+          <span class="kpi-title">Total Govt Holidays</span>
+          <span class="kpi-tag" style="background: #e2e8f0; color: #334155;">2026</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num" style="color: #0f274c;">${holidays.length}</span>
+          <span class="kpi-unit">Days</span>
+        </div>
+        <div class="kpi-card-footer" style="color: #64748b;">
+          All Listed Holidays &rarr;
+        </div>
+      </div>
+
+      <div class="kpi-card ${currentHolidayFilterType === 'GAZETTED' ? 'kpi-green active-kpi-border' : 'kpi-green'}" onclick="setHolidayFilter('GAZETTED')" style="cursor: pointer; padding: 14px 16px;">
+        <div class="kpi-card-head">
+          <span class="kpi-title">राजपत्रित अवकाश (Gazetted)</span>
+          <span class="kpi-tag approved-tag">Public</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num" style="color: #15803d;">${gazettedCount}</span>
+          <span class="kpi-unit">Days</span>
+        </div>
+        <div class="kpi-card-footer" style="color: #15803d;">
+          Official Closed Holidays &rarr;
+        </div>
+      </div>
+
+      <div class="kpi-card ${currentHolidayFilterType === 'RESTRICTED' ? 'kpi-gold active-kpi-border' : 'kpi-gold'}" onclick="setHolidayFilter('RESTRICTED')" style="cursor: pointer; padding: 14px 16px;">
+        <div class="kpi-card-head">
+          <span class="kpi-title">प्रतिबंधित अवकाश (RH)</span>
+          <span class="kpi-tag pending-tag">Restricted</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num" style="color: #b45309;">${restrictedCount}</span>
+          <span class="kpi-unit">Days</span>
+        </div>
+        <div class="kpi-card-footer" style="color: #b45309;">
+          Avail any 2-3 RH in 2026 &rarr;
+        </div>
+      </div>
+
+      <div class="kpi-card ${currentHolidayFilterType === 'UPCOMING' ? 'kpi-purple active-kpi-border' : 'kpi-purple'}" onclick="setHolidayFilter('UPCOMING')" style="cursor: pointer; padding: 14px 16px;">
+        <div class="kpi-card-head">
+          <span class="kpi-title">Upcoming Holidays</span>
+          <span class="kpi-tag" style="background: #f3e8ff; color: #7e22ce;">Remaining</span>
+        </div>
+        <div class="kpi-card-value">
+          <span class="kpi-num" style="color: #6b21a8;">${upcomingCount}</span>
+          <span class="kpi-unit">Days</span>
+        </div>
+        <div class="kpi-card-footer" style="color: #6b21a8;">
+          Filter From Today &rarr;
+        </div>
+      </div>
+    </div>
+
+    <!-- POLICE LEAVE ADVISORY BANNER -->
+    <div style="background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 12px;">
+      <span style="font-size: 1.25rem; line-height: 1;">📌</span>
+      <div style="font-size: 0.82rem; color: #334155; line-height: 1.5;">
+        <strong>हरियाणा पुलिस कर्मचारी अवकाश नियम (Haryana Police Leave Advisory):</strong>
+        कर्मचारियों को वर्ष 2026 में <strong>प्रतिबंधित अवकाशों (Restricted Holidays - RH)</strong> में से अधिकतम <strong>2 से 3 अवकाश</strong> पूर्व स्वीकृति से उपभोग करने की अनुमति होती है।
+        आकस्मिक अवकाश (Casual Leave - CL) के साथ राजपत्रित अवकाशों (Gazetted Holidays) का संयोजन अवकाश नियमों के अंतर्गत अनुमन्य है।
+      </div>
+    </div>
+
+    <!-- FILTER & SEARCH TOOLBAR -->
+    <div class="card-table-wrap">
+      <div class="table-toolbar" style="flex-wrap: wrap; gap: 10px;">
+        <div class="table-title" id="holidaysTableCountTitle">
+          Showing <strong>${holidays.length} Holidays</strong> (Haryana Govt 2026)
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="holidaySearchInput" class="search-input" placeholder="Search holiday, festival, day..." oninput="filterHolidaysTable()" style="min-width: 220px;">
+          <select id="holidayMonthFilter" class="select-filter" onchange="filterHolidaysTable()">
+            <option value="">-- All Months (पूरा वर्ष) --</option>
+            ${months.map(m => `<option value="${m.name}">${m.hindi} (${m.name})</option>`).join("")}
+          </select>
+          <select id="holidayTypeFilter" class="select-filter" onchange="filterHolidaysTable()">
+            <option value="ALL" ${currentHolidayFilterType === 'ALL' ? 'selected' : ''}>-- All Types (सभी अवकाश) --</option>
+            <option value="GAZETTED" ${currentHolidayFilterType === 'GAZETTED' ? 'selected' : ''}>राजपत्रित अवकाश (Gazetted)</option>
+            <option value="RESTRICTED" ${currentHolidayFilterType === 'RESTRICTED' ? 'selected' : ''}>प्रतिबंधित अवकाश (Restricted / RH)</option>
+            <option value="UPCOMING" ${currentHolidayFilterType === 'UPCOMING' ? 'selected' : ''}>Upcoming From Today</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-scroll-hint mobile-hidden">
+        <span>👉 Swipe table horizontally to see all columns</span>
+      </div>
+
+      <div class="responsive-table mobile-fit-100">
+        <table class="data-table mobile-table-compact" id="holidaysTable">
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center;">S.No.</th>
+              <th style="min-width: 130px;">Date &amp; Day</th>
+              <th style="min-width: 220px;">Holiday / Festival Name</th>
+              <th style="min-width: 150px; text-align: center;">Category</th>
+              <th style="min-width: 110px;">Month</th>
+              <th style="min-width: 100px; text-align: center;">Timing</th>
+            </tr>
+          </thead>
+          <tbody id="holidaysTableBody">
+            ${holidays.map((h, idx) => {
+              const isPast = h.date < todayStr;
+              const isToday = h.date === todayStr;
+              const isGazetted = h.type === "GAZETTED";
+
+              const dObj = new Date(h.date + "T00:00:00");
+              const formattedDate = dObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+              return `
+                <tr data-type="${h.type}" data-month="${h.month}" data-date="${h.date}" style="${isPast ? 'opacity: 0.75;' : ''}">
+                  <td style="text-align: center; color: #64748b; font-weight: 600;">${idx + 1}</td>
+                  <td>
+                    <div style="font-weight: 700; color: #0f274c; font-size: 0.92rem;">${formattedDate}</div>
+                    <div style="font-size: 0.76rem; color: #64748b;">${h.hindiDay} &bull; ${h.day}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 700; color: #1e293b; font-size: 0.94rem;">${h.name}</div>
+                    <div style="font-size: 0.8rem; color: #475569;">${h.englishName}</div>
+                  </td>
+                  <td style="text-align: center;">
+                    ${isGazetted ? `
+                      <span class="status-badge approved" style="font-size: 0.76rem; padding: 4px 10px; font-weight: 700;">
+                        राजपत्रित (Gazetted)
+                      </span>
+                    ` : `
+                      <span class="status-badge pending" style="font-size: 0.76rem; padding: 4px 10px; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                        प्रतिबंधित (RH)
+                      </span>
+                    `}
+                  </td>
+                  <td>
+                    <span style="font-weight: 600; color: #334155; font-size: 0.85rem;">${h.monthHindi}</span>
+                    <span style="font-size: 0.75rem; color: #64748b;"> (${h.month})</span>
+                  </td>
+                  <td style="text-align: center;">
+                    ${isToday ? `
+                      <span style="background: #dcfce7; color: #15803d; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; border: 1px solid #86efac;">TODAY</span>
+                    ` : isPast ? `
+                      <span style="background: #f1f5f9; color: #64748b; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px;">Passed</span>
+                    ` : `
+                      <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">Upcoming</span>
+                    `}
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+function setHolidayFilter(type) {
+  currentHolidayFilterType = type;
+  const select = document.getElementById("holidayTypeFilter");
+  if (select) {
+    select.value = type;
+  }
+  filterHolidaysTable();
+}
+
+function filterHolidaysTable() {
+  const searchVal = document.getElementById("holidaySearchInput")?.value.toLowerCase().trim() || "";
+  const monthVal = document.getElementById("holidayMonthFilter")?.value || "";
+  const typeVal = document.getElementById("holidayTypeFilter")?.value || currentHolidayFilterType || "ALL";
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const tbody = document.getElementById("holidaysTableBody");
+  if (!tbody) return;
+
+  const rows = tbody.querySelectorAll("tr");
+  let visibleCount = 0;
+
+  rows.forEach(r => {
+    const rowType = r.dataset.type;
+    const rowMonth = r.dataset.month;
+    const rowDate = r.dataset.date;
+    const rowText = r.textContent.toLowerCase();
+
+    let typeMatch = true;
+    if (typeVal === "GAZETTED") {
+      typeMatch = rowType === "GAZETTED";
+    } else if (typeVal === "RESTRICTED") {
+      typeMatch = rowType === "RESTRICTED";
+    } else if (typeVal === "UPCOMING") {
+      typeMatch = rowDate >= todayStr;
+    }
+
+    const monthMatch = !monthVal || rowMonth === monthVal;
+    const searchMatch = !searchVal || rowText.includes(searchVal);
+
+    if (typeMatch && monthMatch && searchMatch) {
+      r.style.display = "";
+      visibleCount++;
+    } else {
+      r.style.display = "none";
+    }
+  });
+
+  const countTitle = document.getElementById("holidaysTableCountTitle");
+  if (countTitle) {
+    countTitle.innerHTML = `Showing <strong>${visibleCount} Holidays</strong> (Filtered)`;
+  }
 }
 
 function resetUserPinPrompt(userId) {
