@@ -1687,7 +1687,6 @@ function renderDashboard(container) {
       <div class="leave-quota-card">
         <div class="leave-quota-title">
           <span>Haryana Cyber Police - 13 Wings Strength Overview</span>
-          <span style="font-size: 0.8rem; font-weight: normal; color: #64748b;">(Tap any card to open)</span>
         </div>
         <div class="leave-pills-row">
           <div class="leave-pill-item" onclick="switchTab('branches')" title="Click to view all 13 Cyber Wings">
