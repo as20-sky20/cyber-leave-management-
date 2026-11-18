@@ -1729,8 +1729,8 @@ function renderDashboard(container) {
           <div class="leave-pill-item" onclick="switchTab('holidays'); setHolidayFilter('GAZETTED');" title="Click to view Official Haryana Govt Gazetted Holidays (GH) 2026">
             <div class="type-code">GH-2026</div>
             <div class="type-name">Gazetted Leaves</div>
-            <div class="days-count" style="color: #0f274c;">39 GH</div>
-            <div class="days-label">All 39 GH &rarr;</div>
+            <div class="days-count" style="color: #0f274c;">28 GH</div>
+            <div class="days-label">All 28 GH &rarr;</div>
           </div>
           <div class="leave-pill-item" onclick="openUpcomingGHModal()" title="Click to open Upcoming Gazetted Holidays (GH) Modal">
             <div class="type-code">UPCOMING</div>
@@ -1883,7 +1883,7 @@ function renderDashboard(container) {
         <div>
           <div style="font-weight: 700; color: #0f274c; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
             <span>हरियाणा सरकार राजपत्रित अवकाश सूची 2026 (Gazetted Holidays - GH)</span>
-            <span style="background: #dbeafe; color: #1e40af; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">39 Gazetted (GH)</span>
+            <span style="background: #dbeafe; color: #1e40af; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">28 Gazetted (GH)</span>
           </div>
           <div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">
             आधिकारिक राजपत्रित अवकाश (GH) सूची, दिनांक, दिन एवं मूल सरकारी कैलेंडर पीडीएफ डाउनलोड
@@ -5010,9 +5010,10 @@ let currentHolidayFilterType = "GAZETTED"; // Default: ONLY GH (Gazetted Holiday
 function renderHolidaysCalendar(container) {
   const allHolidays = (AppState.holidays && AppState.holidays.length > 0) ? AppState.holidays : getHaryanaGovtHolidays();
   const ghHolidays = allHolidays.filter(h => h.type === "GAZETTED");
+  const weekendHolidays = allHolidays.filter(h => h.type === "WEEKEND_FESTIVAL");
   const rhHolidays = allHolidays.filter(h => h.type === "RESTRICTED");
 
-  // User requirement: "only gh show kro list m"
+  // User requirement: "gh onlu 28 h calnder m" -> Exactly 28 Gazetted Holidays (GH)
   const todayStr = new Date().toISOString().split("T")[0];
   const upcomingGHHolidays = ghHolidays.filter(h => h.date >= todayStr);
   const upcomingGHCount = upcomingGHHolidays.length;
@@ -5022,6 +5023,8 @@ function renderHolidaysCalendar(container) {
     displayedHolidays = allHolidays;
   } else if (currentHolidayFilterType === "RESTRICTED") {
     displayedHolidays = rhHolidays;
+  } else if (currentHolidayFilterType === "WEEKEND") {
+    displayedHolidays = weekendHolidays;
   } else if (currentHolidayFilterType === "UPCOMING_GH") {
     displayedHolidays = (upcomingGHHolidays.length > 0 ? upcomingGHHolidays : ghHolidays);
   } else {
@@ -5049,20 +5052,20 @@ function renderHolidaysCalendar(container) {
       <div>
         <h2 style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span>📅</span>
-          <span>हरियाणा सरकार राजपत्रित अवकाश सूची 2026 (Gazetted Holidays - GH)</span>
-          <span style="font-size: 0.8rem; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 9999px; font-weight: 700; border: 1px solid #86efac;">39 GH Leaves</span>
+          <span>हरियाणा सरकार आधिकारिक राजपत्रित अवकाश सूची 2026 (Gazetted Holidays - GH)</span>
+          <span style="font-size: 0.8rem; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 9999px; font-weight: 700; border: 1px solid #86efac;">28 GH Leaves</span>
         </h2>
         <p style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">
-          Human Resources Department, Govt of Haryana (Notification No. 28/67/2008-1HR-I) &bull; Official Gazetted Holidays
+          Human Resources Department, Govt of Haryana (Notification No. 28/67/2008-1HR-I) &bull; आधिकारिक 28 राजपत्रित अवकाश
         </p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <button class="btn btn-primary" onclick="openUpcomingGHModal()" style="background: #7e22ce; border-color: #6b21a8; display: inline-flex; align-items: center; gap: 6px;">
-          ⚡ Open Upcoming GH
+          ⚡ Open Upcoming GH (${upcomingGHCount})
         </button>
         <a href="assets/Haryana_Govt_Calendar_2026.pdf" target="_blank" download="Haryana_Govt_Calendar_2026.pdf" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Download PDF (3 MB)
+          Download Official PDF (3 MB)
         </a>
         <button class="btn btn-outline" onclick="window.print()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -5072,10 +5075,10 @@ function renderHolidaysCalendar(container) {
     </div>
 
     <!-- STATS / FILTER CHIPS -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
       <div class="kpi-card ${currentHolidayFilterType === 'GAZETTED' ? 'kpi-green active-kpi-border' : 'kpi-green'}" onclick="setHolidayFilter('GAZETTED')" style="cursor: pointer; padding: 14px 16px; border: 2px solid ${currentHolidayFilterType === 'GAZETTED' ? '#16a34a' : '#bbf7d0'};">
         <div class="kpi-card-head">
-          <span class="kpi-title">राजपत्रित अवकाश (Gazetted GH)</span>
+          <span class="kpi-title">राजपत्रित अवकाश (GH)</span>
           <span class="kpi-tag approved-tag">Active List</span>
         </div>
         <div class="kpi-card-value">
@@ -5083,7 +5086,7 @@ function renderHolidaysCalendar(container) {
           <span class="kpi-unit">Days</span>
         </div>
         <div class="kpi-card-footer" style="color: #15803d; font-weight: 600;">
-          ✓ Showing Only GH (39 Holidays) &rarr;
+          ✓ Showing Only 28 GH &rarr;
         </div>
       </div>
 
@@ -5097,35 +5100,35 @@ function renderHolidaysCalendar(container) {
           <span class="kpi-unit">Days</span>
         </div>
         <div class="kpi-card-footer" style="color: #6b21a8; font-weight: 700;">
-          ${currentHolidayFilterType === 'UPCOMING_GH' ? '✓ Showing Upcoming GH &bull; Active' : '⚡ Click to Open Upcoming GH &rarr;'}
+          ${currentHolidayFilterType === 'UPCOMING_GH' ? '✓ Showing Upcoming GH &bull; Active' : '⚡ Open Upcoming GH &rarr;'}
         </div>
       </div>
 
-      <div class="kpi-card kpi-gold" onclick="setHolidayFilter('RESTRICTED')" style="cursor: pointer; padding: 14px 16px;">
+      <div class="kpi-card ${currentHolidayFilterType === 'WEEKEND' ? 'kpi-gold active-kpi-border' : 'kpi-gold'}" onclick="setHolidayFilter('WEEKEND')" style="cursor: pointer; padding: 14px 16px; border: 2px solid ${currentHolidayFilterType === 'WEEKEND' ? '#b45309' : '#fde68a'};">
         <div class="kpi-card-head">
-          <span class="kpi-title">प्रतिबंधित अवकाश (RH)</span>
-          <span class="kpi-tag pending-tag">Optional</span>
+          <span class="kpi-title">रविवार/शनिवार पर्व</span>
+          <span class="kpi-tag pending-tag">Weekly Off</span>
         </div>
         <div class="kpi-card-value">
-          <span class="kpi-num" style="color: #b45309;">${rhHolidays.length}</span>
+          <span class="kpi-num" style="color: #b45309;">${weekendHolidays.length}</span>
           <span class="kpi-unit">Days</span>
         </div>
         <div class="kpi-card-footer" style="color: #b45309;">
-          Click to View RH List &rarr;
+          Weekend Occasions [11] &rarr;
         </div>
       </div>
 
-      <div class="kpi-card kpi-navy" onclick="setHolidayFilter('ALL')" style="cursor: pointer; padding: 14px 16px;">
+      <div class="kpi-card ${currentHolidayFilterType === 'RESTRICTED' ? 'kpi-navy active-kpi-border' : 'kpi-navy'}" onclick="setHolidayFilter('RESTRICTED')" style="cursor: pointer; padding: 14px 16px; border: 2px solid ${currentHolidayFilterType === 'RESTRICTED' ? '#0f274c' : '#cbd5e1'};">
         <div class="kpi-card-head">
-          <span class="kpi-title">All Govt Holidays</span>
-          <span class="kpi-tag" style="background: #e2e8f0; color: #334155;">Full 2026</span>
+          <span class="kpi-title">प्रतिबंधित अवकाश (RH)</span>
+          <span class="kpi-tag" style="background: #e2e8f0; color: #334155;">Optional</span>
         </div>
         <div class="kpi-card-value">
-          <span class="kpi-num" style="color: #0f274c;">${allHolidays.length}</span>
+          <span class="kpi-num" style="color: #0f274c;">${rhHolidays.length}</span>
           <span class="kpi-unit">Days</span>
         </div>
         <div class="kpi-card-footer" style="color: #64748b;">
-          View Both (GH + RH) &rarr;
+          View 20 RH List &rarr;
         </div>
       </div>
     </div>
@@ -5134,9 +5137,9 @@ function renderHolidaysCalendar(container) {
     <div style="background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 12px;">
       <span style="font-size: 1.25rem; line-height: 1;">📅</span>
       <div style="font-size: 0.82rem; color: #166534; line-height: 1.5;">
-        <strong>हरियाणा सरकार आधिकारिक राजपत्रित अवकाश (Gazetted Holidays - GH):</strong>
-        सूची में केवल आधिकारिक <strong>39 राजपत्रित अवकाश (GH)</strong> प्रदर्शित हैं। ये सभी सरकारी कार्यालयों में सार्वजनिक अवकाश होते हैं।
-        आकस्मिक अवकाश (CL) के साथ इनका संयोजन सक्षम अधिकारी (SP Cyber) की पूर्व स्वीकृति अनुसार मान्य होता है।
+        <strong>हरियाणा सरकार आधिकारिक राजपत्रित अवकाश 2026 (Gazetted Holidays - 28 GH):</strong>
+        सरकारी कैलेंडर अनुसार कार्यदिवसों पर कुल <strong>28 आधिकारिक राजपत्रित अवकाश (28 GH)</strong> घोषित हैं। 
+        अन्य 11 प्रमुख पर्व (जैसे दीपावली, गणतंत्र/स्वतंत्रता दिवस, महाशिवरात्रि आदि) रविवार या शनिवार को पड़ते हैं जो पहले से ही सरकारी साप्ताहिक अवकाश (Weekly Off) हैं।
       </div>
     </div>
 
@@ -5147,7 +5150,9 @@ function renderHolidaysCalendar(container) {
           ${currentHolidayFilterType === 'UPCOMING_GH'
             ? `Showing <strong>${displayedHolidays.length} Upcoming Gazetted Holidays (GH)</strong> (Starting from Today - ${formatDate(todayStr)})`
             : currentHolidayFilterType === 'GAZETTED' 
-            ? `Showing <strong>${displayedHolidays.length} Official Gazetted Holidays (GH)</strong> (राजपत्रित अवकाश 2026)`
+            ? `Showing <strong>${displayedHolidays.length} Official Gazetted Holidays (28 GH)</strong> (राजपत्रित अवकाश 2026)`
+            : currentHolidayFilterType === 'WEEKEND'
+            ? `Showing <strong>${displayedHolidays.length} Weekend Occasions</strong> (रविवार/शनिवार पड़ने वाले 11 पर्व)`
             : currentHolidayFilterType === 'RESTRICTED'
             ? `Showing <strong>${displayedHolidays.length} Restricted Holidays (RH)</strong> (प्रतिबंधित अवकाश 2026)`
             : `Showing <strong>${displayedHolidays.length} Holidays</strong> (Haryana Govt 2026)`}
@@ -5159,10 +5164,11 @@ function renderHolidaysCalendar(container) {
             ${months.map(m => `<option value="${m.name}">${m.hindi} (${m.name})</option>`).join("")}
           </select>
           <select id="holidayTypeFilter" class="select-filter" onchange="handleHolidayTypeChange(this.value)">
-            <option value="GAZETTED" ${currentHolidayFilterType === 'GAZETTED' ? 'selected' : ''}>Only Gazetted Holidays (GH - राजपत्रित) [39]</option>
-            <option value="UPCOMING_GH" ${currentHolidayFilterType === 'UPCOMING_GH' ? 'selected' : ''}>Upcoming Gazetted Holidays (GH) [${upcomingGHCount}]</option>
-            <option value="RESTRICTED" ${currentHolidayFilterType === 'RESTRICTED' ? 'selected' : ''}>Restricted Holidays (RH - प्रतिबंधित) [21]</option>
-            <option value="ALL" ${currentHolidayFilterType === 'ALL' ? 'selected' : ''}>All Holidays (GH + RH) [60]</option>
+            <option value="GAZETTED" ${currentHolidayFilterType === 'GAZETTED' ? 'selected' : ''}>Only Gazetted Holidays (राजपत्रित - 28 GH)</option>
+            <option value="UPCOMING_GH" ${currentHolidayFilterType === 'UPCOMING_GH' ? 'selected' : ''}>Upcoming Gazetted Holidays [${upcomingGHCount}]</option>
+            <option value="WEEKEND" ${currentHolidayFilterType === 'WEEKEND' ? 'selected' : ''}>Weekend Occasions (रविवार/शनिवार - 11)</option>
+            <option value="RESTRICTED" ${currentHolidayFilterType === 'RESTRICTED' ? 'selected' : ''}>Restricted Holidays (प्रतिबंधित - 20 RH)</option>
+            <option value="ALL" ${currentHolidayFilterType === 'ALL' ? 'selected' : ''}>All Holidays Combined [${allHolidays.length}]</option>
           </select>
         </div>
       </div>
@@ -5209,8 +5215,12 @@ function renderHolidaysCalendar(container) {
                       <span class="status-badge approved" style="font-size: 0.76rem; padding: 4px 10px; font-weight: 700; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
                         राजपत्रित (GH)
                       </span>
+                    ` : h.type === 'WEEKEND_FESTIVAL' ? `
+                      <span class="status-badge" style="font-size: 0.74rem; padding: 3px 8px; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                        साप्ताहिक अवकाश पर्व
+                      </span>
                     ` : `
-                      <span class="status-badge pending" style="font-size: 0.76rem; padding: 4px 10px; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                      <span class="status-badge pending" style="font-size: 0.74rem; padding: 3px 8px; font-weight: 700; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">
                         प्रतिबंधित (RH)
                       </span>
                     `}
@@ -5279,7 +5289,7 @@ function openUpcomingGHModal() {
   }
 
   if (modalTitle) {
-    modalTitle.innerHTML = `Upcoming Official Gazetted Holidays (GH 2026) &bull; ${upcoming.length} Left`;
+    modalTitle.innerHTML = `Upcoming Official Gazetted Holidays (28 GH &bull; ${upcoming.length} Left)`;
   }
 
   modalBody.innerHTML = `
@@ -5287,12 +5297,12 @@ function openUpcomingGHModal() {
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 1.4rem;">📅</span>
         <div>
-          <strong style="color: #6b21a8; font-size: 0.95rem;">आगामी राजपत्रित अवकाश (Upcoming Gazetted Holidays - GH)</strong>
+          <strong style="color: #6b21a8; font-size: 0.95rem;">आगामी राजपत्रित अवकाश (Upcoming Gazetted Holidays - 28 GH)</strong>
           <div style="font-size: 0.78rem; color: #475569;">हरियाणा सरकार आधिकारिक कैलेंडर 2026 &bull; कुल ${upcoming.length} आगामी अवकाश शेष</div>
         </div>
       </div>
       <button class="btn btn-sm btn-outline" onclick="closeModals(); switchTab('holidays'); setHolidayFilter('GAZETTED');" style="background: #fff; font-weight: 600;">
-        View All 39 GH &rarr;
+        View All 28 GH &rarr;
       </button>
     </div>
 
