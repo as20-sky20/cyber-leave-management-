@@ -5737,6 +5737,201 @@ body.force-mobile-view .modal-grid-2col {
   gap: 10px !important;
 }
 
+/* ==========================================================================
+   VERIFICATION DESK DESKTOP / MOBILE RESPONSIVE CARDS (SP & INCHARGE DESKS)
+   ========================================================================== */
+.vdesk-desktop-view {
+  display: block;
+}
+
+.vdesk-mobile-view {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  body:not(.force-desktop-view) .vdesk-desktop-view {
+    display: none !important;
+  }
+  body:not(.force-desktop-view) .vdesk-mobile-view {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px 10px !important;
+  }
+}
+
+body.force-mobile-view .vdesk-desktop-view {
+  display: none !important;
+}
+
+body.force-mobile-view .vdesk-mobile-view {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 12px 10px !important;
+}
+
+body.force-desktop-view .vdesk-desktop-view {
+  display: block !important;
+}
+
+body.force-desktop-view .vdesk-mobile-view {
+  display: none !important;
+}
+
+/* Verification Desk Mobile Card */
+.vdesk-mobile-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 14px;
+  box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.vdesk-mobile-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 14px rgba(15, 39, 76, 0.09);
+}
+
+.vdesk-mobile-card:active {
+  background: #f8fafc;
+  transform: scale(0.99);
+}
+
+.vdesk-mcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 8px;
+  width: 100%;
+}
+
+.vdesk-mcard-id-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.vdesk-mcard-type-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vdesk-mcard-type-badge {
+  background: #eff6ff;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
+  font-weight: 800;
+  font-size: 0.78rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.vdesk-mcard-officer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.vdesk-mcard-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.vdesk-mcard-officer-info {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.vdesk-mcard-officer-info .vdesk-personnel-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f274c;
+  line-height: 1.25;
+}
+
+.vdesk-mcard-officer-info .vdesk-personnel-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.vdesk-mcard-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #1e293b;
+}
+
+.vdesk-mcard-row-label {
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.vdesk-mcard-reason {
+  width: 100%;
+}
+
+.vdesk-mcard-reason-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.vdesk-mcard-incharge {
+  width: 100%;
+}
+
+.vdesk-mcard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vdesk-mcard-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.vdesk-mcard-actions .btn {
+  flex: 1 1 0;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
 /* Specific Mobile Card Adaptations */
 @media (max-width: 991px) {
   body:not(.force-desktop-view) .leave-card-row {
