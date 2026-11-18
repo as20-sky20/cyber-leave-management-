@@ -953,9 +953,9 @@ var HARYANA_GOVT_HOLIDAYS_2026 = [
   },
   {
     id: "HOL-2026-54",
-    date: "2026-11-25",
-    day: "Wednesday",
-    hindiDay: "बुधवार",
+    date: "2026-11-24",
+    day: "Tuesday",
+    hindiDay: "मंगलवार",
     name: "गुरु नानक देव जयंती",
     englishName: "Guru Nanak Dev Jayanti",
     type: "GAZETTED",
