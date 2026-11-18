@@ -263,7 +263,11 @@ function loadFromLocalStorage() {
       AppState.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
       AppState.leaves = [];
       AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? JSON.parse(JSON.stringify(DEFAULT_NOTICES)) : [];
-      AppState.currentUser = null;
+      AppState.currentUser = AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
+      if (AppState.currentUser) {
+        sessionStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
+        localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
+      }
       recalculateAllUserLeaveBalances();
       saveData();
       return;
@@ -5187,6 +5191,7 @@ function renderHolidaysCalendar(container) {
 
               const dObj = new Date(h.date + "T00:00:00");
               const formattedDate = dObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+              const daysDiff = Math.ceil((dObj - new Date(todayStr + "T00:00:00")) / (1000 * 60 * 60 * 24));
 
               return `
                 <tr data-type="${h.type}" data-month="${h.month}" data-date="${h.date}" style="${isPast ? 'opacity: 0.75;' : ''}">

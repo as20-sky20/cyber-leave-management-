@@ -3,7 +3,7 @@
  * Central Data Definitions & Default Seed Data
  */
 
-const BRANCHES = [
+var BRANCHES = [
   { id: "cyber_helpline_1930", name: "Cyber Helpline 1930", hindi: "Cyber Helpline 1930 Desk", icon: "phone-call" },
   { id: "data_analysis_wing", name: "Data Analysis Wing", hindi: "Data Analysis Wing", icon: "bar-chart-2" },
   { id: "social_media", name: "Social Media", hindi: "Social Media Monitoring Wing", icon: "share-2" },
@@ -19,7 +19,7 @@ const BRANCHES = [
   { id: "cyber_ps_panchkula", name: "Cyber Police Station Panchkula", hindi: "Cyber Police Station Panchkula", icon: "shield" }
 ];
 
-const LEAVE_TYPES = [
+var LEAVE_TYPES = [
   { code: "CL", name: "Casual Leave", hindi: "Casual Leave (CL)", annualQuota: 20, desc: "Standard casual leave for urgent personal matters" },
   { code: "EL", name: "Earned Leave", hindi: "Earned Leave (EL)", annualQuota: 30, desc: "Accumulated privilege leave" },
   { code: "ML", name: "Medical Leave", hindi: "Medical Leave (ML)", annualQuota: 20, desc: "Leave on medical grounds (certificate required)" },
@@ -30,7 +30,7 @@ const LEAVE_TYPES = [
   { code: "RH", name: "Restricted Holiday", hindi: "Restricted Holiday (RH)", annualQuota: 2, desc: "Selected gazetted optional holidays" }
 ];
 
-const RANKS = [
+var RANKS = [
   "SP (Superintendent of Police)",
   "DSP (Deputy Superintendent of Police)",
   "Inspector",
@@ -42,7 +42,7 @@ const RANKS = [
   "Technical Consultant"
 ];
 
-const DEFAULT_USERS = [
+var DEFAULT_USERS = [
   // SP Cyber (Top Approver)
   {
     id: "SP-001",
@@ -295,9 +295,9 @@ const DEFAULT_USERS = [
   }
 ];
 
-const DEFAULT_LEAVES = [];
+var DEFAULT_LEAVES = [];
 
-const DEFAULT_NOTICES = [
+var DEFAULT_NOTICES = [
   {
     id: "NOT-2026-001",
     title: "Weekly Cyber Crime Review & 1930 Portal Coordination Meeting",
@@ -1033,9 +1033,21 @@ var HARYANA_GOVT_HOLIDAYS_2026 = [
 ];
 
 if (typeof window !== "undefined") {
+  window.BRANCHES = BRANCHES;
+  window.LEAVE_TYPES = LEAVE_TYPES;
+  window.RANKS = RANKS;
+  window.DEFAULT_USERS = DEFAULT_USERS;
+  window.DEFAULT_LEAVES = DEFAULT_LEAVES;
+  window.DEFAULT_NOTICES = DEFAULT_NOTICES;
   window.HARYANA_GOVT_HOLIDAYS_2026 = HARYANA_GOVT_HOLIDAYS_2026;
 }
 if (typeof globalThis !== "undefined") {
+  globalThis.BRANCHES = BRANCHES;
+  globalThis.LEAVE_TYPES = LEAVE_TYPES;
+  globalThis.RANKS = RANKS;
+  globalThis.DEFAULT_USERS = DEFAULT_USERS;
+  globalThis.DEFAULT_LEAVES = DEFAULT_LEAVES;
+  globalThis.DEFAULT_NOTICES = DEFAULT_NOTICES;
   globalThis.HARYANA_GOVT_HOLIDAYS_2026 = HARYANA_GOVT_HOLIDAYS_2026;
 }
 
