@@ -5182,11 +5182,6 @@ function buildSitrepOfficialA4Html(targetDate) {
           <div style="font-size: 0.72rem; color: #475569;">State Cyber Crime, Panchkula</div>
         </div>
         <div class="doc-sig-box">
-          <div>Supervisory Officer:</div>
-          <div style="font-weight: 700; margin-top: 24px;">DSP Cyber Crime</div>
-          <div style="font-size: 0.72rem; color: #475569;">State Cyber Crime, Panchkula</div>
-        </div>
-        <div class="doc-sig-box">
           <div>Sanctioning Authority:</div>
           <div style="font-weight: 700; margin-top: 24px;">Mayank Gupta, IPS</div>
           <div style="font-size: 0.72rem; color: #475569;">Superintendent of Police, State Cyber Crime</div>
@@ -5900,14 +5895,6 @@ function renderDailySitrep(container) {
           <div class="sitrep-sig-line">
             Reader to SP Cyber Crime<br>
             <span style="font-size: 0.76rem; font-weight: normal; color: #64748b;">Reader to SP Cyber Crime, Panchkula</span>
-          </div>
-        </div>
-
-        <div class="sitrep-sig-box">
-          <div style="font-size: 0.78rem; color: #64748b;">Supervisory Officer:</div>
-          <div class="sitrep-sig-line">
-            DSP Cyber Crime / Establishment<br>
-            <span style="font-size: 0.76rem; font-weight: normal; color: #64748b;">DSP Cyber / Establishment Incharge</span>
           </div>
         </div>
 
