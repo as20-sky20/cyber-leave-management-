@@ -5502,6 +5502,10 @@ body.portal-logged-out #loginScreen {
     gap: 8px !important;
   }
 
+  .dashboard-kpi-grid .kpi-card:first-child {
+    grid-column: span 2;
+  }
+
   .kpi-card {
     padding: 10px 12px !important;
   }
@@ -5511,8 +5515,8 @@ body.portal-logged-out #loginScreen {
   }
 
   .other-leaves-grid {
-    grid-template-columns: 1fr 1fr 1fr !important;
-    gap: 6px !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
   }
 
   .other-leave-pill {

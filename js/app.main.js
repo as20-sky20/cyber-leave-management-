@@ -1786,7 +1786,7 @@ function renderDashboard(container) {
       </div>
     </div>
 
-    <!-- 4 PRIMARY KPI CARDS -->
+    <!-- 3 PRIMARY KPI CARDS (CL, IN-PROCESS, SANCTIONED) -->
     <div class="dashboard-kpi-grid">
       <div class="kpi-card kpi-blue">
         <div class="kpi-card-head">
@@ -1799,20 +1799,6 @@ function renderDashboard(container) {
         </div>
         <div class="kpi-card-footer">
           Quota: 20 Days &bull; ${Math.max(0, 20 - (user.leaveBalances?.CL ?? 0))} Availed
-        </div>
-      </div>
-
-      <div class="kpi-card kpi-green">
-        <div class="kpi-card-head">
-          <span class="kpi-title">Earned Leave (EL)</span>
-          <span class="kpi-tag el-tag">Accumulated</span>
-        </div>
-        <div class="kpi-card-value">
-          <span class="kpi-num">${user.leaveBalances?.EL ?? 0}</span>
-          <span class="kpi-unit">Days Left</span>
-        </div>
-        <div class="kpi-card-footer">
-          Privilege Leave Account
         </div>
       </div>
 
@@ -1845,14 +1831,14 @@ function renderDashboard(container) {
       </div>
     </div>
 
-    <!-- OTHER LEAVE QUOTAS (NO DUPLICATION OF CL / EL) -->
+    <!-- OTHER LEAVE QUOTAS (EXCLUDING CL, EL, CCL, PL) -->
     <div class="other-leaves-card">
       <div class="other-leaves-header">
         <span class="other-leaves-title">Other Official Leave Balances</span>
-        <span class="other-leaves-sub">Medical, Special &amp; Compensatory</span>
+        <span class="other-leaves-sub">Medical, Compensatory &amp; Restricted</span>
       </div>
       <div class="other-leaves-grid">
-        ${LEAVE_TYPES.filter(lt => lt.code !== 'CL' && lt.code !== 'EL').map(lt => {
+        ${LEAVE_TYPES.filter(lt => !['CL', 'EL', 'CCL', 'PL'].includes(lt.code)).map(lt => {
           const bal = user.leaveBalances ? (user.leaveBalances[lt.code] ?? 0) : 0;
           return `
             <div class="other-leave-pill">
