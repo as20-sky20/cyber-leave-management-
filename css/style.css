@@ -2370,6 +2370,45 @@ table.data-table tr:hover {
     gap: 10px !important;
     margin-bottom: 16px !important;
   }
+
+  body:not(.force-desktop-view) .dashboard-kpi-grid,
+  body.force-mobile-view .dashboard-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  body:not(.force-desktop-view) .dashboard-kpi-grid .kpi-card-featured,
+  body:not(.force-desktop-view) .dashboard-kpi-grid .kpi-card:first-child,
+  body.force-mobile-view .dashboard-kpi-grid .kpi-card-featured,
+  body.force-mobile-view .dashboard-kpi-grid .kpi-card:first-child {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+  body:not(.force-desktop-view) .kpi-card,
+  body.force-mobile-view .kpi-card {
+    padding: 12px 14px !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  body:not(.force-desktop-view) .kpi-card-head,
+  body.force-mobile-view .kpi-card-head {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+  body:not(.force-desktop-view) .kpi-card-footer,
+  body.force-mobile-view .kpi-card-footer {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 6px !important;
+    align-items: center !important;
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
   body:not(.force-desktop-view) .stat-card {
     padding: 14px 12px !important;
     border-radius: 12px !important;
@@ -5308,7 +5347,7 @@ body.portal-logged-out #loginScreen {
   background: #ffffff;
   border-radius: 12px;
   padding: 14px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
@@ -5316,6 +5355,41 @@ body.portal-logged-out #loginScreen {
   overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.kpi-card-featured {
+  border-color: #93c5fd;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.08);
+}
+
+.kpi-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.kpi-open-pill {
+  font-size: 0.68rem;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.kpi-card:hover .kpi-open-pill {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
 }
 
 .kpi-card:hover {
@@ -5346,7 +5420,10 @@ body.portal-logged-out #loginScreen {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 8px;
+  min-width: 0;
 }
 
 .kpi-title {
@@ -5361,6 +5438,7 @@ body.portal-logged-out #loginScreen {
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 10px;
+  white-space: nowrap;
 }
 
 .kpi-tag.cl-tag { background: #dbeafe; color: #1e40af; }
@@ -5394,6 +5472,11 @@ body.portal-logged-out #loginScreen {
   border-top: 1px dashed #f1f5f9;
   padding-top: 6px;
   margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  word-break: break-word;
 }
 
 /* Other Leaves Card */
@@ -5526,14 +5609,35 @@ body.portal-logged-out #loginScreen {
   .dashboard-kpi-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
+  .dashboard-kpi-grid .kpi-card-featured,
   .dashboard-kpi-grid .kpi-card:first-child {
-    grid-column: span 2;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
   }
 
   .kpi-card {
     padding: 10px 12px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .kpi-card-head {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+
+  .kpi-card-footer {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 6px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
   }
 
   .kpi-num {
@@ -5565,6 +5669,20 @@ body.portal-logged-out #loginScreen {
 }
 
 @media (max-width: 380px) {
+  body:not(.force-desktop-view) .dashboard-kpi-grid,
+  body.force-mobile-view .dashboard-kpi-grid,
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  body:not(.force-desktop-view) .dashboard-kpi-grid .kpi-card,
+  body.force-mobile-view .dashboard-kpi-grid .kpi-card,
+  .dashboard-kpi-grid .kpi-card {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
   .other-leaves-grid {
     grid-template-columns: 1fr 1fr !important;
   }

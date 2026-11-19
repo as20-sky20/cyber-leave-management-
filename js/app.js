@@ -1788,17 +1788,24 @@ function renderDashboard(container) {
 
     <!-- 3 PRIMARY KPI CARDS (CL, IN-PROCESS, SANCTIONED) -->
     <div class="dashboard-kpi-grid">
-      <div class="kpi-card kpi-blue" onclick="openLeaveCategoryModal('CL')" style="cursor: pointer;" title="Click to view Casual Leave (CL) Quota, Rules &amp; Apply">
+      <div class="kpi-card kpi-blue kpi-card-featured" onclick="openLeaveCategoryModal('CL')" style="cursor: pointer;" title="Click to view Casual Leave (CL) Quota, Rules &amp; Apply">
         <div class="kpi-card-head">
-          <span class="kpi-title">Casual Leave (CL)</span>
-          <span class="kpi-tag cl-tag">Year 2026</span>
+          <div class="kpi-card-title-group">
+            <span class="kpi-title">Casual Leave (CL)</span>
+            <span class="kpi-tag cl-tag">Year 2026</span>
+          </div>
+          <span class="kpi-open-pill">Tap to open &rarr;</span>
         </div>
         <div class="kpi-card-value">
           <span class="kpi-num">${user.leaveBalances?.CL ?? 0}</span>
           <span class="kpi-unit">Days Left</span>
         </div>
         <div class="kpi-card-footer">
-          Quota: 20 Days &bull; ${Math.max(0, 20 - (user.leaveBalances?.CL ?? 0))} Availed &bull; Tap to open &rarr;
+          <span>Quota: <strong>20 Days</strong></span>
+          <span>&bull;</span>
+          <span>Availed: <strong>${Math.max(0, 20 - (user.leaveBalances?.CL ?? 0))} Days</strong></span>
+          <span>&bull;</span>
+          <span style="color: #1d4ed8; font-weight: 700;">Balance: <strong>${user.leaveBalances?.CL ?? 0} Days</strong></span>
         </div>
       </div>
 
@@ -1812,7 +1819,7 @@ function renderDashboard(container) {
           <span class="kpi-unit">Requests</span>
         </div>
         <div class="kpi-card-footer">
-          ${pendingLeaves.length > 0 ? 'Awaiting Sanction &bull; Tap to open &rarr;' : 'No Active Applications &bull; Tap to view &rarr;'}
+          <span>${pendingLeaves.length > 0 ? 'Awaiting Sanction' : '0 Pending &bull; Tap to view'}</span>
         </div>
       </div>
 
@@ -1826,7 +1833,7 @@ function renderDashboard(container) {
           <span class="kpi-unit">Orders</span>
         </div>
         <div class="kpi-card-footer">
-          Official Sanctions Issued &bull; Tap to open &rarr;
+          <span>Official Sanctions Issued</span>
         </div>
       </div>
     </div>
