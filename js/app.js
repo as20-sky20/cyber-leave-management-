@@ -3778,6 +3778,8 @@ function openTodaysOnLeaveModal(leavesList, branchIdFilter = null) {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 // ==========================================
@@ -3911,33 +3913,28 @@ function openLeaveCategoryModal(leaveCode) {
           You have not applied for any ${lt.name} (${lt.code}) yet in 2026.
         </div>
       ` : `
-        <div class="responsive-table">
-          <table class="data-table mobile-table-compact">
-            <thead>
-              <tr>
-                <th>App ID</th>
-                <th>Dates</th>
-                <th>Days</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${pastLeaves.map(pl => `
-                <tr>
-                  <td><strong>${pl.id}</strong></td>
-                  <td>${formatDate(pl.fromDate)} &rarr; ${formatDate(pl.toDate)}</td>
-                  <td><span class="days-badge">${pl.totalDays}d</span></td>
-                  <td><span class="status-badge ${pl.status.toLowerCase()}">${getStatusBadge(pl.status)}</span></td>
-                  <td>
-                    <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${pl.id}')" style="font-size: 0.75rem; padding: 3px 8px;">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${pastLeaves.map(pl => `
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+              <div style="min-width: 0; flex: 1 1 180px;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <strong style="color: #0f274c; font-size: 0.92rem;">${pl.id}</strong>
+                  <span class="days-badge" style="font-size: 0.72rem; padding: 2px 7px;">${pl.totalDays}d</span>
+                  <span class="status-badge ${pl.status.toLowerCase()}" style="font-size: 0.72rem; padding: 2px 8px;">
+                    ${getStatusBadge(pl.status)}
+                  </span>
+                </div>
+                <div style="font-size: 0.8rem; color: #475569; margin-top: 4px;">
+                  📅 <strong>${formatDate(pl.fromDate)}</strong> &rarr; <strong>${formatDate(pl.toDate)}</strong>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${pl.id}')" style="font-size: 0.78rem; padding: 4px 10px; font-weight: 600;">
+                  View &rarr;
+                </button>
+              </div>
+            </div>
+          `).join("")}
         </div>
       `}
     </div>
@@ -3956,6 +3953,8 @@ function openLeaveCategoryModal(leaveCode) {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 function applyForLeaveCategory(leaveCode) {
@@ -4067,6 +4066,8 @@ function openInProcessLeavesModal() {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 function openSanctionedLeavesModal() {
@@ -4156,7 +4157,10 @@ function openSanctionedLeavesModal() {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
+window.openSanctionedOrdersModal = openSanctionedLeavesModal;
 
 function scrollToBranchesTable() {
   const el = document.getElementById("branchesSearchInput") || document.querySelector(".card-table-wrap");
@@ -4223,6 +4227,8 @@ function openBranchOfficersModal(branchId) {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 function openStationLeaveOfficersModal(targetDate) {
@@ -5806,6 +5812,8 @@ function openUpcomingGHModal() {
   `;
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 function filterHolidaysTable() {
@@ -6206,6 +6214,8 @@ function openInAppPdfViewer(type, idOrDate) {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 function closeInAppPdfModal() {
@@ -7472,6 +7482,8 @@ function viewAttachment(leaveId) {
   }
 
   modal.classList.add("active");
+  const modalScrollTarget = modal.querySelector(".modal-body") || modal.querySelector(".modal-content");
+  if (modalScrollTarget) modalScrollTarget.scrollTop = 0;
 }
 
 function openAttachedPdfBlob(leaveId) {
