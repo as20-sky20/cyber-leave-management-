@@ -263,11 +263,9 @@ function loadFromLocalStorage() {
       AppState.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
       AppState.leaves = [];
       AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? JSON.parse(JSON.stringify(DEFAULT_NOTICES)) : [];
-      AppState.currentUser = AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
-      if (AppState.currentUser) {
-        sessionStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
-        localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
-      }
+      AppState.currentUser = null;
+      sessionStorage.removeItem("cyber_police_current_user_id");
+      localStorage.removeItem("cyber_police_current_user_id");
       recalculateAllUserLeaveBalances();
       saveData();
       return;
@@ -347,24 +345,19 @@ function loadFromLocalStorage() {
     // Always recalculate exact non-duplicative leave balances
     recalculateAllUserLeaveBalances();
 
-    // Maintain active officer session across refreshes; default to SP Cyber (Mayank Gupta, IPS)
-    const storedUserId = sessionStorage.getItem("cyber_police_current_user_id") || localStorage.getItem("cyber_police_current_user_id");
-    if (storedUserId) {
-      AppState.currentUser = AppState.users.find(u => u.id === storedUserId) || AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
-    } else {
-      AppState.currentUser = AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
-    }
-    if (AppState.currentUser) {
-      sessionStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
-      localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
-    }
+    // Require officer login on initial link load; never auto-login to an ID
+    AppState.currentUser = null;
+    sessionStorage.removeItem("cyber_police_current_user_id");
+    localStorage.removeItem("cyber_police_current_user_id");
   } catch (e) {
     console.error("Error loading data from localStorage, reverting to defaults", e);
     AppState.branches = BRANCHES;
     AppState.users = DEFAULT_USERS;
     AppState.leaves = DEFAULT_LEAVES;
     AppState.notices = (typeof DEFAULT_NOTICES !== "undefined") ? DEFAULT_NOTICES : [];
-    AppState.currentUser = AppState.users.find(u => u.id === "SP-001") || AppState.users[0];
+    AppState.currentUser = null;
+    sessionStorage.removeItem("cyber_police_current_user_id");
+    localStorage.removeItem("cyber_police_current_user_id");
     recalculateAllUserLeaveBalances();
   }
 }
@@ -919,7 +912,8 @@ function quickSwitchUser(userId) {
   if (target) {
     AppState.currentUser = target;
     recalculateAllUserLeaveBalances();
-    localStorage.setItem("cyber_police_current_user_id", target.id);
+    sessionStorage.setItem("cyber_police_current_user_id", target.id);
+    localStorage.removeItem("cyber_police_current_user_id");
     AppState.activeTab = "dashboard";
     const sel = document.getElementById("userSwitchSelect");
     if (sel) sel.value = target.id;
@@ -957,9 +951,8 @@ function saveToLocalStorageOnly() {
   localStorage.setItem("cyber_police_users", JSON.stringify(AppState.users));
   localStorage.setItem("cyber_police_leaves", JSON.stringify(AppState.leaves));
   localStorage.setItem("cyber_police_notices", JSON.stringify(AppState.notices || []));
-  if (AppState.currentUser) {
-    localStorage.setItem("cyber_police_current_user_id", AppState.currentUser.id);
-  }
+  // Do not store cyber_police_current_user_id in localStorage so opening link always requires login
+  localStorage.removeItem("cyber_police_current_user_id");
 }
 
 async function pushDataToOfficeServer() {
@@ -7452,7 +7445,7 @@ function quickLoginUser(userId) {
 
   AppState.currentUser = target;
   sessionStorage.setItem("cyber_police_current_user_id", target.id);
-  localStorage.setItem("cyber_police_current_user_id", target.id);
+  localStorage.removeItem("cyber_police_current_user_id");
   recalculateAllUserLeaveBalances();
 
   // When Incharge, SP, or any officer logs in, always land on Dashboard
