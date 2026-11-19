@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=20261119.1005">
+  <link rel="stylesheet" href="css/style.css?v=20261119.1025">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230f274c'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>">
 </head>
 <body class="portal-logged-out">
@@ -227,6 +227,63 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModals()">Close</button>
         <button class="btn btn-primary" onclick="closeModals(); switchTab('holidays'); setHolidayFilter('GAZETTED');">View All 28 GH &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.3 LEAVE CATEGORY / CARD DETAIL MODAL -->
+  <div class="modal-overlay" id="categoryDetailModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span id="categoryDetailModalTitle">Leave Quota &amp; Rules Details</span>
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <div class="modal-body" id="categoryDetailModalBody">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer" id="categoryDetailModalFooter">
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.4 IN-PROCESS APPLICATIONS MODAL -->
+  <div class="modal-overlay" id="inProcessLeavesModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span id="inProcessLeavesModalTitle">In-Process Leave Applications</span>
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <div class="modal-body" id="inProcessLeavesModalBody">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer" id="inProcessLeavesModalFooter">
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.5 SANCTIONED ORDERS MODAL -->
+  <div class="modal-overlay" id="sanctionedOrdersModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span id="sanctionedOrdersModalTitle">Official Sanctioned Orders</span>
+        </h3>
+        <button class="close-btn" onclick="closeModals()">&times;</button>
+      </div>
+      <div class="modal-body" id="sanctionedOrdersModalBody">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer" id="sanctionedOrdersModalFooter">
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
       </div>
     </div>
   </div>
@@ -744,7 +801,7 @@
 
   <!-- SCRIPTS -->
   <script src="js/html2pdf.bundle.min.js"></script>
-  <script src="js/data.js?v=20261119.1005"></script>
-  <script src="js/app.main.js?v=20261119.1005"></script>
+  <script src="js/data.js?v=20261119.1025"></script>
+  <script src="js/app.main.js?v=20261119.1025"></script>
 </body>
 </html>

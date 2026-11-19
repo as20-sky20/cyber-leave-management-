@@ -1788,7 +1788,7 @@ function renderDashboard(container) {
 
     <!-- 3 PRIMARY KPI CARDS (CL, IN-PROCESS, SANCTIONED) -->
     <div class="dashboard-kpi-grid">
-      <div class="kpi-card kpi-blue">
+      <div class="kpi-card kpi-blue" onclick="openLeaveCategoryModal('CL')" style="cursor: pointer;" title="Click to view Casual Leave (CL) Quota, Rules &amp; Apply">
         <div class="kpi-card-head">
           <span class="kpi-title">Casual Leave (CL)</span>
           <span class="kpi-tag cl-tag">Year 2026</span>
@@ -1798,11 +1798,11 @@ function renderDashboard(container) {
           <span class="kpi-unit">Days Left</span>
         </div>
         <div class="kpi-card-footer">
-          Quota: 20 Days &bull; ${Math.max(0, 20 - (user.leaveBalances?.CL ?? 0))} Availed
+          Quota: 20 Days &bull; ${Math.max(0, 20 - (user.leaveBalances?.CL ?? 0))} Availed &bull; Tap to open &rarr;
         </div>
       </div>
 
-      <div class="kpi-card kpi-gold" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="View In-Process Applications">
+      <div class="kpi-card kpi-gold" onclick="openInProcessLeavesModal()" style="cursor: pointer;" title="Click to open In-Process Applications Details">
         <div class="kpi-card-head">
           <span class="kpi-title">In-Process</span>
           <span class="kpi-tag pending-tag">Active</span>
@@ -1812,11 +1812,11 @@ function renderDashboard(container) {
           <span class="kpi-unit">Requests</span>
         </div>
         <div class="kpi-card-footer">
-          ${pendingLeaves.length > 0 ? 'Awaiting Sanction' : 'No Active Applications'}
+          ${pendingLeaves.length > 0 ? 'Awaiting Sanction &bull; Tap to open &rarr;' : 'No Active Applications &bull; Tap to view &rarr;'}
         </div>
       </div>
 
-      <div class="kpi-card kpi-purple" onclick="switchTab('my_leaves')" style="cursor: pointer;" title="View Sanctioned Leaves">
+      <div class="kpi-card kpi-purple" onclick="openSanctionedLeavesModal()" style="cursor: pointer;" title="Click to open Sanctioned Orders Details">
         <div class="kpi-card-head">
           <span class="kpi-title">Sanctioned</span>
           <span class="kpi-tag approved-tag">Approved</span>
@@ -1826,7 +1826,7 @@ function renderDashboard(container) {
           <span class="kpi-unit">Orders</span>
         </div>
         <div class="kpi-card-footer">
-          Official Sanctions Issued
+          Official Sanctions Issued &bull; Tap to open &rarr;
         </div>
       </div>
     </div>
@@ -1835,18 +1835,19 @@ function renderDashboard(container) {
     <div class="other-leaves-card">
       <div class="other-leaves-header">
         <span class="other-leaves-title">Other Official Leave Balances</span>
-        <span class="other-leaves-sub">Medical, Compensatory &amp; Restricted</span>
+        <span class="other-leaves-sub">Medical, Compensatory &amp; Restricted (Tap any card to view &amp; apply)</span>
       </div>
       <div class="other-leaves-grid">
         ${LEAVE_TYPES.filter(lt => !['CL', 'EL', 'CCL', 'PL'].includes(lt.code)).map(lt => {
           const bal = user.leaveBalances ? (user.leaveBalances[lt.code] ?? 0) : 0;
           return `
-            <div class="other-leave-pill">
+            <div class="other-leave-pill" onclick="openLeaveCategoryModal('${lt.code}')" style="cursor: pointer;" title="Click to view ${lt.name} (${lt.code}) Quota Details &amp; Apply">
               <div class="other-leave-top">
                 <span class="other-leave-code">${lt.code}</span>
                 <span class="other-leave-count">${bal} Days</span>
               </div>
               <div class="other-leave-name">${lt.name.split('(')[0].trim()}</div>
+              <div style="font-size: 0.68rem; color: #3b82f6; font-weight: 700; margin-top: 4px; text-align: right;">Open &rarr;</div>
             </div>
           `;
         }).join('')}
@@ -3770,6 +3771,467 @@ function openTodaysOnLeaveModal(leavesList, branchIdFilter = null) {
   }
 
   modal.classList.add("active");
+}
+
+// ==========================================
+// INTERACTIVE CARD OPEN MODALS (ALL CARDS CLICKABLE)
+// ==========================================
+
+function openLeaveCategoryModal(leaveCode) {
+  const user = AppState.currentUser;
+  if (!user) return;
+
+  const modal = document.getElementById("categoryDetailModal");
+  const modalBody = document.getElementById("categoryDetailModalBody");
+  const modalTitle = document.getElementById("categoryDetailModalTitle");
+  const modalFooter = document.getElementById("categoryDetailModalFooter");
+  if (!modal || !modalBody) return;
+
+  const lt = (typeof LEAVE_TYPES !== "undefined" ? LEAVE_TYPES : []).find(l => l.code === leaveCode) || {
+    code: leaveCode,
+    name: leaveCode,
+    hindi: leaveCode,
+    annualQuota: 20,
+    desc: "Official Police Leave"
+  };
+
+  const quota = (user.initialLeaveBalances && user.initialLeaveBalances[leaveCode] !== undefined) 
+    ? user.initialLeaveBalances[leaveCode] 
+    : (lt.annualQuota || 20);
+  const left = user.leaveBalances ? (user.leaveBalances[leaveCode] ?? 0) : 0;
+  const availed = Math.max(0, quota - left);
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `${lt.name} (${lt.code}) &bull; Quota &amp; Rules`;
+  }
+
+  // Guidelines text by leave type
+  let rulesHtml = "";
+  if (leaveCode === "CL") {
+    rulesHtml = `
+      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+        <li><strong>Annual Quota:</strong> 20 Days per calendar year for all Haryana Police personnel.</li>
+        <li><strong>Application Limit:</strong> Maximum 10 consecutive days per application as per Haryana Police Rules.</li>
+        <li><strong>Prefix / Suffix:</strong> Sundays, Gazetted Holidays (GH), and weekly offs may be prefixed or suffixed to Casual Leave without debiting the leave quota.</li>
+        <li><strong>Half-Day Option:</strong> Available for single-day emergencies (Morning Shift: 09:00 AM - 02:00 PM or Evening Shift: 02:00 PM - 08:00 PM).</li>
+      </ul>
+    `;
+  } else if (leaveCode === "ML") {
+    rulesHtml = `
+      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+        <li><strong>Annual Quota:</strong> 20 Days on medical grounds.</li>
+        <li><strong>Mandatory Document:</strong> A valid Medical Certificate / Prescription from a Registered Medical Practitioner (RMP) or Govt Hospital is required.</li>
+        <li><strong>Attachment:</strong> Please attach the doctor's slip in the portal while submitting the application.</li>
+      </ul>
+    `;
+  } else if (leaveCode === "C-OFF") {
+    rulesHtml = `
+      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+        <li><strong>Annual Quota:</strong> 10 Days Compensatory Off.</li>
+        <li><strong>Eligibility:</strong> Granted against special weekend duty, Gazetted Holiday deployment, or overnight cyber operations / raids.</li>
+        <li><strong>Verification:</strong> Subject to recommendation and roster verification by the Branch Incharge.</li>
+      </ul>
+    `;
+  } else if (leaveCode === "HPL") {
+    rulesHtml = `
+      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+        <li><strong>Annual Quota:</strong> 20 Days per completed service year.</li>
+        <li><strong>Half Pay:</strong> Leave salary admissible is equal to half the pay drawn before proceeding on leave.</li>
+        <li><strong>Commutation:</strong> Can be converted into full-pay commuted leave on medical grounds.</li>
+      </ul>
+    `;
+  } else if (leaveCode === "RH") {
+    rulesHtml = `
+      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+        <li><strong>Annual Quota:</strong> 2 Restricted Holidays per calendar year.</li>
+        <li><strong>Choice of Occasion:</strong> Personnel may choose any 2 festivals from the official Haryana Government 20 Restricted Holidays (RH) notification.</li>
+        <li><strong>Prior Notice:</strong> Requires prior sanction so branch duty operations are not disrupted.</li>
+      </ul>
+    `;
+  } else if (leaveCode === "EL") {
+    rulesHtml = `
+      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+        <li><strong>Annual Quota:</strong> 30 Days Earned Leave accumulated in the officer's leave ledger.</li>
+        <li><strong>Purpose:</strong> For extended rest, family functions, or medical treatment beyond casual leave limits.</li>
+      </ul>
+    `;
+  } else {
+    rulesHtml = `
+      <p style="color: #334155; font-size: 0.85rem; margin: 0;">${lt.desc || 'Official Haryana Police sanctioned leave category.'}</p>
+    `;
+  }
+
+  // Past user leaves under this category in 2026
+  const pastLeaves = (AppState.leaves || []).filter(l => l.applicantId === user.id && l.leaveType === leaveCode);
+
+  modalBody.innerHTML = `
+    <!-- Top 3 Stat Cards inside Modal -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px;">
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
+        <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Annual Quota</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #0f274c; margin: 4px 0;">${quota} <small style="font-size: 0.8rem; font-weight: 600;">Days</small></div>
+        <div style="font-size: 0.72rem; color: #475569;">Session 2026</div>
+      </div>
+
+      <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 10px; padding: 12px; text-align: center;">
+        <div style="font-size: 0.72rem; color: #b91c1c; font-weight: 700; text-transform: uppercase;">Availed in 2026</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626; margin: 4px 0;">${availed} <small style="font-size: 0.8rem; font-weight: 600;">Days</small></div>
+        <div style="font-size: 0.72rem; color: #991b1b;">Sanctioned &bull; Availed</div>
+      </div>
+
+      <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 12px; text-align: center;">
+        <div style="font-size: 0.72rem; color: #15803d; font-weight: 700; text-transform: uppercase;">Available Balance</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a; margin: 4px 0;">${left} <small style="font-size: 0.8rem; font-weight: 600;">Days Left</small></div>
+        <div style="font-size: 0.72rem; color: #166534; font-weight: 600;">Current Active Quota</div>
+      </div>
+    </div>
+
+    <!-- Official Police Rules Strip -->
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+      <div style="font-size: 0.9rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <span>📜</span> Haryana Police Service Rules: ${lt.name} (${lt.code})
+      </div>
+      ${rulesHtml}
+    </div>
+
+    <!-- Past Applications of this category -->
+    <div style="margin-bottom: 8px;">
+      <div style="font-size: 0.88rem; font-weight: 700; color: #0f274c; margin-bottom: 8px;">
+        Your Past ${lt.code} Applications in 2026 (${pastLeaves.length})
+      </div>
+      ${pastLeaves.length === 0 ? `
+        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">
+          You have not applied for any ${lt.name} (${lt.code}) yet in 2026.
+        </div>
+      ` : `
+        <div class="responsive-table">
+          <table class="data-table mobile-table-compact">
+            <thead>
+              <tr>
+                <th>App ID</th>
+                <th>Dates</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pastLeaves.map(pl => `
+                <tr>
+                  <td><strong>${pl.id}</strong></td>
+                  <td>${formatDate(pl.fromDate)} &rarr; ${formatDate(pl.toDate)}</td>
+                  <td><span class="days-badge">${pl.totalDays}d</span></td>
+                  <td><span class="status-badge ${pl.status.toLowerCase()}">${getStatusBadge(pl.status)}</span></td>
+                  <td>
+                    <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${pl.id}')" style="font-size: 0.75rem; padding: 3px 8px;">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>
+  `;
+
+  if (modalFooter) {
+    modalFooter.innerHTML = `
+      <button class="btn btn-outline" onclick="closeModals()">Close</button>
+      <button class="btn btn-outline" onclick="closeModals(); switchTab('holidays');" style="color: #2563eb; border-color: #93c5fd;">
+        📅 Check Govt Holidays
+      </button>
+      <button class="btn btn-primary" onclick="applyForLeaveCategory('${lt.code}')">
+        + Apply for ${lt.code} Now &rarr;
+      </button>
+    `;
+  }
+
+  modal.classList.add("active");
+}
+
+function applyForLeaveCategory(leaveCode) {
+  closeModals();
+  switchTab("apply_leave");
+  setTimeout(() => {
+    const sel = document.getElementById("leaveTypeSelect");
+    if (sel) {
+      sel.value = leaveCode;
+      sel.dispatchEvent(new Event("change"));
+    }
+    const fromDateInput = document.getElementById("leaveFromDate");
+    if (fromDateInput) {
+      fromDateInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      fromDateInput.focus();
+    }
+  }, 100);
+}
+
+function openInProcessLeavesModal() {
+  const user = AppState.currentUser;
+  if (!user) return;
+
+  const modal = document.getElementById("inProcessLeavesModal");
+  const modalBody = document.getElementById("inProcessLeavesModalBody");
+  const modalTitle = document.getElementById("inProcessLeavesModalTitle");
+  const modalFooter = document.getElementById("inProcessLeavesModalFooter");
+  if (!modal || !modalBody) return;
+
+  const inProcess = (AppState.leaves || []).filter(l => 
+    l.applicantId === user.id && (l.status === "PENDING_INCHARGE" || l.status === "RECOMMENDED")
+  );
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `In-Process Leave Applications (${inProcess.length} Active)`;
+  }
+
+  if (inProcess.length === 0) {
+    modalBody.innerHTML = `
+      <div style="padding: 30px 16px; text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 10px;">✓</div>
+        <h4 style="font-size: 1.1rem; color: #0f274c; margin-bottom: 6px; font-weight: 700;">No Pending Leave Applications</h4>
+        <p style="color: #64748b; font-size: 0.88rem; max-width: 440px; margin: 0 auto 16px;">
+          You currently have no applications awaiting Incharge recommendation or SP Cyber sanction. All your requests are clear!
+        </p>
+        <button class="btn btn-primary btn-sm" onclick="closeModals(); switchTab('apply_leave');">
+          + Apply New Leave
+        </button>
+      </div>
+    `;
+    if (modalFooter) {
+      modalFooter.innerHTML = `<button class="btn btn-outline" onclick="closeModals()">Close</button>`;
+    }
+  } else {
+    modalBody.innerHTML = `
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.85rem; color: #92400e;">
+        ⚡ You have <strong>${inProcess.length} application(s)</strong> currently under active departmental review.
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        ${inProcess.map(l => {
+          const isRec = l.status === "RECOMMENDED";
+          return `
+            <div style="background: #ffffff; border: 1.5px solid ${isRec ? '#f59e0b' : '#3b82f6'}; border-radius: 10px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <div style="font-weight: 700; color: #0f274c; font-size: 1rem;">
+                    ${l.leaveTypeName || l.leaveType} &bull; ${l.totalDays} Days
+                  </div>
+                  <div style="font-size: 0.82rem; color: #475569; margin-top: 3px;">
+                    📅 <strong>${formatDate(l.fromDate)}</strong> to <strong>${formatDate(l.toDate)}</strong>
+                  </div>
+                </div>
+                <span class="status-badge ${l.status.toLowerCase()}" style="font-size: 0.75rem; padding: 4px 10px;">
+                  ${getStatusBadge(l.status)}
+                </span>
+              </div>
+
+              <!-- Tracking Progress Step -->
+              <div style="margin-top: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: #334155; margin-bottom: 4px;">CURRENT APPROVAL STAGE:</div>
+                <div style="font-size: 0.84rem; color: ${isRec ? '#b45309' : '#1d4ed8'}; font-weight: 600;">
+                  ${isRec 
+                    ? '✓ Recommended by Branch Incharge &rarr; Forwarded to SP Cyber (Mayank Gupta, IPS) for Final Sanction Order' 
+                    : '⏳ Under Initial Review by Branch Incharge'}
+                </div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+                  Applied on: ${formatDate(l.appliedAt || l.fromDate)} &bull; Reason: "${l.reason || 'Personal Work'}"
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+                <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${l.id}');">
+                  View Full Tracking Slip &rarr;
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+    if (modalFooter) {
+      modalFooter.innerHTML = `
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
+        <button class="btn btn-primary" onclick="closeModals(); switchTab('my_leaves');">
+          Open My Leaves Tab &rarr;
+        </button>
+      `;
+    }
+  }
+
+  modal.classList.add("active");
+}
+
+function openSanctionedLeavesModal() {
+  const user = AppState.currentUser;
+  if (!user) return;
+
+  const modal = document.getElementById("sanctionedOrdersModal");
+  const modalBody = document.getElementById("sanctionedOrdersModalBody");
+  const modalTitle = document.getElementById("sanctionedOrdersModalTitle");
+  const modalFooter = document.getElementById("sanctionedOrdersModalFooter");
+  if (!modal || !modalBody) return;
+
+  const approved = (AppState.leaves || []).filter(l => 
+    l.applicantId === user.id && l.status === "APPROVED"
+  ).sort((a, b) => new Date(b.approvedAt || b.toDate) - new Date(a.approvedAt || a.toDate));
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `Official Sanctioned Orders (${approved.length} Sanctioned)`;
+  }
+
+  if (approved.length === 0) {
+    modalBody.innerHTML = `
+      <div style="padding: 30px 16px; text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 10px;">📋</div>
+        <h4 style="font-size: 1.1rem; color: #0f274c; margin-bottom: 6px; font-weight: 700;">No Sanctioned Leaves Yet in 2026</h4>
+        <p style="color: #64748b; font-size: 0.88rem; max-width: 440px; margin: 0 auto 16px;">
+          Once your leave application is sanctioned by SP Cyber (Mayank Gupta, IPS), the official order dispatch slip and download options will appear here.
+        </p>
+        <button class="btn btn-primary btn-sm" onclick="closeModals(); switchTab('apply_leave');">
+          + Apply For Leave
+        </button>
+      </div>
+    `;
+    if (modalFooter) {
+      modalFooter.innerHTML = `<button class="btn btn-outline" onclick="closeModals()">Close</button>`;
+    }
+  } else {
+    modalBody.innerHTML = `
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.85rem; color: #166534;">
+        ✓ Total <strong>${approved.length} official leave order(s)</strong> sanctioned for session 2026.
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        ${approved.map(l => `
+          <div style="background: #ffffff; border: 1.5px solid #16a34a; border-radius: 10px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.78rem; font-weight: 700; color: #166534; text-transform: uppercase;">
+                  SANCTION DISPATCH NO: <strong>${l.sanctionNo || ('CYB/SANCT/2026/' + l.id.slice(-4))}</strong>
+                </div>
+                <div style="font-weight: 700; color: #0f274c; font-size: 1.05rem; margin-top: 3px;">
+                  ${l.leaveTypeName || l.leaveType} &bull; ${l.totalDays} Days
+                </div>
+                <div style="font-size: 0.84rem; color: #334155; margin-top: 3px;">
+                  📅 Sanctioned Period: <strong>${formatDate(l.fromDate)}</strong> to <strong>${formatDate(l.toDate)}</strong>
+                </div>
+              </div>
+              <span class="status-badge approved" style="font-size: 0.75rem; padding: 4px 10px;">
+                ✓ SANCTIONED
+              </span>
+            </div>
+
+            <div style="margin-top: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; color: #475569;">
+              <div><strong>Sanctioning Authority:</strong> Mayank Gupta, IPS, SP Cyber Crime, Panchkula</div>
+              ${l.spRemarks ? `<div style="margin-top: 3px;"><strong>SP Remarks:</strong> "${l.spRemarks}"</div>` : ''}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${l.id}');">
+                📄 View Order Details
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${l.id}');" style="background: #16a34a; border-color: #16a34a;">
+                🖨️ Open Sanction Order Slip
+              </button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    if (modalFooter) {
+      modalFooter.innerHTML = `
+        <button class="btn btn-outline" onclick="closeModals()">Close</button>
+        <button class="btn btn-primary" onclick="closeModals(); switchTab('my_leaves');">
+          Open My Leaves Tab &rarr;
+        </button>
+      `;
+    }
+  }
+
+  modal.classList.add("active");
+}
+
+function scrollToBranchesTable() {
+  const el = document.getElementById("branchesSearchInput") || document.querySelector(".card-table-wrap");
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (el.focus) el.focus();
+  }
+}
+
+function scrollToSitrepOnDuty() {
+  const el = document.querySelector(".sitrep-official-table") || document.querySelector(".sitrep-official-sheet");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function openBranchOfficersModal(branchId) {
+  const branch = AppState.branches.find(b => b.id === branchId);
+  const officers = AppState.users.filter(u => u.branchId === branchId);
+  const branchName = branch ? branch.name : branchId;
+  const modal = document.getElementById("categoryDetailModal");
+  const modalBody = document.getElementById("categoryDetailModalBody");
+  const modalTitle = document.getElementById("categoryDetailModalTitle");
+  const modalFooter = document.getElementById("categoryDetailModalFooter");
+  if (!modal || !modalBody) return;
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `${branchName} &bull; Posted Personnel (${officers.length})`;
+  }
+
+  modalBody.innerHTML = `
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 0.85rem; color: #1e3a8a;">
+      Officers deployed in <strong>${branchName}</strong>:
+    </div>
+    <div class="responsive-table">
+      <table class="data-table mobile-table-compact">
+        <thead>
+          <tr>
+            <th>Belt No</th>
+            <th>Name</th>
+            <th>Rank</th>
+            <th>Role</th>
+            <th>Contact</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${officers.map(u => `
+            <tr>
+              <td><strong>${u.beltNo}</strong></td>
+              <td><strong>${u.name}</strong></td>
+              <td>${u.rank}</td>
+              <td><span class="badge" style="background:#f1f5f9; color:#0f274c;">${getRoleDisplay(u.role)}</span></td>
+              <td><small>${u.mobile || '-'}</small></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  if (modalFooter) {
+    modalFooter.innerHTML = `
+      <button class="btn btn-outline" onclick="closeModals()">Close</button>
+      <button class="btn btn-primary" onclick="closeModals(); switchTab('directory');">Open Full Staff Directory</button>
+    `;
+  }
+
+  modal.classList.add("active");
+}
+
+function openStationLeaveOfficersModal(targetDate) {
+  const dateStr = targetDate || new Date().toISOString().split("T")[0];
+  const stationLeaves = (AppState.leaves || []).filter(l => {
+    if (l.status !== "APPROVED") return false;
+    if (!l.stationLeave) return false;
+    return l.fromDate <= dateStr && l.toDate >= dateStr;
+  });
+
+  if (stationLeaves.length === 0) {
+    showToast(`No personnel on Station Leave (Out of HQ) on ${formatDate(dateStr)}. All officers are in Headquarters.`, "info");
+    return;
+  }
+
+  openTodaysOnLeaveModal(stationLeaves);
 }
 
 // ==========================================

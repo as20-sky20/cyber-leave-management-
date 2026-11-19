@@ -4173,9 +4173,18 @@ body.force-desktop-view .col-mobile-only {
 .sitrep-metric-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 12px 10px;
   text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.sitrep-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 39, 76, 0.12);
+}
+.sitrep-metric-card:active {
+  transform: scale(0.98);
 }
 .sitrep-metric-card.green {
   border-top: 3px solid #16a34a;
@@ -5305,7 +5314,18 @@ body.portal-logged-out #loginScreen {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 39, 76, 0.12);
+  border-color: #93c5fd;
+}
+
+.kpi-card:active {
+  transform: scale(0.99);
 }
 
 .kpi-card::before {
@@ -5414,18 +5434,24 @@ body.portal-logged-out #loginScreen {
 
 .other-leave-pill {
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   transition: all 0.15s ease;
+  cursor: pointer;
 }
 
 .other-leave-pill:hover {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  transform: translateY(-1px);
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.16);
+}
+
+.other-leave-pill:active {
+  transform: scale(0.98);
 }
 
 .other-leave-top {
