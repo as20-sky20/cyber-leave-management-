@@ -2111,26 +2111,7 @@ function renderApplyLeave(container) {
 
   // Same branch members for handover dropdown
   const sameBranchMembers = AppState.users.filter(u => u.branchId === user.branchId && u.id !== user.id);
-
-  // Auto-populate user's last leave record
-  const userPastLeaves = AppState.leaves
-    .filter(l => l.applicantId === user.id)
-    .sort((a, b) => new Date(b.fromDate || b.appliedAt) - new Date(a.fromDate || a.appliedAt));
-  const lastLeave = userPastLeaves.length > 0 ? userPastLeaves[0] : null;
   const isApplicantIncharge = isUserBranchIncharge(user, user.branchId);
-
-  const lastLeaveHtml = lastLeave ? `
-    <div class="compact-history-strip">
-      <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        <strong>Last Leave:</strong> ${lastLeave.leaveTypeName || lastLeave.leaveType} &bull; ${formatDate(lastLeave.fromDate)} to ${formatDate(lastLeave.toDate)} (${lastLeave.totalDays} Days)
-      </div>
-      <span class="status-badge ${lastLeave.status.toLowerCase()}" style="font-size: 0.68rem; padding: 2px 6px;">${getStatusBadge(lastLeave.status)}</span>
-    </div>
-  ` : `
-    <div class="compact-history-strip">
-      <div><strong>Notice:</strong> This is your <strong>First Leave Application</strong> for session 2026.</div>
-    </div>
-  `;
 
   let html = `
     <div class="apply-leave-wrapper">
@@ -2156,15 +2137,7 @@ function renderApplyLeave(container) {
           </div>
         ` : ''}
 
-        <!-- RECENT LEAVE SUMMARY BANNER -->
-        ${lastLeaveHtml}
-
         <form id="applyLeaveForm" onsubmit="handleApplyLeaveSubmit(event)">
-          <!-- SECTION 1: LEAVE TYPE & DATES -->
-          <div class="apply-section-title">
-            <span>1. Leave Period & Category</span>
-          </div>
-
           <!-- LEAVE TYPE SELECTION -->
           <div class="form-group" style="margin-bottom: 12px;">
             <label for="leaveTypeSelect" class="apply-field-label">
@@ -2178,10 +2151,6 @@ function renderApplyLeave(container) {
               }).join("")}
             </select>
             <small id="leaveTypeDesc" style="color: #64748b; font-size: 0.78rem; margin-top: 3px;"></small>
-            <div style="margin-top: 5px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-              <span style="font-size: 0.75rem; color: #64748b;">Plan leaves around Govt Holidays:</span>
-              <a href="javascript:void(0)" onclick="switchTab('holidays')" style="font-size: 0.75rem; color: #2563eb; font-weight: 600; text-decoration: underline;">📅 View Haryana Govt Official Holiday Calendar 2026 (Gazetted &amp; RH) &rarr;</a>
-            </div>
 
             <!-- MANDATORY MEDICAL ALERT -->
             <div id="medicalNoticeAlert" style="display: none; margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 6px; font-weight: 600; font-size: 0.82rem;">
@@ -2203,7 +2172,7 @@ function renderApplyLeave(container) {
 
           <!-- COMPUTED DAYS DURATION BADGE -->
           <div id="leaveDaysNotice" class="leave-days-badge-notice" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;">
-            Please select dates (Total Days: 0)
+            Please select From &amp; To Dates (Total Days: 0)
           </div>
 
           <!-- BRANCH OVERLAP LIVE ALERT -->
@@ -2232,11 +2201,6 @@ function renderApplyLeave(container) {
             </div>
           </div>
 
-          <!-- SECTION 2: REASON & HANDOVER -->
-          <div class="apply-section-title">
-            <span>2. Grounds & Contact</span>
-          </div>
-
           <!-- REASON TEXTAREA -->
           <div class="form-group" style="margin-bottom: 12px;">
             <label for="leaveReason" class="apply-field-label">Specific Reason for Leave <span class="required">*</span></label>
@@ -2247,30 +2211,31 @@ function renderApplyLeave(container) {
           <input type="hidden" id="handoverOfficer" value="Branch Incharge">
           <input type="hidden" id="emergencyMobile" value="${user.mobile || ''}">
 
-          <!-- SUPPORTING DOCUMENT / ATTACHMENT -->
-          <div class="form-group" style="margin-top: 6px; margin-bottom: 20px;">
-            <div class="mobile-attachment-card" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
-              <div style="flex-grow: 1;">
-                <div style="font-weight: 700; font-size: 0.88rem; color: #0f274c;">📎 Supporting Document / Medical Slip (Optional)</div>
-                <div style="font-size: 0.74rem; color: #64748b;">PDF, JPG, PNG (Max 5MB)</div>
+          <!-- SUPPORTING DOCUMENT / ATTACHMENT (COMPACT) -->
+          <div class="form-group" style="margin-top: 4px; margin-bottom: 16px;">
+            <div class="mobile-attachment-card" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <span style="font-size: 0.95rem; line-height: 1;">📎</span>
+                <div style="min-width: 0;">
+                  <div style="font-weight: 600; font-size: 0.82rem; color: #0f274c;">Document / Slip <small style="color: #64748b; font-weight: normal;">(Optional)</small></div>
+                  <div style="font-size: 0.7rem; color: #64748b;">PDF, JPG, PNG (Max 5MB)</div>
+                </div>
               </div>
-              <div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('leaveAttachmentInput').click()" style="padding: 6px 14px; font-weight: 700; font-size: 0.82rem; background: #ffffff;">
-                  Upload File
-                </button>
-              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('leaveAttachmentInput').click()" style="padding: 4px 12px; font-weight: 600; font-size: 0.76rem; background: #ffffff; flex-shrink: 0;">
+                Upload
+              </button>
             </div>
             <input type="file" id="leaveAttachmentInput" style="display: none;" accept=".pdf,image/*,.doc,.docx" onchange="handleAttachmentSelect(event)">
             <div id="attachmentPrompt" style="display: none;"></div>
-            <div id="attachmentPreviewBox" style="display: none; padding: 10px 14px; border: 1px dashed #cbd5e1; border-top: none; background: #ffffff; border-radius: 0 0 8px 8px;" class="attachment-preview-card" onclick="event.stopPropagation()">
-              <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                <span style="font-size: 1.2rem;">📄</span>
+            <div id="attachmentPreviewBox" style="display: none; padding: 8px 12px; border: 1px dashed #cbd5e1; border-top: none; background: #ffffff; border-radius: 0 0 8px 8px;" class="attachment-preview-card" onclick="event.stopPropagation()">
+              <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
+                <span style="font-size: 0.95rem;">📄</span>
                 <div style="text-align: left; overflow: hidden;">
-                  <strong id="attachmentFileName" style="font-size: 0.85rem; color: #0f274c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></strong>
-                  <div id="attachmentFileSize" style="font-size: 0.72rem; color: #64748b;"></div>
+                  <strong id="attachmentFileName" style="font-size: 0.8rem; color: #0f274c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></strong>
+                  <div id="attachmentFileSize" style="font-size: 0.7rem; color: #64748b;"></div>
                 </div>
               </div>
-              <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="clearSelectedAttachment(event)" style="padding: 3px 8px; font-size: 0.72rem;">Remove</button>
             </div>
           </div>
 
@@ -2450,40 +2415,18 @@ function calculateLeaveDays() {
   }
 
   // Prefix & Suffix calculations
-  const prefixCheck = document.getElementById("prefixSuffixCheck")?.checked;
-  const prefix = prefixCheck ? (parseInt(document.getElementById("prefixDaysInput")?.value) || 0) : 0;
-  const suffix = prefixCheck ? (parseInt(document.getElementById("suffixDaysInput")?.value) || 0) : 0;
-  const totalAbsence = diffDays + prefix + suffix;
-
-  const user = AppState.currentUser;
-  const balance = user.leaveBalances ? (user.leaveBalances[leaveCode] ?? 0) : 0;
-
-  let detailsText = `Total Leave Quota Deduction: <strong>${diffDays} Days</strong> (${formatDate(fromVal)} to ${formatDate(toVal)})`;
-  if (prefix > 0 || suffix > 0) {
-    detailsText += ` | Total Absence Period: <strong>${totalAbsence} Days</strong> (${prefix} Prefix + ${diffDays} Leave + ${suffix} Suffix)`;
-  }
+  let displayText = `📅 <strong>${formatDate(fromVal)} to ${formatDate(toVal)}</strong> &bull; Total Leave: <strong>${diffDays} Day${diffDays > 1 ? 's' : ''}</strong>`;
   if (isHalfDay) {
-    const shiftVal = document.querySelector('input[name="halfDayShift"]:checked')?.value || "Morning Shift";
-    detailsText += ` [Half Day: ${shiftVal}]`;
+    const shiftVal = document.querySelector('input[name="halfDayShift"]:checked')?.value?.includes("Morning") ? "Morning Shift" : "Evening Shift";
+    displayText = `📅 <strong>${formatDate(fromVal)}</strong> &bull; Half Day Leave: <strong>0.5 Day</strong> (${shiftVal})`;
   }
 
-  // CL max 10 days policy advice
-  let policyWarning = "";
-  if (leaveCode === "CL" && diffDays > 10) {
-    policyWarning = `<br><span style="color: #b45309; font-weight: normal; font-size: 0.8rem;">Police Service Rules: Casual Leave (CL) is generally capped at 10 consecutive days. For longer periods, apply for Earned Leave (EL).</span>`;
-  }
+  noticeEl.innerHTML = displayText;
+  noticeEl.style.background = "#eff6ff";
+  noticeEl.style.color = "#1e40af";
+  noticeEl.style.borderColor = "#bfdbfe";
 
-  if (diffDays > balance) {
-    noticeEl.innerHTML = `${detailsText} | <strong>Warning:</strong> Available leave balance is only <strong>${balance} Days</strong>!${policyWarning}`;
-    noticeEl.style.background = "#fffbeb";
-    noticeEl.style.color = "#b45309";
-  } else {
-    noticeEl.innerHTML = `${detailsText} | Sufficient quota available (${balance} Days remaining)${policyWarning}`;
-    noticeEl.style.background = "#dcfce7";
-    noticeEl.style.color = "#166534";
-  }
-
-  // FEATURE 2: Check Branch Peer Overlap
+  // Check Branch Peer Overlap
   checkBranchOverlap(branchVal, fromVal, toVal);
 }
 
