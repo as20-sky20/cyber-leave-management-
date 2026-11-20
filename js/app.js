@@ -3746,63 +3746,7 @@ function openLeaveCategoryModal(leaveCode) {
   const availed = Math.max(0, quota - left);
 
   if (modalTitle) {
-    modalTitle.innerHTML = `${lt.name} (${lt.code}) &bull; Quota &amp; Rules`;
-  }
-
-  // Guidelines text by leave type
-  let rulesHtml = "";
-  if (leaveCode === "CL") {
-    rulesHtml = `
-      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
-        <li><strong>Annual Quota:</strong> 20 Days per calendar year for all Haryana Police personnel.</li>
-        <li><strong>Application Limit:</strong> Maximum 10 consecutive days per application as per Haryana Police Rules.</li>
-        <li><strong>Prefix / Suffix:</strong> Sundays, Gazetted Holidays (GH), and weekly offs may be prefixed or suffixed to Casual Leave without debiting the leave quota.</li>
-        <li><strong>Half-Day Option:</strong> Available for single-day emergencies (Morning Shift: 09:00 AM - 02:00 PM or Evening Shift: 02:00 PM - 08:00 PM).</li>
-      </ul>
-    `;
-  } else if (leaveCode === "ML") {
-    rulesHtml = `
-      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
-        <li><strong>Annual Quota:</strong> 20 Days on medical grounds.</li>
-        <li><strong>Mandatory Document:</strong> A valid Medical Certificate / Prescription from a Registered Medical Practitioner (RMP) or Govt Hospital is required.</li>
-        <li><strong>Attachment:</strong> Please attach the doctor's slip in the portal while submitting the application.</li>
-      </ul>
-    `;
-  } else if (leaveCode === "C-OFF") {
-    rulesHtml = `
-      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
-        <li><strong>Annual Quota:</strong> 10 Days Compensatory Off.</li>
-        <li><strong>Eligibility:</strong> Granted against special weekend duty, Gazetted Holiday deployment, or overnight cyber operations / raids.</li>
-        <li><strong>Verification:</strong> Subject to recommendation and roster verification by the Branch Incharge.</li>
-      </ul>
-    `;
-  } else if (leaveCode === "HPL") {
-    rulesHtml = `
-      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
-        <li><strong>Annual Quota:</strong> 20 Days per completed service year.</li>
-        <li><strong>Half Pay:</strong> Leave salary admissible is equal to half the pay drawn before proceeding on leave.</li>
-        <li><strong>Commutation:</strong> Can be converted into full-pay commuted leave on medical grounds.</li>
-      </ul>
-    `;
-  } else if (leaveCode === "RH") {
-    rulesHtml = `
-      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
-        <li><strong>Annual Quota:</strong> 2 Restricted Holidays per calendar year.</li>
-        <li><strong>Choice of Occasion:</strong> Personnel may choose any 2 festivals from the official Haryana Government 20 Restricted Holidays (RH) notification.</li>
-        <li><strong>Prior Notice:</strong> Requires prior sanction so branch duty operations are not disrupted.</li>
-      </ul>
-    `;
-  } else if (leaveCode === "EL") {
-    rulesHtml = `
-      <ul style="margin: 0; padding-left: 18px; color: #334155; font-size: 0.85rem; line-height: 1.6;">
-        <li><strong>Annual Quota:</strong> 30 Days Earned Leave accumulated in the officer's leave ledger.</li>
-        <li><strong>Purpose:</strong> For extended rest, family functions, or medical treatment beyond casual leave limits.</li>
-      </ul>
-    `;
-  } else {
-    rulesHtml = `
-      <p style="color: #334155; font-size: 0.85rem; margin: 0;">${lt.desc || 'Official Haryana Police sanctioned leave category.'}</p>
-    `;
+    modalTitle.innerHTML = `${lt.name} (${lt.code}) &bull; Quota &amp; Details`;
   }
 
   // Past user leaves under this category in 2026
@@ -3828,14 +3772,6 @@ function openLeaveCategoryModal(leaveCode) {
         <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a; margin: 4px 0;">${left} <small style="font-size: 0.8rem; font-weight: 600;">Days Left</small></div>
         <div style="font-size: 0.72rem; color: #166534; font-weight: 600;">Current Active Quota</div>
       </div>
-    </div>
-
-    <!-- Official Police Rules Strip -->
-    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
-      <div style="font-size: 0.9rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-        <span>📜</span> Haryana Police Service Rules: ${lt.name} (${lt.code})
-      </div>
-      ${rulesHtml}
     </div>
 
     <!-- Past Applications of this category -->
