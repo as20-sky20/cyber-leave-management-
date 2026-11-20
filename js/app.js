@@ -2451,19 +2451,11 @@ function checkBranchOverlap(branchId, fromVal, toVal) {
     return (l.fromDate <= toVal && l.toDate >= fromVal);
   });
 
-  overlapBox.style.display = "block";
   if (overlappingLeaves.length === 0) {
-    overlapBox.className = "branch-overlap-box clear";
-    overlapBox.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 1.1rem;">✓</span>
-        <div>
-          <strong>Branch Duty Strength Status:</strong>
-          No other personnel from your branch are on leave during this period. Full strength of ${totalBranchStaff} personnel is available on duty.
-        </div>
-      </div>
-    `;
+    overlapBox.style.display = "none";
+    overlapBox.innerHTML = "";
   } else {
+    overlapBox.style.display = "block";
     overlapBox.className = "branch-overlap-box warning";
     const names = overlappingLeaves.map(l => `<strong>${l.applicantName}</strong> (${l.rank} - ${formatDate(l.fromDate)} to ${formatDate(l.toDate)})`).join(", ");
     const remainingOnDuty = Math.max(0, totalBranchStaff - overlappingLeaves.length - 1);
