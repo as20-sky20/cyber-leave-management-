@@ -419,9 +419,10 @@ function recalculateAllUserLeaveBalances() {
 // Works 100% across multiple computers, laptops, and mobile phones simultaneously
 // Zero CORS preflight issues, zero API keys, instant cross-device updates (< 100ms)
 // ============================================================================
-const LIVE_SYNC_PUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-sync-v2026-clean";
-const LIVE_SYNC_SUB_URL = "https://ntfy.sh/haryana-cyber-police-leave-sync-v2026-clean/sse";
-const LIVE_SYNC_POLL_URL = "https://ntfy.sh/haryana-cyber-police-leave-sync-v2026-clean/json?poll=1&since=all";
+const LIVE_SYNC_TOPIC = "haryana-cyber-leave-sync-live-2026";
+const LIVE_SYNC_PUB_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC}`;
+const LIVE_SYNC_SUB_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC}/sse`;
+const LIVE_SYNC_POLL_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC}/json?poll=1&since=all`;
 
 let isCloudConnected = false;
 let liveSseSource = null;
@@ -490,12 +491,7 @@ function compactLeaveForSync(l) {
 async function syncWithOfficeDatabase() {
   updateSyncIndicator(false, "Syncing...");
 
-  // 1. Broadcast our leaves if we have any so other devices receive them
-  if (AppState.leaves && AppState.leaves.length > 0) {
-    await broadcastFullDatabaseSnapshot();
-  }
-
-  // 2. First try Local Office LAN Server (if running via start_server.ps1)
+  // 1. First try Local Office LAN Server (if running via start_server.ps1)
   try {
     const res = await fetch("/api/data", { cache: "no-store" });
     if (res.ok) {
@@ -506,7 +502,7 @@ async function syncWithOfficeDatabase() {
           mergeIncomingData(data);
           isLanServerConnected = true;
           updateSyncIndicator(true, "Office LAN Sync");
-          saveData();
+          saveToLocalStorageOnly();
           populateUserSwitcher();
           renderNavigationTabs();
           renderApp();
@@ -519,34 +515,56 @@ async function syncWithOfficeDatabase() {
     // Local server not available, fall through to Cloud sync
   }
 
-  // 3. Poll Cloud Live Sync History
+  // 2. Poll Cloud Live Sync History (pulls latest from other devices)
   await pollLiveSyncHistory();
+
+  // 3. Broadcast snapshot if this device has leaves so other devices stay synchronized
+  if (AppState.leaves && AppState.leaves.length > 0) {
+    await broadcastFullDatabaseSnapshot();
+  }
+
   updateSyncIndicator(true, "Live Cloud Sync Online");
   closeSidebarNav();
   renderApp();
   showToast("Multi-Device Cloud Sync refreshed. All data synchronized!", "success");
 }
 
-// Start Live Cross-Device Real-Time Sync (SSE + Periodic Polling)
+// Start Live Cross-Device Real-Time Sync (SSE + Periodic Polling + Tab Wakeup)
 function startLiveSync() {
-  pollLiveSyncHistory();
+  pollLiveSyncHistory().then(() => {
+    if (AppState.leaves && AppState.leaves.length > 0) {
+      broadcastFullDatabaseSnapshot();
+    } else {
+      broadcastLiveAction({ action: "REQUEST_STATE_SYNC" });
+    }
+  });
+
   connectLiveSSE();
 
-  // If we have leaves, broadcast snapshot with retain so newly opening devices catch up
-  if (AppState.leaves && AppState.leaves.length > 0) {
-    broadcastFullDatabaseSnapshot();
-  } else {
-    // If we have no leaves, ask other online devices to share their state
-    broadcastLiveAction({ action: "REQUEST_STATE_SYNC" });
-  }
-
-  // Background refresh every 20 seconds to maintain sync without flood
+  // Background refresh every 8 seconds for rock-solid cross-device sync
   setInterval(() => {
     if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
       connectLiveSSE();
     }
     pollLiveSyncHistory();
-  }, 20000);
+  }, 8000);
+
+  // Automatic instantaneous wake-up when user switches to this tab or unlocks screen
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
+        connectLiveSSE();
+      }
+      pollLiveSyncHistory();
+    }
+  });
+
+  window.addEventListener("focus", () => {
+    if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
+      connectLiveSSE();
+    }
+    pollLiveSyncHistory();
+  });
 }
 
 function connectLiveSSE() {
@@ -650,12 +668,11 @@ async function broadcastLiveAction(actionPayload) {
 
     const bodyText = JSON.stringify(actionPayload);
 
-    // Uses text/plain and X-Retain to guarantee delivery to online and newly opening devices
+    // Simple text/plain post with NO custom headers so NO CORS preflight failure occurs on mobile/PC
     await fetch(LIVE_SYNC_PUB_URL, {
       method: "POST",
       headers: { 
-        "Content-Type": "text/plain; charset=utf-8",
-        "X-Retain": "1"
+        "Content-Type": "text/plain"
       },
       body: bodyText
     });
@@ -668,21 +685,56 @@ async function broadcastLiveAction(actionPayload) {
 // Broadcast complete state snapshot so newly loaded mobile phones or PCs instantly catch up
 async function broadcastFullDatabaseSnapshot() {
   if (!AppState.leaves || AppState.leaves.length === 0) return;
+  const now = Date.now();
+  if (window._lastSnapshotBroadcast && (now - window._lastSnapshotBroadcast < 10000)) {
+    return;
+  }
+  window._lastSnapshotBroadcast = now;
+
   try {
     const compactLeaves = AppState.leaves.map(compactLeaveForSync);
     const payload = {
       action: "FULL_DATABASE_SNAPSHOT",
       clientId: getClientId(),
-      timestamp: Date.now(),
+      timestamp: now,
       leaves: compactLeaves,
-      notices: AppState.notices || []
+      notices: (AppState.notices || []).slice(0, 5)
     };
-    const bodyText = JSON.stringify(payload);
+    let bodyText = JSON.stringify(payload);
+    // Guarantee payload is < 3800 bytes so ntfy never converts it to an attachment file
+    if (bodyText.length > 3800) {
+      const miniLeaves = AppState.leaves.slice(0, 25).map(l => ({
+        id: l.id,
+        sanctionNo: l.sanctionNo || "",
+        applicantId: l.applicantId || "",
+        applicantName: l.applicantName || "",
+        beltNo: l.beltNo || "",
+        rank: l.rank || "",
+        branchId: l.branchId || "",
+        branchName: l.branchName || "",
+        leaveType: l.leaveType || "CL",
+        fromDate: l.fromDate || "",
+        toDate: l.toDate || "",
+        totalDays: l.totalDays || 0,
+        status: l.status || "PENDING_INCHARGE",
+        appliedAt: l.appliedAt || "",
+        reason: (l.reason || "").substring(0, 30),
+        inchargeRemarks: (l.inchargeRemarks || "").substring(0, 40),
+        spRemarks: (l.spRemarks || "").substring(0, 40),
+        stationLeave: !!l.stationLeave
+      }));
+      bodyText = JSON.stringify({
+        action: "FULL_DATABASE_SNAPSHOT",
+        clientId: getClientId(),
+        timestamp: now,
+        leaves: miniLeaves
+      });
+    }
+
     await fetch(LIVE_SYNC_PUB_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "X-Retain": "1"
+        "Content-Type": "text/plain"
       },
       body: bodyText
     });
@@ -757,6 +809,9 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
       if (!isInitialSync) {
         showToast(`New Leave Application: ${payload.leave.applicantName} (${payload.leave.totalDays} Days)`, "info");
       }
+    } else {
+      AppState.leaves[existingIndex] = { ...AppState.leaves[existingIndex], ...payload.leave };
+      hasChanged = true;
     }
   }
 
@@ -895,11 +950,9 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
 
   if (hasChanged) {
     recalculateAllUserLeaveBalances();
-    saveData();
+    saveToLocalStorageOnly();
     renderNavigationTabs();
-    if (["dashboard", "incharge_desk", "sp_desk", "daily_sitrep", "master_register", "notices", "my_leaves", "directory"].includes(AppState.activeTab)) {
-      renderApp();
-    }
+    renderApp();
   }
 }
 
@@ -942,8 +995,6 @@ function saveData() {
   if (isLanServerConnected) {
     pushDataToOfficeServer();
   }
-  // Also push snapshot to cloud with retain so mobile & other PCs stay 100% in sync
-  broadcastFullDatabaseSnapshot();
 }
 
 function saveToLocalStorageOnly() {
@@ -3036,7 +3087,7 @@ function renderInchargeDesk(container) {
         <button class="btn btn-outline btn-sm" onclick="forceResetAllLeavesPrompt()" style="color: #ef4444; border-color: #ef4444;" title="Reset all leave applications across all devices to clean slate">
           🗑️ Reset All Leaves
         </button>
-        <button class="btn btn-outline btn-sm" onclick="renderApp()">
+        <button class="btn btn-outline btn-sm" onclick="syncWithOfficeDatabase()" title="Fetch latest leave applications and real-time cloud data">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
           Refresh
         </button>
@@ -3274,7 +3325,7 @@ function renderSPDesk(container) {
         <button class="btn btn-outline btn-sm" onclick="forceResetAllLeavesPrompt()" style="color: #ef4444; border-color: #ef4444;" title="Reset all leave applications across all devices to clean slate">
           🗑️ Reset All Leaves
         </button>
-        <button class="btn btn-outline btn-sm" onclick="renderApp()">
+        <button class="btn btn-outline btn-sm" onclick="syncWithOfficeDatabase()" title="Fetch latest leave applications and real-time cloud data">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
           Refresh
         </button>
