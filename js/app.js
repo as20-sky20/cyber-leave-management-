@@ -3280,11 +3280,18 @@ function renderInchargeDesk(container) {
           <strong class="incharge-scope-title">${branchName}</strong>
         </div>
       </div>
-      <span class="incharge-scope-badge">
-        ${branchPendingLeaves.length} Pending
-      </span>
+      ${branchPendingLeaves.length > 0 ? `
+        <span class="incharge-scope-badge">
+          ${branchPendingLeaves.length} Pending
+        </span>
+      ` : `
+        <span class="incharge-scope-badge" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">
+          ✓ All Clear
+        </span>
+      `}
     </div>
 
+    ${branchPendingLeaves.length > 0 ? `
     <div class="card-table-wrap">
       <div class="table-toolbar">
         <div class="table-title">
@@ -3293,92 +3300,87 @@ function renderInchargeDesk(container) {
           <span class="tab-badge" style="margin-left: 6px;">${branchPendingLeaves.length}</span>
         </div>
       </div>
-      ${branchPendingLeaves.length === 0 ? `
-        <div style="padding: 24px 16px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 0.95rem; font-weight: 700;">✓ All Clear - No Pending Applications</div>
+      <div class="vdesk-desktop-view">
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
         </div>
-      ` : `
-        <div class="vdesk-desktop-view">
-          <div class="table-scroll-hint">
-            <span>👉 Swipe table horizontally to see all columns</span>
-          </div>
-          <div class="responsive-table">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Application ID</th>
-                  <th>Personnel Details</th>
-                  <th>Leave Type</th>
-                  <th>Period</th>
-                  <th>Days</th>
-                  <th>Ground / Reason</th>
-                  <th>Relieving Handover</th>
-                  <th>Incharge Action</th>
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Application ID</th>
+                <th>Personnel Details</th>
+                <th>Leave Type</th>
+                <th>Period</th>
+                <th>Days</th>
+                <th>Ground / Reason</th>
+                <th>Relieving Handover</th>
+                <th>Incharge Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${branchPendingLeaves.map(leave => `
+                <tr class="leave-card-row">
+                  <td data-label="Application ID">
+                    <div class="vdesk-id-wrap">
+                      <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
+                      <span class="vdesk-date-tag">${leave.appliedAt}</span>
+                    </div>
+                  </td>
+                  <td data-label="Personnel Details">
+                    <div class="vdesk-personnel-block">
+                      <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                      <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
+                    </div>
+                  </td>
+                  <td data-label="Leave Type">
+                    <span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span>
+                    <small style="display: block; color: #64748b;">${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small>
+                  </td>
+                  <td data-label="Period">
+                    <span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+                  </td>
+                  <td data-label="Days">
+                    <span class="days-badge"><strong>${leave.totalDays}</strong> Days</span>
+                  </td>
+                  <td data-label="Ground / Reason">
+                    <div class="vdesk-reason-text">"${leave.reason}"</div>
+                    ${leave.attachment ? `
+                      <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
+                        📎 Doc Attached: ${leave.attachment.name || 'View'}
+                      </span>
+                    ` : ''}
+                    ${leave.stationLeave ? `
+                      <span class="vdesk-chip chip-station">
+                        🚩 Station Leave: ${leave.stationLeaveAddress || 'Permission Requested'}
+                      </span>
+                    ` : ''}
+                  </td>
+                  <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
+                  <td data-label="Incharge Action" class="mobile-card-actions">
+                    <div class="vdesk-btn-group">
+                      <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openInchargeActionModal('${leave.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2h11"></path></svg>
+                        Review & Recommend
+                      </button>
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        Details
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                ${branchPendingLeaves.map(leave => `
-                  <tr class="leave-card-row">
-                    <td data-label="Application ID">
-                      <div class="vdesk-id-wrap">
-                        <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
-                        <span class="vdesk-date-tag">${leave.appliedAt}</span>
-                      </div>
-                    </td>
-                    <td data-label="Personnel Details">
-                      <div class="vdesk-personnel-block">
-                        <div class="vdesk-personnel-name">${leave.applicantName}</div>
-                        <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
-                      </div>
-                    </td>
-                    <td data-label="Leave Type">
-                      <span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span>
-                      <small style="display: block; color: #64748b;">${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small>
-                    </td>
-                    <td data-label="Period">
-                      <span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
-                    </td>
-                    <td data-label="Days">
-                      <span class="days-badge"><strong>${leave.totalDays}</strong> Days</span>
-                    </td>
-                    <td data-label="Ground / Reason">
-                      <div class="vdesk-reason-text">"${leave.reason}"</div>
-                      ${leave.attachment ? `
-                        <span class="vdesk-chip chip-attachment" onclick="viewAttachment('${leave.id}')">
-                          📎 Doc Attached: ${leave.attachment.name || 'View'}
-                        </span>
-                      ` : ''}
-                      ${leave.stationLeave ? `
-                        <span class="vdesk-chip chip-station">
-                          🚩 Station Leave: ${leave.stationLeaveAddress || 'Permission Requested'}
-                        </span>
-                      ` : ''}
-                    </td>
-                    <td data-label="Relieving Handover">${leave.handoverTo || "-"}</td>
-                    <td data-label="Incharge Action" class="mobile-card-actions">
-                      <div class="vdesk-btn-group">
-                        <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openInchargeActionModal('${leave.id}')">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2h11"></path></svg>
-                          Review & Recommend
-                        </button>
-                        <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                          Details
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
+              `).join("")}
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <div class="vdesk-mobile-view">
-          ${branchPendingLeaves.map(leave => renderInchargeMobileCard(leave)).join("")}
-        </div>
-      `}
+      <div class="vdesk-mobile-view">
+        ${branchPendingLeaves.map(leave => renderInchargeMobileCard(leave)).join("")}
+      </div>
     </div>
+    ` : ''}
 
     <!-- PREVIOUSLY PROCESSED LEAVES -->
     <div class="card-table-wrap" style="margin-top: 24px;">
