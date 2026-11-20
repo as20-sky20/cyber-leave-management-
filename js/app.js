@@ -3928,7 +3928,7 @@ function openSanctionedLeavesModal() {
   ).sort((a, b) => new Date(b.approvedAt || b.toDate) - new Date(a.approvedAt || a.toDate));
 
   if (modalTitle) {
-    modalTitle.innerHTML = `Official Sanctioned Orders (${approved.length} Sanctioned)`;
+    modalTitle.innerHTML = `Official Sanctioned Orders (${approved.length})`;
   }
 
   if (approved.length === 0) {
@@ -3937,7 +3937,7 @@ function openSanctionedLeavesModal() {
         <div style="font-size: 2.2rem; margin-bottom: 10px;">📋</div>
         <h4 style="font-size: 1.1rem; color: #0f274c; margin-bottom: 6px; font-weight: 700;">No Sanctioned Leaves Yet in 2026</h4>
         <p style="color: #64748b; font-size: 0.88rem; max-width: 440px; margin: 0 auto 16px;">
-          Once your leave application is sanctioned by SP Cyber (Mayank Gupta, IPS), the official order dispatch slip and download options will appear here.
+          Once your leave application is sanctioned, the official order dispatch slip and download options will appear here.
         </p>
         <button class="btn btn-primary btn-sm" onclick="closeModals(); switchTab('apply_leave');">
           + Apply For Leave
@@ -3949,40 +3949,32 @@ function openSanctionedLeavesModal() {
     }
   } else {
     modalBody.innerHTML = `
-      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.85rem; color: #166534;">
-        ✓ Total <strong>${approved.length} official leave order(s)</strong> sanctioned for session 2026.
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
         ${approved.map(l => `
-          <div style="background: #ffffff; border: 1.5px solid #16a34a; border-radius: 10px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+          <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
               <div>
-                <div style="font-size: 0.78rem; font-weight: 700; color: #166534; text-transform: uppercase;">
-                  SANCTION DISPATCH NO: <strong>${l.sanctionNo || ('CYB/SANCT/2026/' + l.id.slice(-4))}</strong>
+                <div style="font-size: 0.74rem; font-weight: 700; color: #166534; letter-spacing: 0.3px;">
+                  ${l.sanctionNo || ('CYB/SANCT/2026/' + l.id.slice(-4))}
                 </div>
-                <div style="font-weight: 700; color: #0f274c; font-size: 1.05rem; margin-top: 3px;">
+                <div style="font-weight: 700; color: #0f274c; font-size: 1rem; margin-top: 2px;">
                   ${l.leaveTypeName || l.leaveType} &bull; ${l.totalDays} Days
                 </div>
-                <div style="font-size: 0.84rem; color: #334155; margin-top: 3px;">
-                  📅 Sanctioned Period: <strong>${formatDate(l.fromDate)}</strong> to <strong>${formatDate(l.toDate)}</strong>
+                <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">
+                  📅 ${formatDate(l.fromDate)} &rarr; ${formatDate(l.toDate)}
                 </div>
               </div>
-              <span class="status-badge approved" style="font-size: 0.75rem; padding: 4px 10px;">
+              <span class="status-badge approved" style="font-size: 0.72rem; padding: 3px 8px;">
                 ✓ SANCTIONED
               </span>
             </div>
 
-            <div style="margin-top: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; color: #475569;">
-              <div><strong>Sanctioning Authority:</strong> Mayank Gupta, IPS, SP Cyber Crime, Panchkula</div>
-              ${l.spRemarks ? `<div style="margin-top: 3px;"><strong>SP Remarks:</strong> "${l.spRemarks}"</div>` : ''}
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
-              <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${l.id}');">
-                📄 View Order Details
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+              <button class="btn btn-outline btn-sm" onclick="closeModals(); openLeaveDetailsModal('${l.id}');" style="padding: 4px 10px; font-size: 0.78rem;">
+                Details
               </button>
-              <button class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${l.id}');" style="background: #16a34a; border-color: #16a34a;">
-                🖨️ Open Sanction Order Slip
+              <button class="btn btn-primary btn-sm" onclick="closeModals(); openSanctionSlipModal('${l.id}');" style="background: #16a34a; border-color: #16a34a; padding: 4px 12px; font-size: 0.78rem;">
+                📄 Order Slip
               </button>
             </div>
           </div>
@@ -7120,7 +7112,7 @@ function openSPActionModal(leaveId) {
 
     <div class="form-group">
       <label for="spRemarksText">Superintendent of Police Sanction Order & Directive</label>
-      <input type="text" id="spRemarksText" class="form-control" value="Leave and Station Leave permission sanctioned as per rules." placeholder="Enter sanction order remarks">
+      <input type="text" id="spRemarksText" class="form-control" value="Sanctioned" placeholder="Enter sanction order remarks (optional)">
     </div>
   `;
 
