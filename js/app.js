@@ -1787,29 +1787,6 @@ function renderDashboard(container) {
       </div>
     </div>
 
-    <!-- OTHER LEAVE QUOTAS (EXCLUDING CL, EL, CCL, PL) -->
-    <div class="other-leaves-card">
-      <div class="other-leaves-header">
-        <span class="other-leaves-title">Other Official Leave Balances</span>
-        <span class="other-leaves-sub">Medical, Compensatory &amp; Restricted (Tap any card to view &amp; apply)</span>
-      </div>
-      <div class="other-leaves-grid">
-        ${LEAVE_TYPES.filter(lt => !['CL', 'EL', 'CCL', 'PL'].includes(lt.code)).map(lt => {
-          const bal = user.leaveBalances ? (user.leaveBalances[lt.code] ?? 0) : 0;
-          return `
-            <div class="other-leave-pill" onclick="openLeaveCategoryModal('${lt.code}')" style="cursor: pointer;" title="Click to view ${lt.name} (${lt.code}) Quota Details &amp; Apply">
-              <div class="other-leave-top">
-                <span class="other-leave-code">${lt.code}</span>
-                <span class="other-leave-count">${bal} Days</span>
-              </div>
-              <div class="other-leave-name">${lt.name.split('(')[0].trim()}</div>
-              <div style="font-size: 0.68rem; color: #3b82f6; font-weight: 700; margin-top: 4px; text-align: right;">Open &rarr;</div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-
     <!-- GOVT HOLIDAY CALENDAR 2026 SHORTCUT BANNER (ONLY GH FOCUS) -->
     <div style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 18px; margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: var(--shadow-sm); cursor: pointer;" onclick="switchTab('holidays')">
       <div style="display: flex; align-items: center; gap: 14px;">
