@@ -1618,7 +1618,43 @@ function renderDashboard(container) {
   // EXECUTIVE DASHBOARD FOR SP CYBER (Mayank Gupta, IPS)
   // ----------------------------------------------------
   if (isSPRole) {
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    // Identify who is on leave today
+    const todayOnLeaveOfficers = AppState.leaves.filter(l => {
+      if (l.status !== "APPROVED") return false;
+      return l.fromDate <= todayStr && l.toDate >= todayStr;
+    });
+
+    // Recent Sanctioned Orders (last 4 approved leaves)
+    const recentApprovedLeaves = AppState.leaves
+      .filter(l => l.status === "APPROVED")
+      .slice(-4)
+      .reverse();
+
+    // 13 Cyber Wings Strength breakdown
+    const wingBreakdown = (AppState.branches || []).map(branch => {
+      const branchUsers = AppState.users.filter(u => u.branchId === branch.id);
+      const onLeaveCount = branchUsers.filter(u => {
+        return AppState.leaves.some(l => l.applicantId === u.id && l.status === "APPROVED" && l.fromDate <= todayStr && l.toDate >= todayStr);
+      }).length;
+      const totalBranchStrength = branchUsers.length;
+      const onDutyBranchCount = Math.max(0, totalBranchStrength - onLeaveCount);
+      const incharge = branchUsers.find(u => u.role === "branch_incharge" || u.role === "admin") || branchUsers[0];
+      return {
+        id: branch.id,
+        name: branch.name,
+        hindi: branch.hindi,
+        total: totalBranchStrength,
+        onDuty: onDutyBranchCount,
+        onLeave: onLeaveCount,
+        inchargeName: incharge ? incharge.name : "Incharge",
+        inchargeRank: incharge ? incharge.rank : "Insp."
+      };
+    });
+
     let html = `
+      <!-- SP DASHBOARD HEADER -->
       <div class="page-header">
         <div class="page-title-group">
           <h2>
@@ -1632,14 +1668,14 @@ function renderDashboard(container) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
             Open SP Desk (${spPendingLeaves.length})
           </button>
-          <button class="btn btn-outline btn-sm" onclick="switchTab('notices')" title="Official Notice Board">
-            Notice Board
+          <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" title="Daily Attendance & Roll Call">
+            📋 SITREP
           </button>
-          <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" title="Daily Attendance">
-            SITREP
+          <button class="btn btn-outline btn-sm" onclick="switchTab('notices')" title="Official Notice Board">
+            📢 Notice Board
           </button>
           <button class="btn btn-outline btn-sm" onclick="openBackupModal()" title="Data Backup">
-            Data Backup
+            💾 Backup
           </button>
         </div>
       </div>
@@ -1652,7 +1688,7 @@ function renderDashboard(container) {
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
           </div>
           <div class="stat-number" style="color: ${spPendingLeaves.length > 0 ? '#dc2626' : '#15803d'};">${spPendingLeaves.length}</div>
-          <div class="stat-subtext">${spPendingLeaves.length > 0 ? 'Action Required &bull; Click to open &rarr;' : 'All Cleared &bull; Click to open &rarr;'}</div>
+          <div class="stat-subtext">${spPendingLeaves.length > 0 ? '⚠️ Action Required &bull; Open Desk &rarr;' : '✓ All Cleared &bull; Open Desk &rarr;'}</div>
         </div>
 
         <div class="stat-card blue" onclick="openSPDirectInitialDesk()" style="cursor: pointer;" title="Click to view Initial Applications Awaiting Branch Review">
@@ -1661,7 +1697,7 @@ function renderDashboard(container) {
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
           </div>
           <div class="stat-number">${inchargePendingCount}</div>
-          <div class="stat-subtext">Awaiting Branch &bull; Click to view &rarr;</div>
+          <div class="stat-subtext">Awaiting Branch &bull; View &rarr;</div>
         </div>
 
         <div class="stat-card green" onclick="openMasterRegisterWithFilter('APPROVED')" style="cursor: pointer;" title="Click to view all Sanctioned Orders in Master Register">
@@ -1670,7 +1706,7 @@ function renderDashboard(container) {
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
           </div>
           <div class="stat-number">${unitApprovedCount}</div>
-          <div class="stat-subtext">Official Orders Issued &bull; Click to view &rarr;</div>
+          <div class="stat-subtext">Official Orders Issued &bull; Register &rarr;</div>
         </div>
 
         <div class="stat-card purple" onclick="openTodayOnLeaveDetails()" style="cursor: pointer;" title="Click to view Officer(s) on Leave today">
@@ -1679,59 +1715,318 @@ function renderDashboard(container) {
             <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
           </div>
           <div class="stat-number">${onDutyCount} / ${totalForce}</div>
-          <div class="stat-subtext">${currentlyOnLeave} on Leave &bull; Tap to view who &rarr;</div>
+          <div class="stat-subtext">${currentlyOnLeave > 0 ? `🚨 ${currentlyOnLeave} on Leave Today &bull; Tap to view &rarr;` : '🟢 Full Strength On Duty &bull; View &rarr;'}</div>
         </div>
       </div>
 
-      <!-- 13 BRANCHES SUMMARY FOR SP -->
-      <div class="leave-quota-card">
+      <!-- COMMAND QUICK ACTION SHORTCUTS (BALANCED 6 ACTIONS, NO DUPLICATE STATS) -->
+      <div class="leave-quota-card" style="margin-bottom: 20px;">
         <div class="leave-quota-title">
-          <span>Haryana Cyber Police - 13 Wings Strength Overview</span>
+          <span>Command Quick Actions &amp; Wing Operations</span>
         </div>
-        <div class="leave-pills-row">
+        <div class="leave-pills-row" style="grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));">
           <div class="leave-pill-item" onclick="switchTab('branches')" title="Click to view all 13 Cyber Wings">
-            <div class="type-code">13</div>
-            <div class="type-name">Total Branches</div>
-            <div class="days-count">100%</div>
-            <div class="days-label">Active Wings &rarr;</div>
-          </div>
-          <div class="leave-pill-item" onclick="switchTab('directory')" title="Click to view Personnel Directory">
-            <div class="type-code">FORCE</div>
-            <div class="type-name">Total Strength</div>
-            <div class="days-count">${totalForce}</div>
-            <div class="days-label">Staff Directory &rarr;</div>
+            <div class="type-code">🏢 13 WINGS</div>
+            <div class="type-name">Cyber Branches</div>
+            <div class="days-count" style="font-size: 1.05rem; color: #1e3a8a;">13 Units</div>
+            <div class="days-label">View Wings &rarr;</div>
           </div>
           <div class="leave-pill-item" onclick="switchTab('daily_sitrep')" title="Click to view Daily SITREP & Roll Call">
-            <div class="type-code">DUTY</div>
-            <div class="type-name">On Duty</div>
-            <div class="days-count" style="color: #15803d;">${onDutyCount}</div>
-            <div class="days-label">Daily SITREP &rarr;</div>
+            <div class="type-code">📋 SITREP</div>
+            <div class="type-name">Daily Roll Call</div>
+            <div class="days-count" style="font-size: 1.05rem; color: #15803d;">${onDutyCount} Duty</div>
+            <div class="days-label">Roll Call &rarr;</div>
           </div>
-          <div class="leave-pill-item" onclick="openTodayOnLeaveDetails()" title="Click to view officer(s) on leave today" style="cursor: pointer;">
-            <div class="type-code">LEAVE</div>
-            <div class="type-name">On Leave Today</div>
-            <div class="days-count" style="color: #b45309;">${currentlyOnLeave}</div>
-            <div class="days-label">${currentlyOnLeave > 0 ? 'View Officer &rarr;' : '0 on Leave'}</div>
+          <div class="leave-pill-item" onclick="switchTab('master_register')" title="Click to view Master Leave Register">
+            <div class="type-code">📖 REGISTER</div>
+            <div class="type-name">Master Orders</div>
+            <div class="days-count" style="font-size: 1.05rem; color: #0f274c;">${AppState.leaves.length} Total</div>
+            <div class="days-label">Audit Register &rarr;</div>
           </div>
-          <div class="leave-pill-item" onclick="switchTab('sp_desk')" title="Click to open SP Sanction Desk">
-            <div class="type-code">SP-DESK</div>
-            <div class="type-name">Pending Sanction</div>
-            <div class="days-count" style="color: #dc2626;">${spPendingLeaves.length}</div>
-            <div class="days-label">Open Desk &rarr;</div>
+          <div class="leave-pill-item" onclick="switchTab('directory')" title="Click to view Staff Directory">
+            <div class="type-code">👮 STAFF</div>
+            <div class="type-name">Force Directory</div>
+            <div class="days-count" style="font-size: 1.05rem; color: #475569;">${totalForce} Staff</div>
+            <div class="days-label">Directory &rarr;</div>
           </div>
           <div class="leave-pill-item" onclick="switchTab('holidays'); setHolidayFilter('GAZETTED');" title="Click to view Official Haryana Govt Gazetted Holidays (GH) 2026">
-            <div class="type-code">GH-2026</div>
-            <div class="type-name">Gazetted Leaves</div>
-            <div class="days-count" style="color: #0f274c;">28 GH</div>
-            <div class="days-label">All 28 GH &rarr;</div>
+            <div class="type-code">📅 GH-2026</div>
+            <div class="type-name">Govt Holidays</div>
+            <div class="days-count" style="font-size: 1.05rem; color: #0f274c;">28 GH</div>
+            <div class="days-label">Calendar &rarr;</div>
           </div>
           <div class="leave-pill-item" onclick="openUpcomingGHModal()" title="Click to open Upcoming Gazetted Holidays (GH) Modal">
-            <div class="type-code">UPCOMING</div>
-            <div class="type-name">Next GH Leaves</div>
-            <div class="days-count" style="color: #6b21a8;">Upcoming</div>
-            <div class="days-label">Open Upcoming &rarr;</div>
+            <div class="type-code">⚡ UPCOMING</div>
+            <div class="type-name">Next Holiday</div>
+            <div class="days-count" style="font-size: 1.05rem; color: #9333ea;">Upcoming</div>
+            <div class="days-label">View Next &rarr;</div>
           </div>
         </div>
+      </div>
+
+      <!-- PRIORITY SANCTION DESK (AWAITING SP SANCTION) -->
+      ${spPendingLeaves.length > 0 ? `
+        <div class="card-table-wrap" style="margin-bottom: 24px; border: 1.5px solid #fde68a; box-shadow: 0 4px 16px rgba(217, 119, 6, 0.08);">
+          <div class="table-toolbar" style="background: #fffbeb;">
+            <div class="table-title" style="color: #92400e;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              Priority Sanction Desk: Applications Recommended for Approval
+              <span class="tab-badge" style="background: #dc2626; color: #fff; margin-left: 8px;">${spPendingLeaves.length} Ready</span>
+            </div>
+          </div>
+          <div class="vdesk-desktop-view">
+            <div class="table-scroll-hint"><span>👉 Swipe table horizontally to see all columns</span></div>
+            <div class="responsive-table">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Application ID</th>
+                    <th>Personnel &amp; Branch</th>
+                    <th>Leave Type</th>
+                    <th>Period</th>
+                    <th>Days</th>
+                    <th>Ground / Reason</th>
+                    <th>Incharge Note</th>
+                    <th>SP Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${spPendingLeaves.map(leave => `
+                    <tr class="leave-card-row">
+                      <td data-label="Application ID">
+                        <div class="vdesk-id-wrap">
+                          <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
+                          <span class="vdesk-date-tag">${leave.appliedAt || ''}</span>
+                        </div>
+                      </td>
+                      <td data-label="Personnel & Branch">
+                        <div class="vdesk-personnel-block">
+                          <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                          <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
+                        </div>
+                      </td>
+                      <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
+                      <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
+                      <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                      <td data-label="Ground / Reason"><div class="vdesk-reason-text">"${leave.reason}"</div></td>
+                      <td data-label="Incharge Note">
+                        <div class="vdesk-incharge-note">
+                          <strong>Incharge Note:</strong> "${leave.inchargeRemarks || 'Recommended'}"
+                        </div>
+                      </td>
+                      <td data-label="SP Action" class="mobile-card-actions">
+                        <div class="vdesk-btn-group">
+                          <button class="btn btn-gold btn-sm mobile-action-btn" onclick="openSPActionModal('${leave.id}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            Sanction Order
+                          </button>
+                          <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="vdesk-mobile-view">
+            ${spPendingLeaves.map(leave => renderSanctionMobileCard(leave, false)).join("")}
+          </div>
+        </div>
+      ` : `
+        <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">✓</div>
+            <div>
+              <div style="font-weight: 700; color: #166534; font-size: 0.95rem;">Zero Pendency - All Recommended Applications Cleared</div>
+              <div style="font-size: 0.8rem; color: #475569;">No pending leaves currently awaiting SP sanction order.</div>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="switchTab('sp_desk')" style="border-color: #16a34a; color: #15803d; background: #fff;">
+            Open Sanction Desk &rarr;
+          </button>
+        </div>
+      `}
+
+      <!-- TWO-COLUMN OPERATIONAL GRID: TODAY'S ROLL CALL & 13 WINGS MATRIX -->
+      <div class="sp-executive-grid">
+        <!-- LEFT COLUMN: TODAY'S FORCE DEPLOYMENT & ON-LEAVE ROSTER -->
+        <div class="card-table-wrap">
+          <div class="table-toolbar">
+            <div class="table-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Today's Force Roll Call (${currentlyOnLeave > 0 ? `${currentlyOnLeave} On Leave` : '100% Present'})
+            </div>
+          </div>
+          <div style="padding: 16px;">
+            ${todayOnLeaveOfficers.length > 0 ? `
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${todayOnLeaveOfficers.map(leave => `
+                  <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.25rem;">👮</span>
+                        <div>
+                          <strong style="color: #0f274c; font-size: 0.92rem;">${leave.applicantName}</strong>
+                          <div style="font-size: 0.76rem; color: #64748b;">${leave.rank} (${leave.beltNo})</div>
+                        </div>
+                      </div>
+                      <span class="branch-tag-mini">${leave.branchName}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #475569; flex-wrap: wrap; gap: 6px; border-top: 1px solid #f1f5f9; padding-top: 6px;">
+                      <span>📅 <strong>${leave.leaveType}</strong>: ${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)} (${leave.totalDays}d)</span>
+                      <button class="btn btn-outline btn-sm" onclick="openSanctionSlipModal('${leave.id}')" style="padding: 2px 8px; font-size: 0.72rem;">
+                        📄 Sanction Slip
+                      </button>
+                    </div>
+                    ${leave.handoverTo ? `
+                      <div style="font-size: 0.76rem; color: #1e40af; background: #eff6ff; padding: 4px 8px; border-radius: 6px;">
+                        🤝 <strong>Handover / Substitute:</strong> ${leave.handoverTo}
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join("")}
+              </div>
+            ` : `
+              <div style="text-align: center; padding: 24px 12px; color: #15803d;">
+                <div style="font-size: 2rem; margin-bottom: 6px;">🟢</div>
+                <strong style="font-size: 0.96rem;">100% Present On Duty</strong>
+                <p style="font-size: 0.82rem; color: #64748b; margin-top: 4px;">All ${totalForce} personnel across 13 Cyber Wings are present on active duty today.</p>
+              </div>
+            `}
+            <div style="margin-top: 14px; text-align: center;">
+              <button class="btn btn-outline btn-sm" onclick="switchTab('daily_sitrep')" style="width: 100%; justify-content: center;">
+                📋 Open Full Cyber Police SITREP &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: 13 CYBER WINGS REAL-TIME STRENGTH MATRIX -->
+        <div class="card-table-wrap">
+          <div class="table-toolbar">
+            <div class="table-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              13 Cyber Wings Strength Overview
+            </div>
+          </div>
+          <div style="max-height: 380px; overflow-y: auto;">
+            ${wingBreakdown.map(wb => `
+              <div class="sp-wing-item" onclick="switchTab('branches')">
+                <div class="sp-wing-left">
+                  <div class="sp-wing-icon">&#127970;</div>
+                  <div style="min-width: 0;">
+                    <div class="sp-wing-name">${wb.name}</div>
+                    <div class="sp-wing-incharge">${wb.inchargeName} (${wb.inchargeRank})</div>
+                  </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 8px;">
+                  <span class="sp-wing-badge ${wb.onLeave === 0 ? 'full' : 'partial'}">
+                    ${wb.onDuty} / ${wb.total} Active
+                  </span>
+                  ${wb.onLeave > 0 ? `<div style="font-size: 0.7rem; color: #b45309; margin-top: 2px;">${wb.onLeave} on leave</div>` : ''}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+          <div style="padding: 12px; border-top: 1px solid #e2e8f0; text-align: center;">
+            <button class="btn btn-outline btn-sm" onclick="switchTab('branches')" style="width: 100%; justify-content: center;">
+              🏢 View All 13 Wing Command Desks &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT SANCTIONED ORDERS (HQ DISPATCH FEED) -->
+      <div class="card-table-wrap" style="margin-top: 24px;">
+        <div class="table-toolbar">
+          <div class="table-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Recent Sanctioned Orders (Official Dispatch Feed)
+          </div>
+        </div>
+        ${recentApprovedLeaves.length > 0 ? `
+          <div class="vdesk-desktop-view">
+            <div class="table-scroll-hint"><span>👉 Swipe table horizontally to see all columns</span></div>
+            <div class="responsive-table">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Leave ID</th>
+                    <th>Personnel</th>
+                    <th>Leave Type</th>
+                    <th>Period</th>
+                    <th>Days</th>
+                    <th>Status</th>
+                    <th>Sanction Order</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${recentApprovedLeaves.map(leave => `
+                    <tr class="leave-card-row">
+                      <td data-label="Leave ID"><strong>${leave.id}</strong></td>
+                      <td data-label="Personnel"><strong>${leave.applicantName}</strong> (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></td>
+                      <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
+                      <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
+                      <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                      <td data-label="Status">${getStatusBadge(leave.status)}</td>
+                      <td data-label="Sanction Order" class="mobile-card-actions">
+                        <div style="display: flex; gap: 6px;">
+                          <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openSanctionSlipModal('${leave.id}')">
+                            📄 Sanction Slip
+                          </button>
+                          <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="vdesk-mobile-view">
+            ${recentApprovedLeaves.map(leave => `
+              <div class="vdesk-mobile-card" onclick="openSanctionSlipModal('${leave.id}')" style="cursor: pointer;">
+                <div class="vdesk-mcard-header">
+                  <div class="vdesk-mcard-id-group">
+                    <span class="vdesk-id-tag">#${leave.id}</span>
+                    <span class="vdesk-mcard-type-badge">${leave.leaveType}</span>
+                    <span class="days-badge"><strong>${leave.totalDays}</strong>d</span>
+                  </div>
+                  <div>
+                    ${getStatusBadge(leave.status)}
+                  </div>
+                </div>
+                <div class="vdesk-mcard-officer" style="margin-top: 6px;">
+                  <div class="vdesk-mcard-avatar">👮</div>
+                  <div class="vdesk-mcard-officer-info">
+                    <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                    <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; ${leave.branchName}</div>
+                  </div>
+                </div>
+                <div class="vdesk-mcard-row" style="margin-top: 6px; font-size: 0.82rem; color: #475569;">
+                  <span>📅 ${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+                </div>
+                <div class="vdesk-mcard-actions" onclick="event.stopPropagation()">
+                  <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openSanctionSlipModal('${leave.id}')">
+                    📄 View Sanction Slip
+                  </button>
+                  <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                    Details
+                  </button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        ` : `
+          <div style="padding: 24px; text-align: center; color: #64748b;">
+            No sanctioned leave orders found.
+          </div>
+        `}
       </div>
     `;
 

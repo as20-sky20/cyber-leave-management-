@@ -7170,3 +7170,100 @@ body.force-mobile-view .sanction-meta-row {
     padding: 6mm 8mm !important;
   }
 }
+
+/* ==========================================================================
+   SP COMMAND EXECUTIVE DASHBOARD (MOBILE & DESKTOP ENHANCEMENTS)
+   ========================================================================== */
+.sp-executive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 991px) {
+  body:not(.force-desktop-view) .sp-executive-grid,
+  body.force-mobile-view .sp-executive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+  }
+}
+
+.sp-wing-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sp-wing-item:last-child {
+  border-bottom: none;
+}
+
+.sp-wing-item:hover {
+  background: #f8fafc;
+}
+
+.sp-wing-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sp-wing-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.sp-wing-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f274c;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-wing-incharge {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.sp-wing-badge {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sp-wing-badge.full {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.sp-wing-badge.partial {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
