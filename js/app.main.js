@@ -322,13 +322,16 @@ function loadFromLocalStorage() {
             const applicantUser = (AppState.users || []).find(u => u.id === l.applicantId);
             if (applicantUser && isUserBranchIncharge(applicantUser, l.branchId)) {
               l.status = "RECOMMENDED";
-              if (!l.inchargeRemarks) {
-                l.inchargeRemarks = `[Direct Incharge Submission] Applied by Branch Incharge (${applicantUser.name}) - Directly forwarded to SP Cyber for Final Sanction.`;
+              if (!l.inchargeRemarks || l.inchargeRemarks.includes("Direct Incharge Submission")) {
+                l.inchargeRemarks = "Branch Incharge";
               }
               if (!l.inchargeActionAt) {
                 l.inchargeActionAt = l.appliedAt || new Date().toISOString().substring(0, 10);
               }
             }
+          }
+          if (l.inchargeRemarks && l.inchargeRemarks.includes("Direct Incharge Submission")) {
+            l.inchargeRemarks = "Branch Incharge";
           }
         });
       } else {
@@ -463,6 +466,10 @@ async function fetchFromCloudDatabase(silent = false) {
         if (cloudLeaves.length > 0) {
           cloudLeaves.forEach(cl => {
             if (!cl || !cl.id) return;
+            if (cl.inchargeRemarks && cl.inchargeRemarks.includes("Direct Incharge Submission")) {
+              cl.inchargeRemarks = "Branch Incharge";
+              hasChanged = true;
+            }
             const existingIndex = AppState.leaves.findIndex(l => l.id === cl.id);
             if (existingIndex === -1) {
               AppState.leaves.unshift(cl);
@@ -593,6 +600,14 @@ function sanitizeLeaveForBroadcast(leave) {
   return clone;
 }
 
+function formatInchargeRemarks(remarks) {
+  if (!remarks) return "";
+  if (remarks.includes("Direct Incharge Submission") || remarks.includes("Applied by Branch Incharge")) {
+    return "Branch Incharge";
+  }
+  return remarks;
+}
+
 // Compact leave object for ultra-lightweight sync transmission
 function compactLeaveForSync(l) {
   if (!l) return null;
@@ -615,7 +630,7 @@ function compactLeaveForSync(l) {
     status: l.status || "PENDING_INCHARGE",
     appliedAt: l.appliedAt || "",
     reason: (l.reason || "").substring(0, 100),
-    inchargeRemarks: (l.inchargeRemarks || "").substring(0, 150),
+    inchargeRemarks: formatInchargeRemarks(l.inchargeRemarks || "").substring(0, 150),
     inchargeActionAt: l.inchargeActionAt || "",
     spRemarks: (l.spRemarks || "").substring(0, 150),
     spActionAt: l.spActionAt || "",
@@ -2955,7 +2970,7 @@ function handleApplyLeaveSubmit(e) {
     attachment: AppState.currentAttachment || null,
     status: isApplicantIncharge ? "RECOMMENDED" : "PENDING_INCHARGE",
     appliedAt: appliedAt,
-    inchargeRemarks: isApplicantIncharge ? `[Direct Incharge Submission] Applied by Branch Incharge (${user.name}) - Directly forwarded to SP Cyber for Final Sanction.` : "",
+    inchargeRemarks: isApplicantIncharge ? "Branch Incharge" : "",
     inchargeActionAt: isApplicantIncharge ? appliedAt : "",
     spRemarks: "",
     spActionAt: ""
@@ -3446,7 +3461,7 @@ function renderInchargeDesk(container) {
 
               ${leave.inchargeRemarks ? `
                 <div style="font-size: 0.78rem; color: #475569; margin-top: 4px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                  <strong style="color: #64748b;">Remarks:</strong> "${leave.inchargeRemarks}"
+                  <strong style="color: #64748b;">Remarks:</strong> ${formatInchargeRemarks(leave.inchargeRemarks)}
                 </div>
               ` : ''}
             </div>
@@ -3569,7 +3584,7 @@ function renderSPDesk(container) {
                         <span style="display: inline-block; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.76rem; font-weight: 700; padding: 2px 8px; border-radius: 6px;">
                           ✓ Recommended
                         </span>
-                        ${leave.inchargeRemarks ? `<div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">"${leave.inchargeRemarks}"</div>` : ''}
+                        ${leave.inchargeRemarks ? `<div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">${formatInchargeRemarks(leave.inchargeRemarks)}</div>` : ''}
                       ` : `
                         <span style="display: inline-block; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.76rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
                           ⏳ Awaiting Incharge
@@ -6974,7 +6989,7 @@ function openLeaveDetailsModal(leaveId) {
             <strong>1. Application Submitted:</strong> ${leave.appliedAt} by ${leave.applicantName}
           </div>
           <div style="padding: 8px 12px; background: ${leave.inchargeActionAt ? '#eff6ff' : '#f8fafc'}; border-radius: 6px;">
-            <strong>2. ${isApplicantIncharge ? 'Branch Incharge Direct Routing:' : 'Branch Incharge Recommendation:'}</strong> ${leave.inchargeRemarks || "Pending Incharge Review"}
+            <strong>2. ${isApplicantIncharge ? 'Branch Incharge:' : 'Branch Incharge Recommendation:'}</strong> ${formatInchargeRemarks(leave.inchargeRemarks) || "Pending Incharge Review"}
             ${leave.inchargeActionAt ? `<br><small style="color: #64748b;">Date: ${leave.inchargeActionAt}</small>` : ''}
           </div>
           <div style="padding: 8px 12px; background: ${leave.spActionAt ? '#f0fdf4' : '#f8fafc'}; border-radius: 6px;">
@@ -7235,7 +7250,7 @@ function openSPActionModal(leaveId) {
 
       ${leave.status === 'RECOMMENDED' ? `
         <div style="margin-top: 8px; padding: 8px 12px; background: #e0e7ff; border-radius: 6px; color: #1e1b4b;">
-          <strong>Branch Incharge Recommendation:</strong> "${leave.inchargeRemarks || 'Recommended'}"
+          <strong>Branch Incharge Recommendation:</strong> ${formatInchargeRemarks(leave.inchargeRemarks) || 'Recommended'}
         </div>
       ` : `
         <div style="margin-top: 8px; padding: 8px 12px; background: #fef3c7; border-radius: 6px; color: #92400e;">
