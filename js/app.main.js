@@ -3250,9 +3250,16 @@ function renderInchargeDesk(container) {
 // ==========================================
 function renderSPDesk(container) {
   const user = AppState.currentUser;
-  const recommendedLeaves = AppState.leaves.filter(l => l.status === "RECOMMENDED");
-  const initialPendingLeaves = AppState.leaves.filter(l => l.status === "PENDING_INCHARGE");
-  const approvedLeaves = AppState.leaves.filter(l => l.status === "APPROVED");
+  
+  // All leave applications requiring SP review / sanction
+  // Show RECOMMENDED (forwarded by branch incharge) first, followed by PENDING_INCHARGE
+  const pendingSanctionLeaves = (AppState.leaves || []).filter(l => 
+    l.status === "RECOMMENDED" || l.status === "PENDING_INCHARGE"
+  ).sort((a, b) => {
+    if (a.status === "RECOMMENDED" && b.status !== "RECOMMENDED") return -1;
+    if (a.status !== "RECOMMENDED" && b.status === "RECOMMENDED") return 1;
+    return new Date(b.appliedAt || b.fromDate) - new Date(a.appliedAt || a.fromDate);
+  });
 
   let html = `
     <div class="page-header">
@@ -3274,154 +3281,18 @@ function renderSPDesk(container) {
       </div>
     </div>
 
-    <!-- SP STATS BANNER -->
-    <div class="stats-grid">
-      <div class="stat-card gold" onclick="scrollToSPSection('spRecommendedSection')" style="cursor: pointer;" title="Click to view Recommended Applications below">
-        <div class="stat-header">
-          <span class="stat-title">Pending Sanction</span>
-          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
-        </div>
-        <div class="stat-number" style="color: ${recommendedLeaves.length > 0 ? '#dc2626' : '#15803d'};">${recommendedLeaves.length}</div>
-        <div class="stat-subtext">${recommendedLeaves.length > 0 ? 'Recommended by Incharges &bull; View &rarr;' : 'All Clear &bull; View &rarr;'}</div>
-      </div>
-
-      <div class="stat-card blue" onclick="scrollToSPSection('spInitialPendingSection')" style="cursor: pointer;" title="Click to view Direct & Initial Applications below">
-        <div class="stat-header">
-          <span class="stat-title">Awaiting Branch</span>
-          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
-        </div>
-        <div class="stat-number">${initialPendingLeaves.length}</div>
-        <div class="stat-subtext">Direct Sanction Available &bull; View &rarr;</div>
-      </div>
-
-      <div class="stat-card green" onclick="openMasterRegisterWithFilter('APPROVED')" style="cursor: pointer;" title="Click to view all Sanctioned Orders in Master Register">
-        <div class="stat-header">
-          <span class="stat-title">Sanctioned Orders</span>
-          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        </div>
-        <div class="stat-number">${approvedLeaves.length}</div>
-        <div class="stat-subtext">Official Orders Issued &bull; Open Register &rarr;</div>
-      </div>
-
-      <div class="stat-card purple" onclick="switchTab('branches')" style="cursor: pointer;" title="Click to view all 13 Cyber Wings">
-        <div class="stat-header">
-          <span class="stat-title">Cyber Wings</span>
-          <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
-        </div>
-        <div class="stat-number">13</div>
-        <div class="stat-subtext">Units Operational &bull; View Wings &rarr;</div>
-      </div>
-    </div>
-
-    <!-- SECTION 1: RECOMMENDED APPLICATIONS -->
-    <div class="card-table-wrap" id="spRecommendedSection">
+    <!-- SINGLE CLEAN LEAVE SANCTION TABLE -->
+    <div class="card-table-wrap" id="spSanctionSection">
       <div class="table-toolbar">
         <div class="table-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          Recommended Applications &amp; Branch Incharge Direct Submissions (Ready for Sanction)
-          <span class="tab-badge" style="margin-left: 6px;">${recommendedLeaves.length}</span>
+          Applications Awaiting Sanction
+          <span class="tab-badge" style="margin-left: 6px;">${pendingSanctionLeaves.length}</span>
         </div>
       </div>
-      ${recommendedLeaves.length === 0 ? `
-        <div style="padding: 28px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 1.02rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
-          <div style="font-size: 0.86rem; color: #64748b;">No leave applications currently pending for SP sanction.</div>
-        </div>
-      ` : `
-        <div class="vdesk-desktop-view">
-          <div class="table-scroll-hint">
-            <span>👉 Swipe table horizontally to see all columns</span>
-          </div>
-          <div class="responsive-table">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Application ID</th>
-                  <th>Personnel & Branch</th>
-                  <th>Leave Type</th>
-                  <th>Period</th>
-                  <th>Days</th>
-                  <th>Ground / Reason</th>
-                  <th>Incharge Remarks</th>
-                  <th>Station Leave</th>
-                  <th>SP Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${recommendedLeaves.map(leave => `
-                  <tr class="leave-card-row" onclick="openLeaveDetailsModal('${leave.id}')" style="cursor: pointer;" title="Click card to open Leave Application Details">
-                    <td data-label="Application ID">
-                      <div class="vdesk-id-wrap">
-                        <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
-                        <span class="vdesk-date-tag">${leave.appliedAt || ''}</span>
-                      </div>
-                    </td>
-                    <td data-label="Personnel & Branch">
-                      <div class="vdesk-personnel-block">
-                        <div class="vdesk-personnel-name">${leave.applicantName}</div>
-                        <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
-                      </div>
-                    </td>
-                    <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
-                    <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
-                    <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
-                    <td data-label="Ground / Reason">
-                      <div class="vdesk-reason-text">"${leave.reason}"</div>
-                      ${leave.attachment ? `
-                        <span class="vdesk-chip chip-attachment" onclick="event.stopPropagation(); viewAttachment('${leave.id}')">
-                          📎 Doc Attached: ${leave.attachment.name || 'View'}
-                        </span>
-                      ` : ''}
-                      ${leave.stationLeave ? `
-                        <span class="vdesk-chip chip-station">
-                          🚩 Station Leave: ${leave.stationLeaveAddress || 'Permission Requested'}
-                        </span>
-                      ` : ''}
-                    </td>
-                    <td data-label="Incharge Remarks">
-                      <div class="vdesk-incharge-note">
-                        <strong>Incharge Note:</strong> "${leave.inchargeRemarks || 'Recommended'}"
-                      </div>
-                    </td>
-                    <td data-label="Station Leave">${leave.stationLeave ? '<span style="color: #0f274c; font-weight: 700;">Yes</span>' : '<span style="color: #64748b;">No</span>'}</td>
-                    <td data-label="SP Action" class="mobile-card-actions">
-                      <div class="vdesk-btn-group">
-                        <button class="btn btn-gold btn-sm mobile-action-btn" onclick="event.stopPropagation(); openSPActionModal('${leave.id}')">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                          Sanction Order
-                        </button>
-                        <button class="btn btn-outline btn-sm mobile-action-btn" onclick="event.stopPropagation(); openLeaveDetailsModal('${leave.id}')">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                          Details
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="vdesk-mobile-view">
-          ${recommendedLeaves.map(leave => renderSanctionMobileCard(leave, false)).join("")}
-        </div>
-      `}
-    </div>
-
-    <!-- SECTION 2: DIRECT / INITIAL APPLICATIONS (AWAITING BRANCH REVIEW) -->
-    <div class="card-table-wrap" id="spInitialPendingSection" style="margin-top: 20px;">
-      <div class="table-toolbar" style="background: #fffbeb; border-bottom: 1.5px solid #fde68a;">
-        <div class="table-title" style="color: #92400e;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          Direct &amp; Initial Applications (Awaiting Branch Review)
-          <span class="tab-badge" style="background: #d97706; margin-left: 6px;">${initialPendingLeaves.length}</span>
-        </div>
-      </div>
-      ${initialPendingLeaves.length === 0 ? `
-        <div style="padding: 24px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 0.98rem; font-weight: 700; margin-bottom: 2px;">✓ All Clear</div>
-          <div style="font-size: 0.85rem; color: #64748b;">No fresh applications awaiting branch review.</div>
+      ${pendingSanctionLeaves.length === 0 ? `
+        <div style="padding: 32px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
+          <div style="font-size: 0.95rem; font-weight: 700;">✓ All Clear - No Applications Pending Sanction</div>
         </div>
       ` : `
         <div class="vdesk-desktop-view">
@@ -3438,17 +3309,17 @@ function renderSPDesk(container) {
                   <th>Period</th>
                   <th>Days</th>
                   <th>Ground / Reason</th>
-                  <th>Branch</th>
-                  <th>SP Direct Action</th>
+                  <th>Incharge Status</th>
+                  <th>SP Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${initialPendingLeaves.map(leave => `
+                ${pendingSanctionLeaves.map(leave => `
                   <tr class="leave-card-row" onclick="openLeaveDetailsModal('${leave.id}')" style="cursor: pointer;" title="Click card to open Leave Application Details">
                     <td data-label="Application ID">
                       <div class="vdesk-id-wrap">
                         <span class="vdesk-id-tag"><strong>${leave.id}</strong></span>
-                        <span class="vdesk-date-tag">${leave.appliedAt}</span>
+                        <span class="vdesk-date-tag">${leave.appliedAt || ''}</span>
                       </div>
                     </td>
                     <td data-label="Personnel Details">
@@ -3457,9 +3328,15 @@ function renderSPDesk(container) {
                         <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo}) &bull; <span class="branch-tag-mini">${leave.branchName}</span></div>
                       </div>
                     </td>
-                    <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span><small style="display: block; color: #64748b;">${leave.leaveTypeName ? leave.leaveTypeName.split("(")[0] : leave.leaveType}</small></td>
-                    <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
-                    <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                    <td data-label="Leave Type">
+                      <span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span>
+                    </td>
+                    <td data-label="Period">
+                      <span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+                    </td>
+                    <td data-label="Days">
+                      <span class="days-badge"><strong>${leave.totalDays}</strong> Days</span>
+                    </td>
                     <td data-label="Ground / Reason">
                       <div class="vdesk-reason-text">"${leave.reason}"</div>
                       ${leave.attachment ? `
@@ -3473,15 +3350,25 @@ function renderSPDesk(container) {
                         </span>
                       ` : ''}
                     </td>
-                    <td data-label="Branch"><span class="branch-tag">${leave.branchName}</span></td>
-                    <td data-label="SP Direct Action" class="mobile-card-actions">
+                    <td data-label="Incharge Status">
+                      ${leave.status === "RECOMMENDED" ? `
+                        <span style="display: inline-block; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.76rem; font-weight: 700; padding: 2px 8px; border-radius: 6px;">
+                          ✓ Recommended
+                        </span>
+                        ${leave.inchargeRemarks ? `<div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">"${leave.inchargeRemarks}"</div>` : ''}
+                      ` : `
+                        <span style="display: inline-block; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.76rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                          ⏳ Awaiting Incharge
+                        </span>
+                      `}
+                    </td>
+                    <td data-label="SP Action" class="mobile-card-actions">
                       <div class="vdesk-btn-group">
                         <button class="btn btn-gold btn-sm mobile-action-btn" onclick="event.stopPropagation(); openSPActionModal('${leave.id}')">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                          Direct Sanction
+                          Sanction Order
                         </button>
                         <button class="btn btn-outline btn-sm mobile-action-btn" onclick="event.stopPropagation(); openLeaveDetailsModal('${leave.id}')">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                           Details
                         </button>
                       </div>
@@ -3494,7 +3381,7 @@ function renderSPDesk(container) {
         </div>
 
         <div class="vdesk-mobile-view">
-          ${initialPendingLeaves.map(leave => renderSanctionMobileCard(leave, true)).join("")}
+          ${pendingSanctionLeaves.map(leave => renderSanctionMobileCard(leave, leave.status === "PENDING_INCHARGE")).join("")}
         </div>
       `}
     </div>
@@ -3505,7 +3392,7 @@ function renderSPDesk(container) {
 
 // SP Navigation & Card Quick Action Helpers
 function scrollToSPSection(sectionId) {
-  const el = document.getElementById(sectionId);
+  const el = document.getElementById(sectionId) || document.getElementById("spSanctionSection");
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -3514,7 +3401,7 @@ function scrollToSPSection(sectionId) {
 function openSPDirectInitialDesk() {
   switchTab('sp_desk');
   setTimeout(() => {
-    scrollToSPSection('spInitialPendingSection');
+    scrollToSPSection('spSanctionSection');
   }, 120);
 }
 
