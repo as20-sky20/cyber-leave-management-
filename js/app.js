@@ -419,10 +419,10 @@ function recalculateAllUserLeaveBalances() {
 // Works 100% across multiple computers, laptops, and mobile phones simultaneously
 // Zero CORS preflight issues, zero API keys, instant cross-device updates (< 100ms)
 // ============================================================================
-const LIVE_SYNC_TOPIC = "haryana-cyber-leave-sync-live-2026";
-const LIVE_SYNC_PUB_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC}`;
-const LIVE_SYNC_SUB_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC}/sse`;
-const LIVE_SYNC_POLL_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC}/json?poll=1&since=all`;
+const LIVE_SYNC_TOPIC_PRIMARY = "haryana-cyber-leave-sync-live-2026";
+const LIVE_SYNC_TOPIC_LEGACY = "haryana-cyber-police-leave-sync-v2026-clean";
+const LIVE_SYNC_SUB_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC_PRIMARY},${LIVE_SYNC_TOPIC_LEGACY}/sse`;
+const LIVE_SYNC_POLL_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC_PRIMARY},${LIVE_SYNC_TOPIC_LEGACY}/json?poll=1&since=all`;
 
 let isCloudConnected = false;
 let liveSseSource = null;
@@ -541,13 +541,13 @@ function startLiveSync() {
 
   connectLiveSSE();
 
-  // Background refresh every 8 seconds for rock-solid cross-device sync
+  // Background refresh every 5 seconds for rock-solid cross-device sync
   setInterval(() => {
     if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
       connectLiveSSE();
     }
     pollLiveSyncHistory();
-  }, 8000);
+  }, 5000);
 
   // Automatic instantaneous wake-up when user switches to this tab or unlocks screen
   document.addEventListener("visibilitychange", () => {
@@ -668,14 +668,21 @@ async function broadcastLiveAction(actionPayload) {
 
     const bodyText = JSON.stringify(actionPayload);
 
-    // Simple text/plain post with NO custom headers so NO CORS preflight failure occurs on mobile/PC
-    await fetch(LIVE_SYNC_PUB_URL, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "text/plain"
-      },
-      body: bodyText
-    });
+    // Simple text/plain post with NO custom headers to avoid CORS preflight failure
+    // Publish to BOTH topics in parallel so cached mobile devices and updated PCs both receive it
+    const postPromises = [
+      fetch(`https://ntfy.sh/${LIVE_SYNC_TOPIC_PRIMARY}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: bodyText
+      }).catch(e => console.warn(e)),
+      fetch(`https://ntfy.sh/${LIVE_SYNC_TOPIC_LEGACY}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: bodyText
+      }).catch(e => console.warn(e))
+    ];
+    await Promise.allSettled(postPromises);
     updateSyncIndicator(true, "Live Cloud Sync Online");
   } catch (err) {
     console.warn("Could not broadcast live action", err);
@@ -686,7 +693,7 @@ async function broadcastLiveAction(actionPayload) {
 async function broadcastFullDatabaseSnapshot() {
   if (!AppState.leaves || AppState.leaves.length === 0) return;
   const now = Date.now();
-  if (window._lastSnapshotBroadcast && (now - window._lastSnapshotBroadcast < 10000)) {
+  if (window._lastSnapshotBroadcast && (now - window._lastSnapshotBroadcast < 5000)) {
     return;
   }
   window._lastSnapshotBroadcast = now;
@@ -701,7 +708,6 @@ async function broadcastFullDatabaseSnapshot() {
       notices: (AppState.notices || []).slice(0, 5)
     };
     let bodyText = JSON.stringify(payload);
-    // Guarantee payload is < 3800 bytes so ntfy never converts it to an attachment file
     if (bodyText.length > 3800) {
       const miniLeaves = AppState.leaves.slice(0, 25).map(l => ({
         id: l.id,
@@ -731,13 +737,19 @@ async function broadcastFullDatabaseSnapshot() {
       });
     }
 
-    await fetch(LIVE_SYNC_PUB_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain"
-      },
-      body: bodyText
-    });
+    const postPromises = [
+      fetch(`https://ntfy.sh/${LIVE_SYNC_TOPIC_PRIMARY}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: bodyText
+      }).catch(e => console.warn(e)),
+      fetch(`https://ntfy.sh/${LIVE_SYNC_TOPIC_LEGACY}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: bodyText
+      }).catch(e => console.warn(e))
+    ];
+    await Promise.allSettled(postPromises);
   } catch (err) {
     console.warn("Could not broadcast full snapshot", err);
   }
@@ -816,10 +828,19 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
   }
 
   // 2. LEAVE STATUS CHANGED (INCHARGE RECOMMENDATION OR SP APPROVAL)
-  else if (payload.action === "LEAVE_STATUS_CHANGED" && payload.leaveId) {
-    const leave = AppState.leaves.find(l => l.id === payload.leaveId);
+  else if (payload.action === "LEAVE_STATUS_CHANGED" && (payload.leaveId || payload.leave)) {
+    const leaveId = payload.leaveId || (payload.leave && payload.leave.id);
+    let leave = AppState.leaves.find(l => l.id === leaveId);
+    if (!leave && payload.leave) {
+      AppState.leaves.unshift(payload.leave);
+      leave = AppState.leaves[0];
+      hasChanged = true;
+    }
     if (leave) {
-      leave.status = payload.status;
+      if (payload.leave) {
+        Object.assign(leave, payload.leave);
+      }
+      if (payload.status) leave.status = payload.status;
       if (payload.inchargeRemarks !== undefined) leave.inchargeRemarks = payload.inchargeRemarks;
       if (payload.inchargeActionAt !== undefined) leave.inchargeActionAt = payload.inchargeActionAt;
       if (payload.spRemarks !== undefined) leave.spRemarks = payload.spRemarks;
@@ -831,10 +852,10 @@ function handleLiveSyncAction(payload, isInitialSync = false) {
 
       recalculateAllUserLeaveBalances();
       hasChanged = true;
-      const statusLabel = payload.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
-                          (payload.status === "APPROVED" ? "Sanctioned by SP Cyber" : "Rejected");
+      const statusLabel = leave.status === "RECOMMENDED" ? "Recommended by Branch Incharge" : 
+                          (leave.status === "APPROVED" ? "Sanctioned by SP Cyber" : "Rejected");
       if (!isInitialSync) {
-        showToast(`Application ${leave.id} Status Updated: ${statusLabel}`, "info");
+        showToast(`Application ${leave.id} (${leave.applicantName || ''}) Status: ${statusLabel}`, "info");
       }
     }
   }
@@ -2803,6 +2824,7 @@ function handleApplyLeaveSubmit(e) {
   AppState.currentAttachment = null;
   saveData();
   broadcastLiveAction({ action: "NEW_LEAVE", leave: newLeave });
+  broadcastFullDatabaseSnapshot();
 
   if (isApplicantIncharge) {
     showToast(`Leave Application ${newId} (${totalDays} Days) submitted by Branch Incharge and forwarded directly to SP Cyber for Sanction.`, "success");
@@ -7023,6 +7045,7 @@ function submitInchargeDecision(action) {
   broadcastLiveAction({
     action: "LEAVE_STATUS_CHANGED",
     leaveId: leave.id,
+    leave: compactLeaveForSync(leave),
     status: leave.status,
     inchargeRemarks: leave.inchargeRemarks,
     inchargeActionAt: leave.inchargeActionAt,
@@ -7031,6 +7054,7 @@ function submitInchargeDecision(action) {
     curtailedBy: leave.curtailedBy || "",
     curtailReason: leave.curtailReason || ""
   });
+  broadcastFullDatabaseSnapshot();
   closeModals();
   renderApp();
 }
@@ -7195,6 +7219,7 @@ function submitSPDecision(action) {
   broadcastLiveAction({
     action: "LEAVE_STATUS_CHANGED",
     leaveId: leave.id,
+    leave: compactLeaveForSync(leave),
     status: leave.status,
     spRemarks: leave.spRemarks,
     spActionAt: leave.spActionAt,
@@ -7203,6 +7228,7 @@ function submitSPDecision(action) {
     curtailedBy: leave.curtailedBy || "",
     curtailReason: leave.curtailReason || ""
   });
+  broadcastFullDatabaseSnapshot();
   closeModals();
   renderApp();
 }
