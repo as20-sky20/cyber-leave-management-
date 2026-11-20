@@ -1877,15 +1877,6 @@ function renderDashboard(container) {
           <div class="stat-subtext">${spPendingLeaves.length > 0 ? 'Action Required &bull; Click to open &rarr;' : 'All Cleared &bull; Click to open &rarr;'}</div>
         </div>
 
-        <div class="stat-card blue" onclick="openSPDirectInitialDesk()" style="cursor: pointer;" title="Click to view Initial Applications Awaiting Branch Review">
-          <div class="stat-header">
-            <span class="stat-title">Initial Pending</span>
-            <div class="stat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
-          </div>
-          <div class="stat-number">${inchargePendingCount}</div>
-          <div class="stat-subtext">Awaiting Branch &bull; Click to view &rarr;</div>
-        </div>
-
         <div class="stat-card green" onclick="openMasterRegisterWithFilter('APPROVED')" style="cursor: pointer;" title="Click to view all Sanctioned Orders in Master Register">
           <div class="stat-header">
             <span class="stat-title">Sanctioned Orders</span>
