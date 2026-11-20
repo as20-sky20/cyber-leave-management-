@@ -1682,57 +1682,6 @@ function renderDashboard(container) {
           <div class="stat-subtext">${currentlyOnLeave} on Leave &bull; Tap to view who &rarr;</div>
         </div>
       </div>
-
-      <!-- 13 BRANCHES SUMMARY FOR SP -->
-      <div class="leave-quota-card">
-        <div class="leave-quota-title">
-          <span>Haryana Cyber Police - 13 Wings Strength Overview</span>
-        </div>
-        <div class="leave-pills-row">
-          <div class="leave-pill-item" onclick="switchTab('branches')" title="Click to view all 13 Cyber Wings">
-            <div class="type-code">13</div>
-            <div class="type-name">Total Branches</div>
-            <div class="days-count">100%</div>
-            <div class="days-label">Active Wings &rarr;</div>
-          </div>
-          <div class="leave-pill-item" onclick="switchTab('directory')" title="Click to view Personnel Directory">
-            <div class="type-code">FORCE</div>
-            <div class="type-name">Total Strength</div>
-            <div class="days-count">${totalForce}</div>
-            <div class="days-label">Staff Directory &rarr;</div>
-          </div>
-          <div class="leave-pill-item" onclick="switchTab('daily_sitrep')" title="Click to view Daily SITREP & Roll Call">
-            <div class="type-code">DUTY</div>
-            <div class="type-name">On Duty</div>
-            <div class="days-count" style="color: #15803d;">${onDutyCount}</div>
-            <div class="days-label">Daily SITREP &rarr;</div>
-          </div>
-          <div class="leave-pill-item" onclick="openTodayOnLeaveDetails()" title="Click to view officer(s) on leave today" style="cursor: pointer;">
-            <div class="type-code">LEAVE</div>
-            <div class="type-name">On Leave Today</div>
-            <div class="days-count" style="color: #b45309;">${currentlyOnLeave}</div>
-            <div class="days-label">${currentlyOnLeave > 0 ? 'View Officer &rarr;' : '0 on Leave'}</div>
-          </div>
-          <div class="leave-pill-item" onclick="switchTab('sp_desk')" title="Click to open SP Sanction Desk">
-            <div class="type-code">SP-DESK</div>
-            <div class="type-name">Pending Sanction</div>
-            <div class="days-count" style="color: #dc2626;">${spPendingLeaves.length}</div>
-            <div class="days-label">Open Desk &rarr;</div>
-          </div>
-          <div class="leave-pill-item" onclick="switchTab('holidays'); setHolidayFilter('GAZETTED');" title="Click to view Official Haryana Govt Gazetted Holidays (GH) 2026">
-            <div class="type-code">GH-2026</div>
-            <div class="type-name">Gazetted Leaves</div>
-            <div class="days-count" style="color: #0f274c;">28 GH</div>
-            <div class="days-label">All 28 GH &rarr;</div>
-          </div>
-          <div class="leave-pill-item" onclick="openUpcomingGHModal()" title="Click to open Upcoming Gazetted Holidays (GH) Modal">
-            <div class="type-code">UPCOMING</div>
-            <div class="type-name">Next GH Leaves</div>
-            <div class="days-count" style="color: #6b21a8;">Upcoming</div>
-            <div class="days-label">Open Upcoming &rarr;</div>
-          </div>
-        </div>
-      </div>
     `;
 
     container.innerHTML = html;
