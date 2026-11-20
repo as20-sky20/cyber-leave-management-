@@ -3907,44 +3907,107 @@ function openBranchOfficersModal(branchId) {
   const modalFooter = document.getElementById("categoryDetailModalFooter");
   if (!modal || !modalBody) return;
 
+  const today = new Date().toISOString().split("T")[0];
+
   if (modalTitle) {
-    modalTitle.innerHTML = `${branchName} &bull; Posted Personnel (${officers.length})`;
+    modalTitle.innerHTML = `🏢 ${branchName} &bull; Roster (${officers.length} Personnel)`;
   }
 
-  modalBody.innerHTML = `
-    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 0.85rem; color: #1e3a8a;">
-      Officers deployed in <strong>${branchName}</strong>:
-    </div>
-    <div class="responsive-table">
-      <table class="data-table mobile-table-compact">
-        <thead>
-          <tr>
-            <th>Belt No</th>
-            <th>Name</th>
-            <th>Rank</th>
-            <th>Role</th>
-            <th>Contact</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${officers.map(u => `
-            <tr>
-              <td><strong>${u.beltNo}</strong></td>
-              <td><strong>${u.name}</strong></td>
-              <td>${u.rank}</td>
-              <td><span class="badge" style="background:#f1f5f9; color:#0f274c;">${getRoleDisplay(u.role)}</span></td>
-              <td><small>${u.mobile || '-'}</small></td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
+  if (officers.length === 0) {
+    modalBody.innerHTML = `
+      <div style="padding: 30px 16px; text-align: center; color: #64748b;">
+        <div style="font-size: 2rem; margin-bottom: 8px;">🏢</div>
+        <strong>No officers currently posted in ${branchName}</strong>
+      </div>
+    `;
+  } else {
+    modalBody.innerHTML = `
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <strong style="color: #0f274c; font-size: 0.95rem;">${branchName}</strong>
+          <div style="font-size: 0.78rem; color: #64748b;">Exclusive Wing Personnel Roster &bull; Total Strength: <strong>${officers.length}</strong></div>
+        </div>
+        <span class="badge" style="background: #0f274c; color: #ffd700; font-weight: 700; padding: 4px 8px; border-radius: 6px;">
+          ${(branch ? branch.id : branchId).toUpperCase()}
+        </span>
+      </div>
+
+      <!-- DESKTOP TABLE -->
+      <div class="vdesk-desktop-view">
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 110px;">Belt No.</th>
+                <th>Officer Name</th>
+                <th>Rank</th>
+                <th>Role</th>
+                <th style="text-align: center;">Today's Duty Status</th>
+                <th>Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${officers.map(u => {
+                const isOnLeaveToday = AppState.leaves.some(l => 
+                  l.applicantId === u.id && l.status === "APPROVED" && l.fromDate <= today && l.toDate >= today
+                );
+                return `
+                  <tr class="leave-card-row">
+                    <td><strong>${u.beltNo}</strong></td>
+                    <td>
+                      <strong>${u.name}</strong>
+                      ${(u.role === "branch_incharge" || u.isApprover) ? '<span class="badge" style="background:#fef3c7; color:#92400e; font-size:0.68rem; margin-left:6px; font-weight:700;">Branch Incharge</span>' : ''}
+                    </td>
+                    <td>${u.rank}</td>
+                    <td><span class="badge" style="background:#f1f5f9; color:#0f274c;">${getRoleDisplay(u.role)}</span></td>
+                    <td style="text-align: center;">
+                      ${isOnLeaveToday 
+                        ? '<span class="status-badge rejected" style="padding: 3px 8px; font-size: 0.74rem;">🔴 On Leave</span>' 
+                        : '<span class="status-badge approved" style="padding: 3px 8px; font-size: 0.74rem;">🟢 On Duty</span>'}
+                    </td>
+                    <td><small style="color: #475569;">${u.mobile ? `📞 ${u.mobile}` : '-'}</small></td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MOBILE VIEW CARDS -->
+      <div class="vdesk-mobile-view">
+        ${officers.map(u => {
+          const isOnLeaveToday = AppState.leaves.some(l => 
+            l.applicantId === u.id && l.status === "APPROVED" && l.fromDate <= today && l.toDate >= today
+          );
+          return `
+            <div class="vdesk-mobile-card" style="padding: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.25rem;">👮</span>
+                  <div>
+                    <strong style="color: #0f274c; font-size: 0.95rem;">${u.name}</strong>
+                    <div style="font-size: 0.76rem; color: #64748b;">${u.rank} (${u.beltNo})</div>
+                  </div>
+                </div>
+                ${isOnLeaveToday 
+                  ? '<span class="status-badge rejected" style="padding: 2px 8px; font-size: 0.72rem;">🔴 On Leave</span>' 
+                  : '<span class="status-badge approved" style="padding: 2px 8px; font-size: 0.72rem;">🟢 On Duty</span>'}
+              </div>
+              <div style="margin-top: 8px; font-size: 0.8rem; color: #475569; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 6px;">
+                <span>Role: <strong>${getRoleDisplay(u.role)}</strong> ${(u.role === "branch_incharge" || u.isApprover) ? '<strong style="color:#92400e;">(Incharge)</strong>' : ''}</span>
+                ${u.mobile ? `<a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600;">📞 ${u.mobile}</a>` : ''}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
 
   if (modalFooter) {
     modalFooter.innerHTML = `
       <button class="btn btn-outline" onclick="closeModals()">Close</button>
-      <button class="btn btn-primary" onclick="closeModals(); switchTab('directory');">Open Full Staff Directory</button>
     `;
   }
 
@@ -4126,7 +4189,7 @@ function renderBranchesView(container) {
                     <span class="status-badge approved" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-size: 0.72rem;">Active Unit</span>
                   </td>
                   <td class="col-desktop-only" style="text-align: center;">
-                    <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 10px; font-size: 0.78rem;">
+                    <button class="btn btn-outline btn-sm" onclick="openBranchOfficersModal('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 10px; font-size: 0.78rem;">
                       Roster &rarr;
                     </button>
                   </td>
@@ -4154,7 +4217,7 @@ function renderBranchesView(container) {
                     <div style="font-size: 0.67rem; color: #64748b; margin-top: 2px;">Tot: ${branchMembers.length}</div>
                   </td>
                   <td class="col-mobile-only" style="width: 18%; text-align: center; vertical-align: middle; padding: 10px 4px;">
-                    <button class="btn btn-outline btn-sm" onclick="viewBranchInDirectory('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 6px; font-size: 0.72rem; white-space: nowrap; border-color: #0f274c; color: #0f274c; width: 100%; font-weight: 600;">
+                    <button class="btn btn-outline btn-sm" onclick="openBranchOfficersModal('${branch.id}')" title="View personnel roster of this wing" style="padding: 4px 6px; font-size: 0.72rem; white-space: nowrap; border-color: #0f274c; color: #0f274c; width: 100%; font-weight: 600;">
                       Roster &rarr;
                     </button>
                   </td>
@@ -4186,14 +4249,7 @@ function filterBranchesTable() {
 }
 
 function viewBranchInDirectory(branchId) {
-  switchTab("directory");
-  setTimeout(() => {
-    const branchFilter = document.getElementById("directoryBranchFilter");
-    if (branchFilter) {
-      branchFilter.value = branchId;
-      filterDirectoryTable();
-    }
-  }, 120);
+  openBranchOfficersModal(branchId);
 }
 
 function exportBranchesToCSV() {
