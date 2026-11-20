@@ -3753,25 +3753,33 @@ function openLeaveCategoryModal(leaveCode) {
   const pastLeaves = (AppState.leaves || []).filter(l => l.applicantId === user.id && l.leaveType === leaveCode);
 
   modalBody.innerHTML = `
-    <!-- Top 3 Stat Cards inside Modal -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px;">
-      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
-        <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Annual Quota</div>
-        <div style="font-size: 1.5rem; font-weight: 800; color: #0f274c; margin: 4px 0;">${quota} <small style="font-size: 0.8rem; font-weight: 600;">Days</small></div>
-        <div style="font-size: 0.72rem; color: #475569;">Session 2026</div>
-      </div>
-
-      <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 10px; padding: 12px; text-align: center;">
-        <div style="font-size: 0.72rem; color: #b91c1c; font-weight: 700; text-transform: uppercase;">Availed in 2026</div>
-        <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626; margin: 4px 0;">${availed} <small style="font-size: 0.8rem; font-weight: 600;">Days</small></div>
-        <div style="font-size: 0.72rem; color: #991b1b;">Sanctioned &bull; Availed</div>
-      </div>
-
-      <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 12px; text-align: center;">
-        <div style="font-size: 0.72rem; color: #15803d; font-weight: 700; text-transform: uppercase;">Available Balance</div>
-        <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a; margin: 4px 0;">${left} <small style="font-size: 0.8rem; font-weight: 600;">Days Left</small></div>
-        <div style="font-size: 0.72rem; color: #166534; font-weight: 600;">Current Active Quota</div>
-      </div>
+    <!-- Quota & Balance Summary Table (Mobile Optimized) -->
+    <div style="border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 16px; background: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+      <table style="width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed;">
+        <thead>
+          <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+            <th style="padding: 9px 4px; font-size: 0.72rem; color: #475569; font-weight: 700; text-transform: uppercase; width: 33.33%;">Annual Quota</th>
+            <th style="padding: 9px 4px; font-size: 0.72rem; color: #b91c1c; font-weight: 700; text-transform: uppercase; width: 33.33%; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">Availed</th>
+            <th style="padding: 9px 4px; font-size: 0.72rem; color: #15803d; font-weight: 700; text-transform: uppercase; width: 33.33%;">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 10px 4px; background: #ffffff;">
+              <div style="font-size: 1.3rem; font-weight: 800; color: #0f274c; line-height: 1.1;">${quota} <span style="font-size: 0.76rem; font-weight: 600; color: #64748b;">Days</span></div>
+              <small style="font-size: 0.68rem; color: #64748b; display: block; margin-top: 2px;">Session 2026</small>
+            </td>
+            <td style="padding: 10px 4px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: #fef2f2;">
+              <div style="font-size: 1.3rem; font-weight: 800; color: #dc2626; line-height: 1.1;">${availed} <span style="font-size: 0.76rem; font-weight: 600; color: #ef4444;">Days</span></div>
+              <small style="font-size: 0.68rem; color: #991b1b; display: block; margin-top: 2px;">Availed</small>
+            </td>
+            <td style="padding: 10px 4px; background: #f0fdf4;">
+              <div style="font-size: 1.3rem; font-weight: 800; color: #16a34a; line-height: 1.1;">${left} <span style="font-size: 0.76rem; font-weight: 600; color: #22c55e;">Days</span></div>
+              <small style="font-size: 0.68rem; color: #166534; font-weight: 700; display: block; margin-top: 2px;">Remaining</small>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Past Applications of this category -->
