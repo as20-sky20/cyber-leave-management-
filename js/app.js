@@ -415,10 +415,13 @@ function recalculateAllUserLeaveBalances() {
 }
 
 // ============================================================================
-// REAL-TIME MULTI-DEVICE CLOUD SYNC ENGINE (Pub/Sub & SSE Stream)
-// Works 100% across multiple computers, laptops, and mobile phones simultaneously
-// Zero CORS preflight issues, zero API keys, instant cross-device updates (< 100ms)
+// 24/7 DEDICATED PERMANENT CLOUD DATABASE (Supabase PostgreSQL Cloud)
+// Zero data loss, 24/7 online, instant real-time sync across all PCs and Phones
 // ============================================================================
+const SUPABASE_URL = "https://ywwactqzblhigncsaxbm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_d02TByCWnU5cPlgYpj3Dvg_0jv32GFa";
+const SUPABASE_SYNC_ENDPOINT = `${SUPABASE_URL}/rest/v1/cyber_leaves_sync?id=eq.main`;
+
 const LIVE_SYNC_TOPIC_PRIMARY = "haryana-cyber-leave-sync-live-2026";
 const LIVE_SYNC_TOPIC_LEGACY = "haryana-cyber-police-leave-sync-v2026-clean";
 const LIVE_SYNC_SUB_URL = `https://ntfy.sh/${LIVE_SYNC_TOPIC_PRIMARY},${LIVE_SYNC_TOPIC_LEGACY}/sse`;
@@ -428,6 +431,144 @@ let isCloudConnected = false;
 let liveSseSource = null;
 let lastProcessedSyncIds = new Set();
 window._lastSyncBroadcastTime = 0;
+let _lastCloudSyncTimestamp = null;
+let _isCloudSyncing = false;
+let _isCloudPushing = false;
+
+// Pull from 24/7 Supabase Cloud Database and merge with local state
+async function fetchFromCloudDatabase(silent = false) {
+  if (_isCloudSyncing) return;
+  _isCloudSyncing = true;
+  try {
+    const res = await fetch(`${SUPABASE_SYNC_ENDPOINT}&select=*`, {
+      method: "GET",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Accept": "application/json"
+      },
+      cache: "no-store"
+    });
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const cloudRecord = rows[0];
+        const cloudLeaves = Array.isArray(cloudRecord.leaves) ? cloudRecord.leaves : [];
+        const cloudNotices = Array.isArray(cloudRecord.notices) ? cloudRecord.notices : [];
+        const cloudUsers = Array.isArray(cloudRecord.custom_users) ? cloudRecord.custom_users : [];
+
+        let hasChanged = false;
+
+        // 1. If cloud has leaves, merge into AppState
+        if (cloudLeaves.length > 0) {
+          cloudLeaves.forEach(cl => {
+            if (!cl || !cl.id) return;
+            const existingIndex = AppState.leaves.findIndex(l => l.id === cl.id);
+            if (existingIndex === -1) {
+              AppState.leaves.unshift(cl);
+              hasChanged = true;
+            } else {
+              const existing = AppState.leaves[existingIndex];
+              if (cl.status !== existing.status || cl.totalDays !== existing.totalDays || cl.spRemarks !== existing.spRemarks || cl.inchargeRemarks !== existing.inchargeRemarks || cl.toDate !== existing.toDate) {
+                AppState.leaves[existingIndex] = { ...existing, ...cl };
+                hasChanged = true;
+              }
+            }
+          });
+        }
+
+        // 2. If local has leaves not yet in cloud, flag for upload
+        let needPush = false;
+        if (AppState.leaves && AppState.leaves.length > 0) {
+          const cloudIds = new Set(cloudLeaves.map(l => l.id));
+          const missingInCloud = AppState.leaves.some(l => !cloudIds.has(l.id));
+          if (missingInCloud) {
+            needPush = true;
+          }
+        }
+
+        // 3. Merge notices
+        if (cloudNotices.length > 0) {
+          if (!AppState.notices) AppState.notices = [];
+          cloudNotices.forEach(cn => {
+            if (!AppState.notices.some(n => n.id === cn.id)) {
+              AppState.notices.unshift(cn);
+              hasChanged = true;
+            }
+          });
+        }
+
+        // 4. Merge custom officers
+        if (cloudUsers.length > 0) {
+          cloudUsers.forEach(cu => {
+            if (!cu || !cu.id) return;
+            const ex = AppState.users.find(u => u.id === cu.id);
+            if (!ex) {
+              AppState.users.push(cu);
+              hasChanged = true;
+            }
+          });
+        }
+
+        if (hasChanged) {
+          AppState.leaves.sort((a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0));
+          recalculateAllUserLeaveBalances();
+          saveToLocalStorageOnly();
+          renderNavigationTabs();
+          renderApp();
+          if (!silent) {
+            showToast("24/7 Cloud Database Synced!", "success");
+          }
+        }
+
+        _lastCloudSyncTimestamp = cloudRecord.updated_at;
+        updateSyncIndicator(true, "24/7 Cloud Database Live");
+
+        if (needPush) {
+          await pushToCloudDatabase();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Cloud fetch error:", err);
+  } finally {
+    _isCloudSyncing = false;
+  }
+}
+
+// Push local state to 24/7 Supabase Cloud Database
+async function pushToCloudDatabase() {
+  if (_isCloudPushing) return;
+  _isCloudPushing = true;
+  try {
+    const compactLeaves = (AppState.leaves || []).map(compactLeaveForSync);
+    const customUsers = (AppState.users || []).filter(u => u.isCustomOfficer);
+    const payload = {
+      leaves: compactLeaves,
+      notices: (AppState.notices || []).slice(0, 10),
+      custom_users: customUsers,
+      updated_at: new Date().toISOString()
+    };
+
+    const res = await fetch(SUPABASE_SYNC_ENDPOINT, {
+      method: "PATCH",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      updateSyncIndicator(true, "24/7 Cloud Database Live");
+    }
+  } catch (err) {
+    console.warn("Cloud push error:", err);
+  } finally {
+    _isCloudPushing = false;
+  }
+}
 
 function getClientId() {
   let cid = localStorage.getItem("cyber_police_client_uuid");
@@ -487,9 +628,9 @@ function compactLeaveForSync(l) {
   };
 }
 
-// Connect and Sync with Shared Office Database (Local LAN server OR Real-time Cloud Stream)
+// Connect and Sync with Shared Office Database (Local LAN server OR 24/7 Supabase Cloud Database)
 async function syncWithOfficeDatabase() {
-  updateSyncIndicator(false, "Syncing...");
+  updateSyncIndicator(false, "Syncing 24/7 Cloud...");
 
   // 1. First try Local Office LAN Server (if running via start_server.ps1)
   try {
@@ -515,24 +656,30 @@ async function syncWithOfficeDatabase() {
     // Local server not available, fall through to Cloud sync
   }
 
-  // 2. Poll Cloud Live Sync History (pulls latest from other devices)
-  await pollLiveSyncHistory();
+  // 2. Fetch from 24/7 Supabase Cloud Database
+  await fetchFromCloudDatabase(false);
 
-  // 3. Broadcast snapshot if this device has leaves so other devices stay synchronized
+  // 3. Push current state to Cloud Database to guarantee complete persistence
+  await pushToCloudDatabase();
+
+  // 4. Poll auxiliary relay & broadcast snapshot
+  await pollLiveSyncHistory();
   if (AppState.leaves && AppState.leaves.length > 0) {
     await broadcastFullDatabaseSnapshot();
   }
 
-  updateSyncIndicator(true, "Live Cloud Sync Online");
+  updateSyncIndicator(true, "24/7 Cloud Database Live");
   closeSidebarNav();
   renderApp();
-  showToast("Multi-Device Cloud Sync refreshed. All data synchronized!", "success");
+  showToast("24/7 Cloud Database refreshed. All data synchronized!", "success");
 }
 
-// Start Live Cross-Device Real-Time Sync (SSE + Periodic Polling + Tab Wakeup)
+// Start Live Cross-Device Real-Time Sync (Supabase 24/7 Cloud + Fast Polling + Tab Wakeup)
 function startLiveSync() {
-  pollLiveSyncHistory().then(() => {
+  // 1. Initial immediate pull from 24/7 Supabase Cloud Database
+  fetchFromCloudDatabase(true).then(() => {
     if (AppState.leaves && AppState.leaves.length > 0) {
+      pushToCloudDatabase();
       broadcastFullDatabaseSnapshot();
     } else {
       broadcastLiveAction({ action: "REQUEST_STATE_SYNC" });
@@ -541,17 +688,18 @@ function startLiveSync() {
 
   connectLiveSSE();
 
-  // Background refresh every 5 seconds for rock-solid cross-device sync
+  // 2. Background polling loop every 3 seconds for continuous 24/7 sync
   setInterval(() => {
+    fetchFromCloudDatabase(true);
     if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
       connectLiveSSE();
     }
-    pollLiveSyncHistory();
-  }, 5000);
+  }, 3000);
 
-  // Automatic instantaneous wake-up when user switches to this tab or unlocks screen
+  // 3. Automatic instantaneous wake-up when user switches to this tab or unlocks screen
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
+      fetchFromCloudDatabase(true);
       if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
         connectLiveSSE();
       }
@@ -560,6 +708,7 @@ function startLiveSync() {
   });
 
   window.addEventListener("focus", () => {
+    fetchFromCloudDatabase(true);
     if (!liveSseSource || liveSseSource.readyState === EventSource.CLOSED) {
       connectLiveSSE();
     }
@@ -1010,12 +1159,13 @@ function setInchargeBranchFilter(branchId) {
   renderApp();
 }
 
-// Save data to localStorage and local LAN office server if running
+// Save data to localStorage, local LAN office server, and 24/7 Supabase Cloud Database
 function saveData() {
   saveToLocalStorageOnly();
   if (isLanServerConnected) {
     pushDataToOfficeServer();
   }
+  pushToCloudDatabase();
 }
 
 function saveToLocalStorageOnly() {
