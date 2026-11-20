@@ -3123,11 +3123,10 @@ function renderInchargeDesk(container) {
         <span class="incharge-scope-icon">&#127970;</span>
         <div class="incharge-scope-info">
           <strong class="incharge-scope-title">${branchName}</strong>
-          <div class="incharge-scope-sub">Incharge Verification Scope: Restricted exclusively to ${branchName} personnel</div>
         </div>
       </div>
       <span class="incharge-scope-badge">
-        ${branchPendingLeaves.length} Pending Recommendation
+        ${branchPendingLeaves.length} Pending
       </span>
     </div>
 
@@ -3140,9 +3139,8 @@ function renderInchargeDesk(container) {
         </div>
       </div>
       ${branchPendingLeaves.length === 0 ? `
-        <div style="padding: 32px 20px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
-          <div style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">All Clear - No Pending Applications</div>
-          <div style="font-size: 0.88rem; color: #64748b;">No pending leave applications for ${branchName}. All applications from your branch personnel have been reviewed and disposed.</div>
+        <div style="padding: 24px 16px; text-align: center; color: #166534; background: #f0fdf4; border-radius: 0 0 12px 12px;">
+          <div style="font-size: 0.95rem; font-weight: 700;">✓ All Clear - No Pending Applications</div>
         </div>
       ` : `
         <div class="vdesk-desktop-view">
@@ -3230,49 +3228,89 @@ function renderInchargeDesk(container) {
     <!-- PREVIOUSLY PROCESSED LEAVES -->
     <div class="card-table-wrap" style="margin-top: 24px;">
       <div class="table-toolbar">
-        <div class="table-title">${branchName} Disposed / Processed Leave Register</div>
+        <div class="table-title">Disposed Leaves (${branchProcessedLeaves.length})</div>
       </div>
       ${branchProcessedLeaves.length === 0 ? `
         <div style="padding: 24px 20px; text-align: center; color: #64748b; background: #ffffff; border-radius: 0 0 12px 12px; font-size: 0.88rem;">
           No previous processed leave applications found for ${branchName}.
         </div>
       ` : `
-        <div class="table-scroll-hint">
-          <span>👉 Swipe table horizontally to see all columns</span>
-        </div>
-        <div class="responsive-table">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Leave ID</th>
-                <th>Personnel</th>
-                <th>Leave Type</th>
-                <th>Period</th>
-                <th>Days</th>
-                <th>Incharge Remarks</th>
-                <th>Current Status</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${branchProcessedLeaves.slice(0, 8).map(leave => `
-                <tr class="leave-card-row">
-                  <td data-label="Leave ID"><strong>${leave.id}</strong></td>
-                  <td data-label="Personnel"><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
-                  <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
-                  <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
-                  <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
-                  <td data-label="Incharge Remarks"><div class="vdesk-reason-text">${leave.inchargeRemarks || "-"}</div></td>
-                  <td data-label="Current Status">${getStatusBadge(leave.status)}</td>
-                  <td data-label="Details" class="mobile-card-actions">
-                    <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
-                      Details
-                    </button>
-                  </td>
+        <div class="vdesk-desktop-view">
+          <div class="table-scroll-hint">
+            <span>👉 Swipe table horizontally to see all columns</span>
+          </div>
+          <div class="responsive-table">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Leave ID</th>
+                  <th>Personnel</th>
+                  <th>Leave Type</th>
+                  <th>Period</th>
+                  <th>Days</th>
+                  <th>Incharge Remarks</th>
+                  <th>Current Status</th>
+                  <th>Details</th>
                 </tr>
-              `).join("")}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${branchProcessedLeaves.slice(0, 10).map(leave => `
+                  <tr class="leave-card-row">
+                    <td data-label="Leave ID"><strong>${leave.id}</strong></td>
+                    <td data-label="Personnel"><strong>${leave.applicantName}</strong> (${leave.beltNo})</td>
+                    <td data-label="Leave Type"><span style="font-weight: 700; color: #1e3a8a;">${leave.leaveType}</span></td>
+                    <td data-label="Period"><span class="period-dates">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span></td>
+                    <td data-label="Days"><span class="days-badge"><strong>${leave.totalDays}</strong> Days</span></td>
+                    <td data-label="Incharge Remarks"><div class="vdesk-reason-text">${leave.inchargeRemarks || "-"}</div></td>
+                    <td data-label="Current Status">${getStatusBadge(leave.status)}</td>
+                    <td data-label="Details" class="mobile-card-actions">
+                      <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')">
+                        Details
+                      </button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="vdesk-mobile-view">
+          ${branchProcessedLeaves.slice(0, 10).map(leave => `
+            <div class="vdesk-mobile-card" onclick="openLeaveDetailsModal('${leave.id}')" style="cursor: pointer;">
+              <div class="vdesk-mcard-header">
+                <div class="vdesk-mcard-id-group">
+                  <span class="vdesk-id-tag">#${leave.id}</span>
+                  <span class="vdesk-mcard-type-badge">${leave.leaveType}</span>
+                  <span class="days-badge"><strong>${leave.totalDays}</strong>d</span>
+                </div>
+                <div>
+                  ${getStatusBadge(leave.status)}
+                </div>
+              </div>
+
+              <div class="vdesk-mcard-officer" style="margin-top: 6px;">
+                <div class="vdesk-mcard-avatar">👮</div>
+                <div class="vdesk-mcard-officer-info">
+                  <div class="vdesk-personnel-name">${leave.applicantName}</div>
+                  <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo})</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openLeaveDetailsModal('${leave.id}')" style="margin-left: auto; padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+                  Details &rarr;
+                </button>
+              </div>
+
+              <div class="vdesk-mcard-row" style="margin-top: 6px; font-size: 0.82rem; color: #475569;">
+                <span>📅 ${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+              </div>
+
+              ${leave.inchargeRemarks ? `
+                <div style="font-size: 0.78rem; color: #475569; margin-top: 4px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                  <strong style="color: #64748b;">Remarks:</strong> "${leave.inchargeRemarks}"
+                </div>
+              ` : ''}
+            </div>
+          `).join("")}
         </div>
       `}
     </div>
