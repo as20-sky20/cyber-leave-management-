@@ -2756,7 +2756,7 @@ table.data-table tr:hover {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
-  body:not(.force-desktop-view) .sitrep-summary-grid .sitrep-metric-card:last-child {
+  body:not(.force-desktop-view) .sitrep-summary-grid .sitrep-metric-card:first-child {
     grid-column: span 2 !important;
   }
   body:not(.force-desktop-view) .sitrep-metric-card {
@@ -3170,7 +3170,7 @@ table.data-table tr:hover {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
-  body:not(.force-desktop-view) .sitrep-summary-grid .sitrep-metric-card:last-child {
+  body:not(.force-desktop-view) .sitrep-summary-grid .sitrep-metric-card:first-child {
     grid-column: span 2 !important;
   }
 }
@@ -4331,8 +4331,8 @@ body.force-desktop-view .col-mobile-only {
 /* Metrics Grid */
 .sitrep-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   margin: 16px 0;
 }
 .sitrep-metric-card {
@@ -6754,7 +6754,7 @@ body.force-mobile-view .sitrep-summary-grid {
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 8px !important;
 }
-body.force-mobile-view .sitrep-summary-grid .sitrep-metric-card:last-child {
+body.force-mobile-view .sitrep-summary-grid .sitrep-metric-card:first-child {
   grid-column: span 2 !important;
 }
 body.force-mobile-view .sitrep-metric-card {

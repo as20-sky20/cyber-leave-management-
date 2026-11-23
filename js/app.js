@@ -6717,7 +6717,7 @@ function buildSitrepOfficialA4Html(targetDate) {
         <div><strong>Roll Call:</strong> 09:00 Hours Morning Session</div>
       </div>
 
-      <div class="doc-stat-grid">
+      <div class="doc-stat-grid" style="grid-template-columns: repeat(3, 1fr);">
         <div class="doc-stat-cell">
           <div class="doc-stat-val">${totalForce}</div>
           <div class="doc-stat-lbl">Total Strength</div>
@@ -6729,10 +6729,6 @@ function buildSitrepOfficialA4Html(targetDate) {
         <div class="doc-stat-cell" style="background: #fffbeb; border-color: #fde68a;">
           <div class="doc-stat-val" style="color: #b45309;">${onLeaveCount}</div>
           <div class="doc-stat-lbl">On Sanctioned Leave</div>
-        </div>
-        <div class="doc-stat-cell" style="background: #eff6ff; border-color: #bfdbfe;">
-          <div class="doc-stat-val" style="color: #1d4ed8;">${helplineOnDuty}/${helplineUsers.length}</div>
-          <div class="doc-stat-lbl">1930 Helpline Desk</div>
         </div>
       </div>
 
@@ -7295,34 +7291,22 @@ function renderDailySitrep(container) {
 
       <!-- SITREP SUMMARY METRIC GRID -->
       <div class="sitrep-summary-grid">
-        <div class="sitrep-metric-card navy">
+        <div class="sitrep-metric-card navy" onclick="openAllPersonnelModal()" style="cursor: pointer;" title="Click to view Total Force roster">
           <div class="sitrep-metric-title">Total Force Strength</div>
           <div class="sitrep-metric-num">${totalForce}</div>
-          <small class="sitrep-metric-sub">Registered Cyber Force</small>
+          <small class="sitrep-metric-sub">Registered Cyber Force &bull; <span style="color: #2563eb; font-weight: 700;">Tap to view &rarr;</span></small>
         </div>
 
-        <div class="sitrep-metric-card green">
+        <div class="sitrep-metric-card green" onclick="openTodaysOnDutyModal()" style="cursor: pointer;" title="Click to view Officer(s) on Duty today">
           <div class="sitrep-metric-title">Personnel on Duty</div>
           <div class="sitrep-metric-num" style="color: #15803d;">${onDutyCount}</div>
-          <small class="sitrep-metric-sub" style="color: #15803d;">Deployed across 13 branches</small>
+          <small class="sitrep-metric-sub" style="color: #15803d;">Deployed across 13 branches &bull; <span style="color: #15803d; font-weight: 700;">Tap to view &rarr;</span></small>
         </div>
 
-        <div class="sitrep-metric-card amber">
+        <div class="sitrep-metric-card amber" onclick="openTodayOnLeaveDetails()" style="cursor: pointer;" title="Click to view Officer(s) on Sanctioned Leave today">
           <div class="sitrep-metric-title">Sanctioned on Leave</div>
           <div class="sitrep-metric-num" style="color: #b45309;">${onLeaveCount}</div>
-          <small class="sitrep-metric-sub" style="color: #b45309;">By Competent Authority</small>
-        </div>
-
-        <div class="sitrep-metric-card blue">
-          <div class="sitrep-metric-title">1930 Helpline Duty</div>
-          <div class="sitrep-metric-num" style="color: #1d4ed8;">${helplineOnDuty} / ${helplineUsers.length}</div>
-          <small class="sitrep-metric-sub" style="color: #1d4ed8;">24x7 Call Center</small>
-        </div>
-
-        <div class="sitrep-metric-card purple">
-          <div class="sitrep-metric-title">Station Leave (Out of HQ)</div>
-          <div class="sitrep-metric-num" style="color: #6b21a8;">${stationLeaveCount}</div>
-          <small class="sitrep-metric-sub" style="color: #6b21a8;">Permission granted</small>
+          <small class="sitrep-metric-sub" style="color: #b45309;">By Competent Authority &bull; <span style="color: #b45309; font-weight: 700;">Tap to view &rarr;</span></small>
         </div>
       </div>
 
