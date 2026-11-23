@@ -1539,15 +1539,14 @@ function switchTab(tabId) {
     btn.classList.toggle("active", btn.dataset.tab === tabId);
   });
 
-  // Sync mobile bottom nav buttons
+  // Sync mobile bottom nav buttons and auto-scroll active tab into view
   document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
-    if (btn.id === "mobileNavMore") return;
-    if (btn.dataset.tab === tabId) {
-      btn.classList.add("active");
-    } else if ((tabId === "incharge_desk" || tabId === "sp_desk" || (tabId === "notices" && user && user.role === "member")) && btn.id === "mobileNavDesk") {
-      btn.classList.add("active");
-    } else {
-      btn.classList.remove("active");
+    const isActive = btn.dataset.tab === tabId;
+    btn.classList.toggle("active", isActive);
+    if (isActive) {
+      try {
+        btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      } catch (e) {}
     }
   });
 
@@ -1611,33 +1610,50 @@ function renderNavigationTabs() {
     spTabBtn.style.display = isSP ? "flex" : "none";
   }
 
-  // Update Mobile Bottom Nav items according to role
-  const mobileApplyBtn = document.getElementById("mobileNavApply");
-  const mobileMyLeavesBtn = document.getElementById("mobileNavMyLeaves");
-  if (mobileApplyBtn) mobileApplyBtn.style.display = isSPRole ? "none" : "flex";
-  if (mobileMyLeavesBtn) mobileMyLeavesBtn.style.display = isSPRole ? "none" : "flex";
+  // Update Scrollable Mobile Bottom Nav buttons according to role
+  const mobTabApply = document.getElementById("mobTabApply");
+  const mobTabMyLeaves = document.getElementById("mobTabMyLeaves");
+  const mobTabIncharge = document.getElementById("mobTabIncharge");
+  const mobTabSP = document.getElementById("mobTabSP");
+  const mobTabSitrep = document.getElementById("mobTabSitrep");
+  const mobTabRegister = document.getElementById("mobTabRegister");
+  const mobTabDirectory = document.getElementById("mobTabDirectory");
+  const mobTabBranches = document.getElementById("mobTabBranches");
 
-  const mobileDeskLabel = document.getElementById("mobileDeskLabel");
-  const mobileDeskBadge = document.getElementById("mobileDeskBadge");
-  const mobileNavDesk = document.getElementById("mobileNavDesk");
-  if (mobileDeskLabel && mobileDeskBadge) {
-    if (isSPRole) {
-      mobileDeskLabel.textContent = "SP Desk";
-      mobileDeskBadge.textContent = pendingSPCount;
-      mobileDeskBadge.style.display = pendingSPCount > 0 ? "inline-block" : "none";
-      if (mobileNavDesk) mobileNavDesk.setAttribute("data-tab", "sp_desk");
-    } else if (isBranchIncharge) {
-      mobileDeskLabel.textContent = "Incharge Desk";
-      mobileDeskBadge.textContent = pendingInchargeCount;
-      mobileDeskBadge.style.display = pendingInchargeCount > 0 ? "inline-block" : "none";
-      if (mobileNavDesk) mobileNavDesk.setAttribute("data-tab", "incharge_desk");
-    } else {
-      mobileDeskLabel.textContent = "Notices";
-      const count = (AppState.notices || []).length;
-      mobileDeskBadge.textContent = count;
-      mobileDeskBadge.style.display = count > 0 ? "inline-block" : "none";
-      if (mobileNavDesk) mobileNavDesk.setAttribute("data-tab", "notices");
-    }
+  if (mobTabApply) mobTabApply.style.display = isSPRole ? "none" : "inline-flex";
+  if (mobTabMyLeaves) mobTabMyLeaves.style.display = isSPRole ? "none" : "inline-flex";
+  if (mobTabIncharge) mobTabIncharge.style.display = isBranchIncharge ? "inline-flex" : "none";
+  if (mobTabSP) mobTabSP.style.display = isSP ? "inline-flex" : "none";
+  if (mobTabSitrep) mobTabSitrep.style.display = (user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN")) ? "inline-flex" : "none";
+  if (mobTabRegister) mobTabRegister.style.display = (user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN")) ? "inline-flex" : "none";
+  if (mobTabDirectory) mobTabDirectory.style.display = canViewDirectory ? "inline-flex" : "none";
+  if (mobTabBranches) mobTabBranches.style.display = isSPRole ? "inline-flex" : "none";
+
+  // Badges on Scrollable Mobile Bottom Nav
+  const mobBadgeNotices = document.getElementById("mobBadgeNotices");
+  if (mobBadgeNotices) {
+    const totalNotices = (AppState.notices || []).length;
+    mobBadgeNotices.textContent = totalNotices;
+    mobBadgeNotices.style.display = totalNotices > 0 ? "flex" : "none";
+  }
+
+  const mobBadgeMyLeaves = document.getElementById("mobBadgeMyLeaves");
+  if (mobBadgeMyLeaves) {
+    const activeLeavesCount = AppState.leaves.filter(l => l.applicantId === (user ? user.id : "") && (l.status === "PENDING_INCHARGE" || l.status === "RECOMMENDED")).length;
+    mobBadgeMyLeaves.textContent = activeLeavesCount;
+    mobBadgeMyLeaves.style.display = activeLeavesCount > 0 ? "flex" : "none";
+  }
+
+  const mobBadgeIncharge = document.getElementById("mobBadgeIncharge");
+  if (mobBadgeIncharge) {
+    mobBadgeIncharge.textContent = pendingInchargeCount;
+    mobBadgeIncharge.style.display = pendingInchargeCount > 0 ? "flex" : "none";
+  }
+
+  const mobBadgeSP = document.getElementById("mobBadgeSP");
+  if (mobBadgeSP) {
+    mobBadgeSP.textContent = pendingSPCount;
+    mobBadgeSP.style.display = pendingSPCount > 0 ? "flex" : "none";
   }
 
   // Update Drawer menu items visibility
@@ -1742,13 +1758,12 @@ function renderNavigationTabs() {
 
   // Always synchronize mobile bottom nav buttons with current AppState.activeTab
   document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
-    if (btn.id === "mobileNavMore") return;
-    if (btn.dataset.tab === AppState.activeTab) {
-      btn.classList.add("active");
-    } else if ((AppState.activeTab === "incharge_desk" || AppState.activeTab === "sp_desk" || (AppState.activeTab === "notices" && user && user.role === "member")) && btn.id === "mobileNavDesk") {
-      btn.classList.add("active");
-    } else {
-      btn.classList.remove("active");
+    const isActive = btn.dataset.tab === AppState.activeTab;
+    btn.classList.toggle("active", isActive);
+    if (isActive) {
+      try {
+        btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      } catch (e) {}
     }
   });
 }
@@ -3024,36 +3039,126 @@ function renderMyLeaves(container) {
       </div>
     ` : `
       <div class="card-table-wrap">
-        <div class="responsive-table mobile-fit-100">
-          <table class="data-table mobile-table-compact">
-            <thead>
-              <tr>
-                <!-- DESKTOP 8 COLUMNS -->
-                <th class="col-desktop-only">Application ID</th>
-                <th class="col-desktop-only">Leave Type</th>
-                <th class="col-desktop-only">Period</th>
-                <th class="col-desktop-only">Days</th>
-                <th class="col-desktop-only">Ground / Reason</th>
-                <th class="col-desktop-only">Station Leave</th>
-                <th class="col-desktop-only">Current Status</th>
-                <th class="col-desktop-only">Action</th>
+        <!-- DESKTOP VIEW: Full Data Table -->
+        <div class="vdesk-desktop-view">
+          <div class="table-scroll-hint">
+            <span>👉 Swipe table horizontally to see all columns</span>
+          </div>
+          <div class="responsive-table">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Application ID</th>
+                  <th>Leave Type</th>
+                  <th>Period</th>
+                  <th>Days</th>
+                  <th>Ground / Reason</th>
+                  <th>Station Leave</th>
+                  <th>Current Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${userLeaves.map(leave => renderLeaveTableRow(leave)).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-                <!-- MOBILE 3 CONSOLIDATED COLUMNS -->
-                <th class="col-mobile-only" style="width: 34%;">Application & Type</th>
-                <th class="col-mobile-only" style="width: 42%;">Period & Days</th>
-                <th class="col-mobile-only" style="width: 24%; text-align: center;">Status & Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${userLeaves.map(leave => renderLeaveTableRow(leave)).join("")}
-            </tbody>
-          </table>
+        <!-- MOBILE VIEW: OPEN CARDS -->
+        <div class="vdesk-mobile-view">
+          ${userLeaves.map(leave => renderMyLeavesMobileCard(leave)).join("")}
         </div>
       </div>
     `}
   `;
 
   container.innerHTML = html;
+}
+
+// ------------------------------------------
+// MOBILE CARD RENDERER FOR MY LEAVES
+// ------------------------------------------
+function renderMyLeavesMobileCard(leave) {
+  const statusBadge = getStatusBadge(leave.status);
+  return `
+    <div class="vdesk-mobile-card" onclick="openLeaveDetailsModal('${leave.id}')">
+      <!-- HEADER: ID, DATE & STATUS -->
+      <div class="vdesk-mcard-header">
+        <div class="vdesk-mcard-id-group">
+          <span class="vdesk-id-tag">#${leave.id}</span>
+          <span class="vdesk-date-tag">${leave.appliedAt || ''}</span>
+        </div>
+        <div style="margin-left: auto;">
+          ${statusBadge}
+        </div>
+      </div>
+
+      <!-- LEAVE TYPE, PERIOD & DAYS (OPEN) -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 2px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 700; color: #0f274c; font-size: 0.86rem;">${leave.leaveType}</span>
+          <span class="days-badge"><strong>${leave.totalDays}</strong> Days</span>
+        </div>
+        <div class="vdesk-mcard-row" style="font-size: 0.82rem;">
+          <span class="vdesk-mcard-row-label">📅 Period:</span>
+          <span class="period-dates" style="font-weight: 600;">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+        </div>
+        ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
+          <div style="margin-top: 4px;">
+            <span class="curtailed-badge" style="font-size: 0.72rem;">
+              Curtailed from ${leave.originalDays} to ${leave.totalDays} Days
+            </span>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- GROUND / REASON (FULLY OPEN) -->
+      <div class="vdesk-mcard-reason">
+        <div class="vdesk-mcard-reason-label">Ground / Reason:</div>
+        <div class="vdesk-reason-text" style="font-style: normal; color: #1e293b; font-weight: 500; font-size: 0.84rem;">
+          "${leave.reason}"
+        </div>
+      </div>
+
+      <!-- INCHARGE NOTE (IF ANY) -->
+      ${leave.inchargeRemarks ? `
+        <div class="vdesk-mcard-incharge">
+          <div class="vdesk-incharge-note" style="font-size: 0.8rem;">
+            <strong>Incharge Note:</strong> "${leave.inchargeRemarks}"
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- SP NOTE (IF ANY) -->
+      ${leave.spSanctionRemarks ? `
+        <div style="background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; color: #9d174d; margin-top: 4px;">
+          <strong>SP Cyber Order:</strong> "${leave.spSanctionRemarks}"
+        </div>
+      ` : ''}
+
+      <!-- ATTACHMENT CHIP -->
+      ${leave.attachment ? `
+        <div style="margin-top: 2px;">
+          <span class="vdesk-chip chip-attachment" onclick="event.stopPropagation(); viewAttachment('${leave.id}')">
+            📎 Attached: ${leave.attachment.name || 'View Slip'}
+          </span>
+        </div>
+      ` : ''}
+
+      <!-- ACTION BUTTONS -->
+      <div class="vdesk-mcard-actions" onclick="event.stopPropagation()" style="margin-top: 4px; display: flex; gap: 8px;">
+        <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')" style="flex: 1;">
+          Details
+        </button>
+        ${leave.status === "APPROVED" ? `
+          <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openSanctionSlipModal('${leave.id}')" style="flex: 1;">
+            Order Slip
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
 }
 
 // ------------------------------------------
@@ -3207,6 +3312,191 @@ function renderInchargeMobileCard(leave) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
           Details
         </button>
+      </div>
+    </div>
+  `;
+}
+
+// ------------------------------------------
+// MOBILE CARD RENDERER FOR MASTER DATA (LEAVE REGISTER)
+// ------------------------------------------
+function renderMasterLeaveMobileCard(leave) {
+  const statusBadge = getStatusBadge(leave.status);
+  return `
+    <div class="vdesk-mobile-card" onclick="openLeaveDetailsModal('${leave.id}')">
+      <!-- HEADER: ID, APPLIED DATE & STATUS -->
+      <div class="vdesk-mcard-header">
+        <div class="vdesk-mcard-id-group">
+          <span class="vdesk-id-tag">#${leave.id}</span>
+          <span class="vdesk-date-tag">${leave.appliedAt || ''}</span>
+        </div>
+        <div style="margin-left: auto;">
+          ${statusBadge}
+        </div>
+      </div>
+
+      <!-- APPLICANT OFFICER DETAILS (OPEN) -->
+      <div class="vdesk-mcard-officer">
+        <div class="vdesk-mcard-avatar">👮</div>
+        <div class="vdesk-mcard-officer-info">
+          <div class="vdesk-personnel-name">${leave.applicantName}</div>
+          <div class="vdesk-personnel-sub">${leave.rank} (${leave.beltNo})</div>
+        </div>
+        <span class="branch-tag-mini" style="margin-left: auto;">${leave.branchName}</span>
+      </div>
+
+      <!-- LEAVE TYPE, PERIOD & DAYS (OPEN) -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 2px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 700; color: #0f274c; font-size: 0.85rem;">${leave.leaveType}</span>
+          <span class="days-badge"><strong>${leave.totalDays}</strong> Days</span>
+        </div>
+        <div class="vdesk-mcard-row" style="font-size: 0.82rem;">
+          <span class="vdesk-mcard-row-label">📅 Period:</span>
+          <span class="period-dates" style="font-weight: 600;">${formatDate(leave.fromDate)} &rarr; ${formatDate(leave.toDate)}</span>
+        </div>
+        ${leave.originalDays && leave.originalDays !== leave.totalDays ? `
+          <div style="margin-top: 4px;">
+            <span class="curtailed-badge" style="font-size: 0.72rem;">
+              Curtailed from ${leave.originalDays} to ${leave.totalDays} Days
+            </span>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- GROUND / REASON (FULLY OPEN) -->
+      <div class="vdesk-mcard-reason">
+        <div class="vdesk-mcard-reason-label">Ground / Reason:</div>
+        <div class="vdesk-reason-text" style="font-style: normal; color: #1e293b; font-weight: 500; font-size: 0.84rem;">
+          "${leave.reason}"
+        </div>
+      </div>
+
+      <!-- HANDOVER / STATION LEAVE / REMARKS (OPEN) -->
+      ${leave.handoverTo ? `
+        <div class="vdesk-mcard-row" style="font-size: 0.8rem; color: #475569;">
+          <span class="vdesk-mcard-row-label">🤝 Handover:</span>
+          <strong>${leave.handoverTo}</strong>
+        </div>
+      ` : ''}
+
+      ${leave.stationLeave ? `
+        <div class="vdesk-mcard-row" style="font-size: 0.8rem; color: #0f274c;">
+          <span class="vdesk-mcard-row-label">🚩 Station Leave:</span>
+          <span>${leave.stationLeaveAddress || 'Permission Requested'}</span>
+        </div>
+      ` : ''}
+
+      ${leave.inchargeRemarks ? `
+        <div class="vdesk-mcard-incharge" style="margin-top: 4px;">
+          <div class="vdesk-incharge-note" style="font-size: 0.8rem;">
+            <strong>Incharge Note:</strong> "${leave.inchargeRemarks}"
+          </div>
+        </div>
+      ` : ''}
+
+      ${leave.spSanctionRemarks ? `
+        <div style="background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; color: #9d174d; margin-top: 4px;">
+          <strong>SP Cyber Order:</strong> "${leave.spSanctionRemarks}"
+        </div>
+      ` : ''}
+
+      <!-- ATTACHMENT CHIP -->
+      ${leave.attachment ? `
+        <div style="margin-top: 2px;">
+          <span class="vdesk-chip chip-attachment" onclick="event.stopPropagation(); viewAttachment('${leave.id}')">
+            📎 Attached: ${leave.attachment.name || 'View Slip'}
+          </span>
+        </div>
+      ` : ''}
+
+      <!-- ACTIONS -->
+      <div class="vdesk-mcard-actions" onclick="event.stopPropagation()" style="margin-top: 4px; display: flex; gap: 8px;">
+        <button class="btn btn-outline btn-sm mobile-action-btn" onclick="openLeaveDetailsModal('${leave.id}')" style="flex: 1;">
+          Details
+        </button>
+        ${leave.status === "APPROVED" ? `
+          <button class="btn btn-primary btn-sm mobile-action-btn" onclick="openSanctionSlipModal('${leave.id}')" style="flex: 1;">
+            Order Slip
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ------------------------------------------
+// MOBILE CARD RENDERER FOR PERSONNEL DIRECTORY
+// ------------------------------------------
+function renderPersonnelMobileCard(u) {
+  const b = AppState.branches.find(br => br.id === u.branchId);
+  const branchName = b ? b.name : u.branchId;
+  const isSP = AppState.currentUser && (AppState.currentUser.role === "sp_cyber" || AppState.currentUser.role === "admin");
+  return `
+    <div class="vdesk-mobile-card" data-branch="${u.branchId}">
+      <!-- HEADER: BELT NO, SYSTEM ROLE & BRANCH -->
+      <div class="vdesk-mcard-header">
+        <div class="vdesk-mcard-id-group">
+          <span class="vdesk-id-tag"><strong>${u.id}</strong></span>
+          <span class="vdesk-date-tag" style="background: #e2e8f0; color: #1e293b; font-weight: 700;">Belt: ${u.beltNo}</span>
+        </div>
+        <div style="margin-left: auto;">
+          <span class="badge" style="background: #f1f5f9; color: #0f274c; border: 1px solid #cbd5e1; font-size: 0.72rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">
+            ${getRoleDisplay(u.role)}
+          </span>
+        </div>
+      </div>
+
+      <!-- OFFICER DETAILS (OPEN) -->
+      <div class="vdesk-mcard-officer">
+        <div class="vdesk-mcard-avatar">👮</div>
+        <div class="vdesk-mcard-officer-info">
+          <div class="vdesk-personnel-name" style="font-size: 0.95rem; font-weight: 800; color: #0f274c;">${u.name}</div>
+          <div class="vdesk-personnel-sub" style="font-size: 0.8rem; color: #475569;">${u.rank}</div>
+        </div>
+        <span class="branch-tag" style="margin-left: auto; font-size: 0.72rem; padding: 2px 8px;">${branchName}</span>
+      </div>
+
+      <!-- LEAVE BALANCES (FULLY OPEN) -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0;">
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 6px; text-align: center;">
+          <div style="font-size: 0.65rem; color: #166534; font-weight: 700; text-transform: uppercase;">CL Balance</div>
+          <div style="font-size: 1.1rem; font-weight: 800; color: #15803d; line-height: 1.2; margin-top: 2px;">${u.leaveBalances?.CL ?? 0} <small style="font-size: 0.68rem; font-weight: 600;">Days</small></div>
+        </div>
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 6px; text-align: center;">
+          <div style="font-size: 0.65rem; color: #1e40af; font-weight: 700; text-transform: uppercase;">EL Balance</div>
+          <div style="font-size: 1.1rem; font-weight: 800; color: #1d4ed8; line-height: 1.2; margin-top: 2px;">${u.leaveBalances?.EL ?? 0} <small style="font-size: 0.68rem; font-weight: 600;">Days</small></div>
+        </div>
+        <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 8px 6px; text-align: center;">
+          <div style="font-size: 0.65rem; color: #854d0e; font-weight: 700; text-transform: uppercase;">RH Balance</div>
+          <div style="font-size: 1.1rem; font-weight: 800; color: #a16207; line-height: 1.2; margin-top: 2px;">${u.leaveBalances?.RH ?? 0} <small style="font-size: 0.68rem; font-weight: 600;">Days</small></div>
+        </div>
+      </div>
+
+      <!-- CONTACT INFO (FULLY OPEN) -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="color: #64748b;">Phone / Mobile:</span>
+          ${u.mobile ? `
+            <a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 700;">📞 ${u.mobile}</a>
+          ` : '<span style="color: #94a3b8;">Not provided</span>'}
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="color: #64748b;">Email Address:</span>
+          <span style="color: #334155; font-weight: 600;">${u.email || '-'}</span>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div style="display: flex; gap: 8px; margin-top: 4px;">
+        <button class="btn btn-outline btn-sm mobile-action-btn" onclick="resetUserPinPrompt('${u.id}')" style="flex: 1; font-weight: 600;">
+          🔑 Reset PIN
+        </button>
+        ${isSP && u.role !== 'sp_cyber' ? `
+          <button class="btn btn-outline btn-sm mobile-action-btn" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5; width: 44px; padding: 0;" title="Remove Officer">
+            🗑️
+          </button>
+        ` : ''}
       </div>
     </div>
   `;
@@ -4594,34 +4884,36 @@ function renderMasterRegister(container) {
           <div style="font-size: 0.86rem; color: #64748b;">No leave records found in the system.</div>
         </div>
       ` : `
-        <div class="table-scroll-hint mobile-hidden">
-          <span>👉 Swipe table horizontally to see all columns</span>
+        <!-- DESKTOP VIEW: Full 9 Columns Data Table -->
+        <div class="vdesk-desktop-view">
+          <div class="table-scroll-hint">
+            <span>👉 Swipe table horizontally to see all columns</span>
+          </div>
+          <div class="responsive-table">
+            <table class="data-table" id="masterTable">
+              <thead>
+                <tr>
+                  <th>ID &amp; Applied Date</th>
+                  <th>Personnel Details</th>
+                  <th>Leave Type</th>
+                  <th>Period</th>
+                  <th>Days</th>
+                  <th>Ground / Reason</th>
+                  <th>Station Leave</th>
+                  <th>Current Status</th>
+                  <th>Action / Order</th>
+                </tr>
+              </thead>
+              <tbody id="masterTableBody">
+                ${AppState.leaves.map(leave => renderLeaveTableRow(leave, true)).join("")}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="responsive-table mobile-fit-100">
-          <table class="data-table mobile-table-compact" id="masterTable">
-            <thead>
-              <tr>
-                <!-- DESKTOP 9 COLUMNS -->
-                <th class="col-desktop-only">ID & Applied Date</th>
-                <th class="col-desktop-only">Personnel Details</th>
-                <th class="col-desktop-only">Leave Type</th>
-                <th class="col-desktop-only">Period</th>
-                <th class="col-desktop-only">Days</th>
-                <th class="col-desktop-only">Ground / Reason</th>
-                <th class="col-desktop-only">Station Leave</th>
-                <th class="col-desktop-only">Current Status</th>
-                <th class="col-desktop-only">Action / Order</th>
 
-                <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
-                <th class="col-mobile-only" style="width: 42%;">Personnel & ID</th>
-                <th class="col-mobile-only" style="width: 38%;">Leave & Period</th>
-                <th class="col-mobile-only" style="width: 20%; text-align: center;">Status & Action</th>
-              </tr>
-            </thead>
-            <tbody id="masterTableBody">
-              ${AppState.leaves.map(leave => renderLeaveTableRow(leave, true)).join("")}
-            </tbody>
-          </table>
+        <!-- MOBILE VIEW: All Cards Completely OPEN with Full Details -->
+        <div class="vdesk-mobile-view" id="masterMobileCards">
+          ${AppState.leaves.map(leave => renderMasterLeaveMobileCard(leave)).join("")}
         </div>
       `}
     </div>
@@ -4658,6 +4950,15 @@ function filterRegisterTable() {
       tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">No records match the selected filter criteria.</td></tr>`;
     } else {
       tbody.innerHTML = filtered.map(l => renderLeaveTableRow(l, true)).join("");
+    }
+  }
+
+  const cardsContainer = document.getElementById("masterMobileCards");
+  if (cardsContainer) {
+    if (filtered.length === 0) {
+      cardsContainer.innerHTML = `<div style="text-align: center; color: #64748b; padding: 24px; background: #fff; border-radius: 10px; border: 1.5px dashed #cbd5e1;">No records match the selected filter criteria.</div>`;
+    } else {
+      cardsContainer.innerHTML = filtered.map(l => renderMasterLeaveMobileCard(l)).join("");
     }
   }
 }
@@ -5345,89 +5646,66 @@ function renderPersonnelDirectory(container) {
           ` : ''}
         </div>
       </div>
-      <div class="table-scroll-hint mobile-hidden">
-        <span>👉 Swipe table horizontally to see all columns</span>
-      </div>
-      <div class="responsive-table mobile-fit-100">
-        <table class="data-table mobile-table-compact" id="directoryTable">
-          <thead>
-            <tr>
-              <!-- DESKTOP 9 COLUMNS -->
-              <th class="col-desktop-only">ID / Belt No.</th>
-              <th class="col-desktop-only">Name</th>
-              <th class="col-desktop-only">Rank</th>
-              <th class="col-desktop-only">Branch</th>
-              <th class="col-desktop-only">System Role</th>
-              <th class="col-desktop-only">Contact</th>
-              <th class="col-desktop-only">CL Balance</th>
-              <th class="col-desktop-only">EL Balance</th>
-              <th class="col-desktop-only">Action / Security</th>
-
-              <!-- MOBILE 3 CONSOLIDATED COLUMNS (Fits 100% Screen) -->
-              <th class="col-mobile-only" style="width: 48%;">Officer Details</th>
-              <th class="col-mobile-only" style="width: 36%;">Branch & Leaves</th>
-              <th class="col-mobile-only" style="width: 16%; text-align: center;">Action</th>
-            </tr>
-          </thead>
-          <tbody id="directoryTableBody">
-            ${displayedUsers.length === 0 ? `
+      <!-- DESKTOP VIEW: Full 9 Columns Data Table -->
+      <div class="vdesk-desktop-view">
+        <div class="table-scroll-hint">
+          <span>👉 Swipe table horizontally to see all columns</span>
+        </div>
+        <div class="responsive-table">
+          <table class="data-table" id="directoryTable">
+            <thead>
               <tr>
-                <td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">
-                  No personnel records found for this branch.
-                </td>
+                <th>ID / Belt No.</th>
+                <th>Name</th>
+                <th>Rank</th>
+                <th>Branch</th>
+                <th>System Role</th>
+                <th>Contact</th>
+                <th>CL Balance</th>
+                <th>EL Balance</th>
+                <th>Action / Security</th>
               </tr>
-            ` : displayedUsers.map(u => {
-              const b = AppState.branches.find(br => br.id === u.branchId);
-              return `
-                <tr class="leave-card-row" data-branch="${u.branchId}">
-                  <!-- DESKTOP 9 CELLS -->
-                  <td class="col-desktop-only" data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
-                  <td class="col-desktop-only" data-label="Officer Name"><strong>${u.name}</strong></td>
-                  <td class="col-desktop-only" data-label="Rank">${u.rank}</td>
-                  <td class="col-desktop-only" data-label="Cyber Branch"><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
-                  <td class="col-desktop-only" data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
-                  <td class="col-desktop-only" data-label="Contact Details"><small>${u.mobile}<br>${u.email}</small></td>
-                  <td class="col-desktop-only" data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
-                  <td class="col-desktop-only" data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
-                  <td class="col-desktop-only" data-label="Action / Security">
-                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                      <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
-                      ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5;" title="Remove Official">🗑️</button>` : ''}
-                    </div>
-                  </td>
-
-                  <!-- MOBILE CONSOLIDATED 3 CELLS (Fits 100% Phone Screen) -->
-                  <td class="col-mobile-only" style="width: 48%; vertical-align: top; padding: 10px 8px;">
-                    <div style="font-weight: 700; color: #0f274c; font-size: 0.84rem; line-height: 1.25;">${u.name}</div>
-                    <div style="font-size: 0.72rem; color: #334155; margin-top: 2px;">${u.rank} <span style="color:#64748b;">(${u.beltNo})</span></div>
-                    <div style="margin-top: 3px;">
-                      <span class="badge" style="background: #f1f5f9; color: #0f274c; font-size: 0.65rem; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 4px; display: inline-block;">${getRoleDisplay(u.role)}</span>
-                    </div>
-                  </td>
-                  <td class="col-mobile-only" style="width: 36%; vertical-align: top; padding: 10px 8px;">
-                    <div>
-                      <span class="branch-tag" style="font-size: 0.68rem; padding: 1px 5px; display: inline-block;">${b ? b.name : u.branchId}</span>
-                    </div>
-                    <div style="font-size: 0.72rem; color: #0f274c; font-weight: 700; margin-top: 3px;">
-                      CL: ${u.leaveBalances?.CL ?? 0}d | EL: ${u.leaveBalances?.EL ?? 0}d
-                    </div>
-                    ${u.mobile ? `
-                      <div style="font-size: 0.7rem; margin-top: 3px;">
-                        <a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-weight: 600; white-space: nowrap;">📞 ${u.mobile}</a>
-                      </div>
-                    ` : ''}
-                  </td>
-                  <td class="col-mobile-only" style="width: 16%; text-align: center; vertical-align: top; padding: 10px 4px;">
-                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-                      <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password" style="padding: 4px 6px; font-size: 0.7rem; width: 100%; white-space: nowrap; font-weight: 600;">🔑 PIN</button>
-                      ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5; padding: 2px 6px; font-size: 0.68rem; width: 100%;" title="Remove Official">🗑️</button>` : ''}
-                    </div>
+            </thead>
+            <tbody id="directoryTableBody">
+              ${displayedUsers.length === 0 ? `
+                <tr>
+                  <td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">
+                    No personnel records found for this branch.
                   </td>
                 </tr>
-              `;
-            }).join("")}
-          </tbody>
-        </table>
+              ` : displayedUsers.map(u => {
+                const b = AppState.branches.find(br => br.id === u.branchId);
+                return `
+                  <tr class="leave-card-row" data-branch="${u.branchId}">
+                    <td data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
+                    <td data-label="Officer Name"><strong>${u.name}</strong></td>
+                    <td data-label="Rank">${u.rank}</td>
+                    <td data-label="Cyber Branch"><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
+                    <td data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
+                    <td data-label="Contact Details"><small>${u.mobile ? `📞 ${u.mobile}` : ''}<br>${u.email || ''}</small></td>
+                    <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
+                    <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
+                    <td data-label="Action / Security">
+                      <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
+                        ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5;" title="Remove Official">🗑️</button>` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MOBILE VIEW: All Personnel Cards OPEN with Full Details -->
+      <div class="vdesk-mobile-view" id="directoryMobileCards">
+        ${displayedUsers.length === 0 ? `
+          <div style="text-align: center; color: #64748b; padding: 24px; background: #fff; border-radius: 10px; border: 1.5px dashed #cbd5e1;">
+            No personnel records found for this branch.
+          </div>
+        ` : displayedUsers.map(u => renderPersonnelMobileCard(u)).join("")}
       </div>
     </div>
   `;
@@ -5438,18 +5716,36 @@ function renderPersonnelDirectory(container) {
 function filterDirectoryTable() {
   const searchVal = document.getElementById("directorySearchInput")?.value.toLowerCase().trim() || "";
   const branchVal = document.getElementById("directoryBranchFilter")?.value || "";
+
+  // 1. Filter Desktop Table Rows
   const tbody = document.getElementById("directoryTableBody");
-  if (!tbody) return;
-  const rows = tbody.querySelectorAll("tr");
-  rows.forEach(r => {
-    const branchMatch = !branchVal || r.dataset.branch === branchVal;
-    const textMatch = !searchVal || r.textContent.toLowerCase().includes(searchVal);
-    if (branchMatch && textMatch) {
-      r.style.display = "";
-    } else {
-      r.style.display = "none";
-    }
-  });
+  if (tbody) {
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach(r => {
+      const branchMatch = !branchVal || r.dataset.branch === branchVal;
+      const textMatch = !searchVal || r.textContent.toLowerCase().includes(searchVal);
+      if (branchMatch && textMatch) {
+        r.style.display = "";
+      } else {
+        r.style.display = "none";
+      }
+    });
+  }
+
+  // 2. Filter Mobile Open Cards
+  const cardsContainer = document.getElementById("directoryMobileCards");
+  if (cardsContainer) {
+    const cards = cardsContainer.querySelectorAll(".vdesk-mobile-card");
+    cards.forEach(c => {
+      const branchMatch = !branchVal || c.dataset.branch === branchVal;
+      const textMatch = !searchVal || c.textContent.toLowerCase().includes(searchVal);
+      if (branchMatch && textMatch) {
+        c.style.display = "flex";
+      } else {
+        c.style.display = "none";
+      }
+    });
+  }
 }
 
 // ==========================================

@@ -1865,101 +1865,123 @@ table.data-table tr:hover {
    MOBILE APP COMPONENTS (Bottom Nav, Drawer, Profile Pill, View Switcher)
    ========================================================================== */
 
-/* FIXED MOBILE BOTTOM NAVIGATION BAR (HIDDEN: Navigation moved to Left Sidebar) */
+/* FIXED MOBILE BOTTOM NAVIGATION BAR - HORIZONTALLY SCROLLABLE FOR MOBILE */
 .mobile-bottom-nav {
-  display: none !important;
+  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(60px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: #0f274c;
-  border-top: 2px solid var(--police-gold);
-  display: none;
-  align-items: stretch;
-  justify-content: space-around;
-  z-index: 1000;
-  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.25);
+  height: calc(58px + env(safe-area-inset-bottom, 0px));
+  padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px)) 6px;
+  background: #09172e;
+  border-top: 2px solid var(--police-gold, #cba135);
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 1250;
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 4px;
+}
+
+.mobile-bottom-nav::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .mobile-nav-btn {
-  flex: 1;
-  display: flex;
+  flex: 0 0 auto;
+  min-width: 66px;
+  height: 100%;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: none;
   border: none;
   color: #94a3b8;
-  padding: 4px 2px;
+  padding: 3px 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   font-family: inherit;
   position: relative;
+  border-radius: 8px;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  text-decoration: none;
 }
 
 .mobile-nav-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.93);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .mobile-nav-btn.active {
-  color: var(--police-gold);
+  color: var(--police-gold, #ffd700);
+  background: rgba(203, 161, 53, 0.18);
   font-weight: 700;
 }
 
 .mobile-nav-btn.active .mobile-nav-icon svg {
-  stroke: var(--police-gold);
+  stroke: var(--police-gold, #ffd700);
 }
 
 .mobile-nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
-  margin-bottom: 2px;
+  height: 22px;
+  position: relative;
 }
 
 .mobile-nav-plus-icon {
-  background: var(--police-gold);
-  color: #0f274c !important;
+  background: var(--police-gold, #cba135);
+  color: #09172e !important;
   border-radius: 50%;
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 10px rgba(212, 160, 23, 0.45);
-  margin-top: -8px;
+  box-shadow: 0 2px 8px rgba(203, 161, 53, 0.45);
 }
 
 .mobile-nav-plus-icon svg {
-  stroke: #0f274c !important;
+  stroke: #09172e !important;
 }
 
 .mobile-nav-label {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 600;
-  letter-spacing: 0.2px;
-  line-height: 1;
+  letter-spacing: 0.1px;
+  line-height: 1.15;
+  margin-top: 2px;
+  white-space: nowrap;
 }
 
 .mobile-nav-badge {
   position: absolute;
-  top: -3px;
+  top: -4px;
   right: -8px;
   background: #dc2626;
-  color: #fff;
-  font-size: 0.65rem;
+  color: #ffffff;
+  font-size: 0.62rem;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 10px;
-  border: 1.5px solid #0f274c;
-  min-width: 16px;
-  text-align: center;
-  line-height: 1.2;
+  padding: 0 4px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #09172e;
 }
 
 /* MOBILE OFFICER HEADER BUTTON */
@@ -2278,9 +2300,15 @@ table.data-table tr:hover {
     display: flex !important;
   }
 
-  /* Display mobile thumb bottom bar */
+  /* Display mobile horizontally scrollable bottom nav bar */
   body:not(.force-desktop-view) .mobile-bottom-nav {
-    display: none !important;
+    display: flex !important;
+  }
+  body:not(.force-desktop-view) {
+    padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  body:not(.force-desktop-view) .app-container {
+    padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* Mobile compact header */
@@ -3587,7 +3615,13 @@ body.force-mobile-view .mobile-floating-left-nav-btn {
   display: flex !important;
 }
 body.force-mobile-view .mobile-bottom-nav {
-  display: none !important;
+  display: flex !important;
+}
+body.force-mobile-view {
+  padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+}
+body.force-mobile-view .app-container {
+  padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
 }
 body.force-mobile-view .mobile-drawer-overlay {
   display: none !important;
@@ -4996,8 +5030,7 @@ body.force-desktop-view .col-mobile-only {
   margin: 0 auto !important;
 }
 
-/* PERMANENTLY REMOVE BOTTOM MENU & FLOATING BUTTON ON MOBILE */
-.mobile-bottom-nav,
+/* Floating left nav button legacy reset */
 .mobile-floating-left-nav-btn {
   display: none !important;
   visibility: hidden !important;
@@ -5008,9 +5041,7 @@ body.force-desktop-view .col-mobile-only {
   opacity: 0 !important;
 }
 
-body,
-body:not(.force-desktop-view),
-body.force-mobile-view {
+body.force-desktop-view {
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
 }
