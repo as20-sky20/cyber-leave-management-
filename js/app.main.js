@@ -5035,11 +5035,86 @@ function exportLeavesToCSV() {
   showToast("Leave Register downloaded successfully as Excel (CSV).", "success");
 }
 
+// Helper to sort personnel within a branch in proper command hierarchy
+function sortBranchPersonnel(users) {
+  const rankScores = {
+    "sp (superintendent of police)": 100,
+    "superintendent of police": 100,
+    "dsp (deputy superintendent of police)": 90,
+    "deputy superintendent of police": 90,
+    "inspector": 80,
+    "sub-inspector (si)": 60,
+    "sub-inspector": 60,
+    "si": 60,
+    "assistant sub-inspector (asi)": 40,
+    "assistant sub-inspector": 40,
+    "asi": 40,
+    "head constable (hc)": 20,
+    "head constable": 20,
+    "hc": 20,
+    "constable (ct)": 10,
+    "constable": 10,
+    "ct": 10,
+    "lady constable (w/ct)": 10,
+    "w/ct": 10
+  };
+
+  return [...users].sort((a, b) => {
+    // 1. SP Cyber always on top
+    const aIsSP = a.role === "sp_cyber";
+    const bIsSP = b.role === "sp_cyber";
+    if (aIsSP && !bIsSP) return -1;
+    if (bIsSP && !aIsSP) return 1;
+
+    // 2. Branch Incharge / Approver next
+    const aIsIncharge = (a.role === "branch_incharge" || a.isApprover);
+    const bIsIncharge = (b.role === "branch_incharge" || b.isApprover);
+    if (aIsIncharge && !bIsIncharge) return -1;
+    if (bIsIncharge && !aIsIncharge) return 1;
+
+    // 3. Rank hierarchy
+    const rA = rankScores[(a.rank || "").toLowerCase().trim()] || 0;
+    const rB = rankScores[(b.rank || "").toLowerCase().trim()] || 0;
+    if (rA !== rB) return rB - rA;
+
+    // 4. Belt / Name
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+
 // Export Personnel Staff Directory to CSV / Excel
 function exportStaffToCSV() {
   const user = AppState.currentUser;
   const isSP = user && (user.role === "sp_cyber" || user.role === "admin" || user.id === "INCH-ADMIN");
   const targetUsers = isSP ? AppState.users : AppState.users.filter(u => u.branchId === user.branchId);
+
+  // Group by branch in proper hierarchy
+  const branchMap = new Map();
+  const orderedBranches = [...(AppState.branches || [])].sort((a, b) => {
+    if (a.id === "admin_branch") return -1;
+    if (b.id === "admin_branch") return 1;
+    return 0;
+  });
+  orderedBranches.forEach(b => branchMap.set(b.id, []));
+  const unassigned = [];
+  targetUsers.forEach(u => {
+    if (u.branchId && branchMap.has(u.branchId)) {
+      branchMap.get(u.branchId).push(u);
+    } else {
+      unassigned.push(u);
+    }
+  });
+
+  const sortedUsers = [];
+  for (const bId of branchMap.keys()) {
+    const list = branchMap.get(bId);
+    if (list.length > 0) {
+      sortedUsers.push(...sortBranchPersonnel(list));
+    }
+  }
+  if (unassigned.length > 0) {
+    sortedUsers.push(...sortBranchPersonnel(unassigned));
+  }
 
   const headers = [
     "S.No.",
@@ -5061,7 +5136,7 @@ function exportStaffToCSV() {
     "RH Balance"
   ];
 
-  const rows = targetUsers.map((u, idx) => {
+  const rows = sortedUsers.map((u, idx) => {
     const branch = AppState.branches.find(b => b.id === u.branchId);
     const branchName = branch ? branch.name : u.branchId;
     const b = u.leaveBalances || {};
@@ -5603,6 +5678,43 @@ function renderPersonnelDirectory(container) {
     ? AppState.users 
     : AppState.users.filter(u => u.branchId === user.branchId);
 
+  // Group displayed users by branch in proper command hierarchy
+  const branchMap = new Map();
+  // Order: put admin_branch first (HQ / SP Cyber Command), then the rest
+  const orderedBranches = [...(AppState.branches || [])].sort((a, b) => {
+    if (a.id === "admin_branch") return -1;
+    if (b.id === "admin_branch") return 1;
+    return 0;
+  });
+
+  orderedBranches.forEach(b => {
+    branchMap.set(b.id, { branch: b, users: [] });
+  });
+
+  const unassignedUsers = [];
+  displayedUsers.forEach(u => {
+    if (u.branchId && branchMap.has(u.branchId)) {
+      branchMap.get(u.branchId).users.push(u);
+    } else {
+      unassignedUsers.push(u);
+    }
+  });
+
+  const branchGroups = [];
+  for (const group of branchMap.values()) {
+    if (group.users.length > 0) {
+      group.users = sortBranchPersonnel(group.users);
+      branchGroups.push(group);
+    }
+  }
+
+  if (unassignedUsers.length > 0) {
+    branchGroups.push({
+      branch: { id: "unassigned", name: "General Duty / Unassigned Cyber Staff", hindi: "General Cyber Staff" },
+      users: sortBranchPersonnel(unassignedUsers)
+    });
+  }
+
   let html = `
     <div class="page-header">
       <div class="page-title-group">
@@ -5646,7 +5758,7 @@ function renderPersonnelDirectory(container) {
           ` : ''}
         </div>
       </div>
-      <!-- DESKTOP VIEW: Full 9 Columns Data Table -->
+      <!-- DESKTOP VIEW: Full 9 Columns Data Table Grouped By Branch -->
       <div class="vdesk-desktop-view">
         <div class="table-scroll-hint">
           <span>👉 Swipe table horizontally to see all columns</span>
@@ -5667,45 +5779,87 @@ function renderPersonnelDirectory(container) {
               </tr>
             </thead>
             <tbody id="directoryTableBody">
-              ${displayedUsers.length === 0 ? `
+              ${branchGroups.length === 0 ? `
                 <tr>
-                  <td colspan="12" style="text-align: center; color: #64748b; padding: 24px;">
+                  <td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">
                     No personnel records found for this branch.
                   </td>
                 </tr>
-              ` : displayedUsers.map(u => {
-                const b = AppState.branches.find(br => br.id === u.branchId);
-                return `
-                  <tr class="leave-card-row" data-branch="${u.branchId}">
-                    <td data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b;">${u.beltNo}</small></td>
-                    <td data-label="Officer Name"><strong>${u.name}</strong></td>
-                    <td data-label="Rank">${u.rank}</td>
-                    <td data-label="Cyber Branch"><span class="branch-tag">${b ? b.name : u.branchId}</span></td>
-                    <td data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
-                    <td data-label="Contact Details"><small>${u.mobile ? `📞 ${u.mobile}` : ''}<br>${u.email || ''}</small></td>
-                    <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
-                    <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
-                    <td data-label="Action / Security">
-                      <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                        <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
-                        ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5;" title="Remove Official">🗑️</button>` : ''}
+              ` : branchGroups.map(group => `
+                <!-- Branch Section Header Row -->
+                <tr class="dir-branch-header-row" data-branch="${group.branch.id}">
+                  <td colspan="9">
+                    <div class="dir-branch-hdr-wrap">
+                      <div class="dir-branch-hdr-left">
+                        <span class="dir-branch-hdr-icon">🏢</span>
+                        <strong class="dir-branch-hdr-title">${group.branch.name}</strong>
+                        ${group.branch.hindi ? `<span class="dir-branch-hdr-hindi">${group.branch.hindi}</span>` : ''}
                       </div>
-                    </td>
-                  </tr>
-                `;
-              }).join("")}
+                      <div class="dir-branch-hdr-right">
+                        <span class="badge dir-branch-count-badge">${group.users.length} ${group.users.length === 1 ? 'Official' : 'Personnel'}</span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                ${group.users.map(u => {
+                  return `
+                    <tr class="leave-card-row dir-user-row" data-branch="${group.branch.id}">
+                      <td data-label="ID / Belt No."><strong>${u.id}</strong><br><small style="color: #64748b; font-weight: 600;">${u.beltNo}</small></td>
+                      <td data-label="Officer Name">
+                        <div style="font-weight: 700; color: #0f274c;">${u.name}</div>
+                        ${u.role === 'sp_cyber' 
+                          ? '<span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; font-weight: 700;">★ Sanctioning Authority</span>' 
+                          : (u.role === 'branch_incharge' || u.isApprover) 
+                            ? '<span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; font-weight: 700;">★ Branch Incharge</span>' 
+                            : '<span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Branch Staff</span>'
+                        }
+                      </td>
+                      <td data-label="Rank"><span style="font-weight: 600;">${u.rank}</span></td>
+                      <td data-label="Cyber Branch"><span class="branch-tag">${group.branch.name}</span></td>
+                      <td data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
+                      <td data-label="Contact Details"><small>${u.mobile ? `📞 ${u.mobile}` : ''}<br>${u.email || ''}</small></td>
+                      <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
+                      <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
+                      <td data-label="Action / Security">
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                          <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
+                          ${isSP && u.role !== 'sp_cyber' ? `<button class="btn btn-outline btn-sm" onclick="deleteUserPrompt('${u.id}')" style="color: #dc2626; border-color: #fca5a5;" title="Remove Official">🗑️</button>` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join("")}
+              `).join("")}
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- MOBILE VIEW: All Personnel Cards OPEN with Full Details -->
+      <!-- MOBILE VIEW: Grouped by Branch with All Personnel Cards OPEN -->
       <div class="vdesk-mobile-view" id="directoryMobileCards">
-        ${displayedUsers.length === 0 ? `
+        ${branchGroups.length === 0 ? `
           <div style="text-align: center; color: #64748b; padding: 24px; background: #fff; border-radius: 10px; border: 1.5px dashed #cbd5e1;">
             No personnel records found for this branch.
           </div>
-        ` : displayedUsers.map(u => renderPersonnelMobileCard(u)).join("")}
+        ` : branchGroups.map(group => `
+          <div class="dir-mobile-branch-group" data-branch="${group.branch.id}">
+            <div class="dir-mobile-branch-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.2rem; line-height: 1;">🏢</span>
+                <div>
+                  <strong style="font-size: 0.95rem; color: #0f274c; display: block; line-height: 1.3;">${group.branch.name}</strong>
+                  ${group.branch.hindi ? `<span style="font-size: 0.72rem; color: #64748b; font-weight: 500;">${group.branch.hindi}</span>` : ''}
+                </div>
+              </div>
+              <span class="badge dir-mobile-branch-count-badge">
+                ${group.users.length} ${group.users.length === 1 ? 'Official' : 'Personnel'}
+              </span>
+            </div>
+            <div class="dir-mobile-branch-cards">
+              ${group.users.map(u => renderPersonnelMobileCard(u)).join("")}
+            </div>
+          </div>
+        `).join("")}
       </div>
     </div>
   `;
@@ -5717,34 +5871,102 @@ function filterDirectoryTable() {
   const searchVal = document.getElementById("directorySearchInput")?.value.toLowerCase().trim() || "";
   const branchVal = document.getElementById("directoryBranchFilter")?.value || "";
 
-  // 1. Filter Desktop Table Rows
+  // 1. Filter Desktop Table Rows & Branch Headers
   const tbody = document.getElementById("directoryTableBody");
   if (tbody) {
-    const rows = tbody.querySelectorAll("tr");
-    rows.forEach(r => {
-      const branchMatch = !branchVal || r.dataset.branch === branchVal;
-      const textMatch = !searchVal || r.textContent.toLowerCase().includes(searchVal);
-      if (branchMatch && textMatch) {
-        r.style.display = "";
+    const branchHeaders = tbody.querySelectorAll(".dir-branch-header-row");
+    let totalVisibleRows = 0;
+
+    branchHeaders.forEach(header => {
+      const bId = header.dataset.branch;
+      if (branchVal && bId !== branchVal) {
+        header.style.display = "none";
+        tbody.querySelectorAll(`.dir-user-row[data-branch="${bId}"]`).forEach(r => r.style.display = "none");
+        return;
+      }
+
+      const memberRows = tbody.querySelectorAll(`.dir-user-row[data-branch="${bId}"]`);
+      let visibleInBranch = 0;
+      memberRows.forEach(r => {
+        const textMatch = !searchVal || r.textContent.toLowerCase().includes(searchVal);
+        if (textMatch) {
+          r.style.display = "";
+          visibleInBranch++;
+          totalVisibleRows++;
+        } else {
+          r.style.display = "none";
+        }
+      });
+
+      if (visibleInBranch > 0) {
+        header.style.display = "";
       } else {
-        r.style.display = "none";
+        header.style.display = "none";
       }
     });
+
+    let noRowsEl = document.getElementById("dirTableNoResults");
+    if (totalVisibleRows === 0 && branchHeaders.length > 0) {
+      if (!noRowsEl) {
+        const tr = document.createElement("tr");
+        tr.id = "dirTableNoResults";
+        tr.innerHTML = `<td colspan="9" style="text-align: center; color: #64748b; padding: 24px; font-weight: 500;">No matching personnel found for "${searchVal}".</td>`;
+        tbody.appendChild(tr);
+      } else {
+        noRowsEl.style.display = "";
+      }
+    } else if (noRowsEl) {
+      noRowsEl.style.display = "none";
+    }
   }
 
-  // 2. Filter Mobile Open Cards
+  // 2. Filter Mobile Open Cards & Branch Groups
   const cardsContainer = document.getElementById("directoryMobileCards");
   if (cardsContainer) {
-    const cards = cardsContainer.querySelectorAll(".vdesk-mobile-card");
-    cards.forEach(c => {
-      const branchMatch = !branchVal || c.dataset.branch === branchVal;
-      const textMatch = !searchVal || c.textContent.toLowerCase().includes(searchVal);
-      if (branchMatch && textMatch) {
-        c.style.display = "flex";
+    const branchGroups = cardsContainer.querySelectorAll(".dir-mobile-branch-group");
+    let totalVisibleMobile = 0;
+
+    branchGroups.forEach(group => {
+      const bId = group.dataset.branch;
+      if (branchVal && bId !== branchVal) {
+        group.style.display = "none";
+        return;
+      }
+
+      const cards = group.querySelectorAll(".vdesk-mobile-card");
+      let visibleInGroup = 0;
+      cards.forEach(c => {
+        const textMatch = !searchVal || c.textContent.toLowerCase().includes(searchVal);
+        if (textMatch) {
+          c.style.display = "flex";
+          visibleInGroup++;
+          totalVisibleMobile++;
+        } else {
+          c.style.display = "none";
+        }
+      });
+
+      if (visibleInGroup > 0) {
+        group.style.display = "";
       } else {
-        c.style.display = "none";
+        group.style.display = "none";
       }
     });
+
+    let noMobileResults = document.getElementById("dirMobileNoResults");
+    if (totalVisibleMobile === 0 && branchGroups.length > 0) {
+      if (!noMobileResults) {
+        const div = document.createElement("div");
+        div.id = "dirMobileNoResults";
+        div.style.cssText = "text-align: center; color: #64748b; padding: 24px; background: #fff; border-radius: 10px; border: 1.5px dashed #cbd5e1; margin-top: 10px;";
+        div.textContent = `No matching personnel found for "${searchVal}".`;
+        cardsContainer.appendChild(div);
+      } else {
+        noMobileResults.style.display = "block";
+      }
+    } else if (noMobileResults) {
+      noMobileResults.style.display = "none";
+    }
   }
 }
 

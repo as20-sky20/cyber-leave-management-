@@ -7212,3 +7212,112 @@ body.force-mobile-view .sanction-meta-row {
     padding: 6mm 8mm !important;
   }
 }
+
+/* =====================================================
+   PERSONNEL DIRECTORY BRANCH GROUPING (DESKTOP & MOBILE)
+   ===================================================== */
+.dir-branch-header-row td {
+  background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 100%) !important;
+  border-top: 2px solid #cbd5e1 !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  border-left: 5px solid #0f274c !important;
+  padding: 10px 16px !important;
+}
+
+.dir-branch-hdr-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dir-branch-hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dir-branch-hdr-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.dir-branch-hdr-title {
+  font-size: 1.02rem;
+  color: #0f274c;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.dir-branch-hdr-hindi {
+  display: inline-block;
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 600;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.dir-branch-count-badge {
+  background: #0f274c !important;
+  color: #ffd700 !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  padding: 4px 11px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 1px 3px rgba(15, 39, 76, 0.2);
+  white-space: nowrap;
+}
+
+.dir-user-row {
+  transition: background-color 0.15s ease;
+}
+
+.dir-user-row:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* Mobile branch grouping container */
+.dir-mobile-branch-group {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(15, 39, 76, 0.05);
+}
+
+.dir-mobile-branch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.dir-mobile-branch-count-badge {
+  background: #0f274c !important;
+  color: #ffd700 !important;
+  font-size: 0.72rem !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  margin-left: auto !important;
+  white-space: nowrap !important;
+}
+
+.dir-mobile-branch-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dir-mobile-branch-cards .vdesk-mobile-card {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(15, 39, 76, 0.04);
+}
