@@ -7321,3 +7321,78 @@ body.force-mobile-view .sanction-meta-row {
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 4px rgba(15, 39, 76, 0.04);
 }
+
+/* =====================================================
+   BRANCHES STATS GRID & COMPACT MOBILE CARD STYLES
+   ===================================================== */
+.branches-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.branches-stats-grid .stat-card {
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.branches-stats-grid .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 39, 76, 0.1);
+}
+
+.branches-stats-grid .stat-card:active {
+  transform: scale(0.98);
+}
+
+.stat-open-hint {
+  color: #2563eb;
+  font-weight: 700;
+  display: inline-block;
+  margin-left: 2px;
+}
+
+@media (max-width: 768px) {
+  body:not(.force-desktop-view) .branches-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    min-height: 72px !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card .stat-header {
+    margin-bottom: 2px !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card .stat-title {
+    font-size: 0.67rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2px !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card .stat-icon {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card .stat-number {
+    font-size: 1.25rem !important;
+    line-height: 1.15 !important;
+    margin: 2px 0 !important;
+    font-weight: 800 !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card .stat-subtext {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  body:not(.force-desktop-view) .branches-stats-grid .stat-card .stat-open-hint {
+    color: #2563eb !important;
+    font-weight: 700 !important;
+  }
+}

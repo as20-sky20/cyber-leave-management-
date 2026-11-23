@@ -4601,31 +4601,42 @@ function renderBranchesView(container) {
       </div>
     </div>
 
-    <!-- SUMMARY METRICS -->
-    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
-      <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(15, 39, 76, 0.1); color: #0f274c;">🏢</div>
+    <!-- SUMMARY METRICS (INTERACTIVE & COMPACT ON MOBILE) -->
+    <div class="stats-grid branches-stats-grid">
+      <div class="stat-card blue" onclick="openAllWingsModal()" style="cursor: pointer;" title="Click to view all 13 Cyber Wings list & details">
+        <div class="stat-header">
+          <span class="stat-title">Cyber Wings</span>
+          <div class="stat-icon" style="font-size: 1rem;">🏢</div>
+        </div>
         <div class="stat-number">${totalBranches}</div>
-        <div class="stat-title">Cyber Wings</div>
-        <div class="stat-subtext">Active specialized units</div>
+        <div class="stat-subtext">Active specialized units &bull; <span class="stat-open-hint">Tap to open &rarr;</span></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(30, 58, 138, 0.1); color: #1e3a8a;">👥</div>
+
+      <div class="stat-card gold" onclick="openAllPersonnelModal()" style="cursor: pointer;" title="Click to view Total Personnel details">
+        <div class="stat-header">
+          <span class="stat-title">Total Personnel</span>
+          <div class="stat-icon" style="font-size: 1rem;">👥</div>
+        </div>
         <div class="stat-number">${totalPersonnel}</div>
-        <div class="stat-title">Total Personnel</div>
-        <div class="stat-subtext">Posted cyber officers</div>
+        <div class="stat-subtext">Posted cyber officers &bull; <span class="stat-open-hint">Tap to open &rarr;</span></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(22, 163, 74, 0.1); color: #16a34a;">🟢</div>
+
+      <div class="stat-card green" onclick="openTodaysOnDutyModal()" style="cursor: pointer;" title="Click to view Officer(s) on Duty today">
+        <div class="stat-header">
+          <span class="stat-title">Present / On Duty</span>
+          <div class="stat-icon" style="font-size: 1rem;">🟢</div>
+        </div>
         <div class="stat-number" style="color: #16a34a;">${totalOnDuty}</div>
-        <div class="stat-title">Present / On Duty</div>
-        <div class="stat-subtext">Effective deployed strength</div>
+        <div class="stat-subtext">Effective deployed strength &bull; <span class="stat-open-hint">Tap to open &rarr;</span></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">🔴</div>
+
+      <div class="stat-card red" onclick="openTodayOnLeaveDetails()" style="cursor: pointer;" title="Click to view Officer(s) on Sanctioned Leave today">
+        <div class="stat-header">
+          <span class="stat-title">On Leave</span>
+          <div class="stat-icon" style="font-size: 1rem;">🔴</div>
+        </div>
         <div class="stat-number" style="color: #dc2626;">${totalOnLeave}</div>
-        <div class="stat-title">On Sanctioned Leave</div>
-        <div class="stat-subtext">Absent with permission</div>
+        <div class="stat-subtext">${totalOnLeave > 0 ? 'Absent with permission &bull; ' : '0 Absent &bull; '}<span class="stat-open-hint">Tap to open &rarr;</span></div>
       </div>
     </div>
 
@@ -4771,6 +4782,239 @@ function filterBranchesTable() {
 
 function viewBranchInDirectory(branchId) {
   openBranchOfficersModal(branchId);
+}
+
+function openAllWingsModal() {
+  const modal = document.getElementById("categoryDetailModal");
+  const modalBody = document.getElementById("categoryDetailModalBody");
+  const modalTitle = document.getElementById("categoryDetailModalTitle");
+  const modalFooter = document.getElementById("categoryDetailModalFooter");
+  if (!modal || !modalBody) return;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `🏢 13 Specialized Cyber Crime Branches & Wings`;
+  }
+
+  const branches = AppState.branches || [];
+
+  modalBody.innerHTML = `
+    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <strong style="color: #0f274c; font-size: 0.95rem;">Haryana State Cyber Crime Wing Directory</strong>
+        <div style="font-size: 0.78rem; color: #64748b;">Total <strong>13 Specialized Cyber Branches</strong> under SP Cyber, Panchkula</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeModals(); document.getElementById('branchesTable')?.scrollIntoView({ behavior: 'smooth' });">
+        Scroll to Table &darr;
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto;">
+      ${branches.map((b, idx) => {
+        const incharge = AppState.users.find(u => u.branchId === b.id && (u.role === "branch_incharge" || u.isApprover));
+        const members = AppState.users.filter(u => u.branchId === b.id);
+        const onLeave = AppState.leaves.filter(l => l.branchId === b.id && l.status === "APPROVED" && l.fromDate <= today && l.toDate >= today).length;
+        const onDuty = Math.max(0, members.length - onLeave);
+
+        return `
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="flex: 1; min-width: 200px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-weight: 700; color: #64748b; font-size: 0.78rem;">#${idx + 1}</span>
+                <strong style="color: #0f274c; font-size: 0.88rem;">${b.name}</strong>
+                <span class="badge" style="background: #0f274c; color: #ffd700; font-size: 0.65rem; padding: 1px 6px; border-radius: 4px;">${b.id.toUpperCase()}</span>
+              </div>
+              <div style="font-size: 0.75rem; color: #475569; margin-top: 3px;">
+                ${incharge ? `Incharge: <strong>${incharge.name}</strong> (${incharge.rank}) &bull; <a href="tel:${incharge.mobile}" style="color: #2563eb; text-decoration: none;">📞 ${incharge.mobile}</a>` : `<span style="color: #dc2626;">Under Posting</span>`}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="badge" style="background: #dcfce7; color: #15803d; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;">🟢 ${onDuty} Duty</span>
+              ${onLeave > 0 ? `<span class="badge" style="background: #fee2e2; color: #dc2626; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;">🔴 ${onLeave} Leave</span>` : ''}
+              <button class="btn btn-outline btn-sm" onclick="openBranchOfficersModal('${b.id}')" style="padding: 3px 8px; font-size: 0.74rem;">Roster &rarr;</button>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  if (modalFooter) {
+    modalFooter.innerHTML = `
+      <button class="btn btn-primary" onclick="closeModals(); switchTab('directory');">Open Full Staff Directory &rarr;</button>
+      <button class="btn btn-outline" onclick="closeModals()">Close</button>
+    `;
+  }
+
+  modal.classList.add("active");
+}
+
+function openAllPersonnelModal() {
+  const modal = document.getElementById("categoryDetailModal");
+  const modalBody = document.getElementById("categoryDetailModalBody");
+  const modalTitle = document.getElementById("categoryDetailModalTitle");
+  const modalFooter = document.getElementById("categoryDetailModalFooter");
+  if (!modal || !modalBody) return;
+
+  const totalUsers = AppState.users || [];
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `👥 Total Deployed Force (${totalUsers.length} Personnel)`;
+  }
+
+  // Group by branch
+  const branchMap = new Map();
+  (AppState.branches || []).forEach(b => branchMap.set(b.id, { branch: b, users: [] }));
+  const unassigned = [];
+  totalUsers.forEach(u => {
+    if (u.branchId && branchMap.has(u.branchId)) {
+      branchMap.get(u.branchId).users.push(u);
+    } else {
+      unassigned.push(u);
+    }
+  });
+
+  const branchGroups = [];
+  for (const g of branchMap.values()) {
+    if (g.users.length > 0) {
+      g.users = sortBranchPersonnel(g.users);
+      branchGroups.push(g);
+    }
+  }
+
+  modalBody.innerHTML = `
+    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <strong style="color: #0f274c; font-size: 0.95rem;">Cyber Crime Branch Deployment Strength</strong>
+        <div style="font-size: 0.78rem; color: #64748b;">Total <strong>${totalUsers.length} Officers & Personnel</strong> across all 13 specialized branches</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="closeModals(); switchTab('directory');">
+        Open Staff Directory Tab &rarr;
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto;">
+      ${branchGroups.map(g => `
+        <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 10px 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 8px;">
+            <strong style="color: #0f274c; font-size: 0.88rem;">🏢 ${g.branch.name}</strong>
+            <span class="badge" style="background: #0f274c; color: #ffd700; font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700;">
+              ${g.users.length} Personnel
+            </span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${g.users.map(u => `
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; background: #f8fafc; padding: 6px 10px; border-radius: 6px;">
+                <div>
+                  <strong style="color: #1e293b;">${u.name}</strong>
+                  <span style="color: #64748b; font-size: 0.74rem;">(${u.rank} - ${u.beltNo})</span>
+                  ${u.role === 'sp_cyber' ? '<span class="badge" style="background:#fef3c7; color:#92400e; font-size:0.65rem; padding:1px 5px; margin-left:4px;">SP Cyber</span>' : (u.role === 'branch_incharge' || u.isApprover) ? '<span class="badge" style="background:#eff6ff; color:#1d4ed8; font-size:0.65rem; padding:1px 5px; margin-left:4px;">Incharge</span>' : ''}
+                </div>
+                ${u.mobile ? `<a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-size: 0.75rem; font-weight: 600;">📞 ${u.mobile}</a>` : ''}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  if (modalFooter) {
+    modalFooter.innerHTML = `
+      <button class="btn btn-primary" onclick="closeModals(); switchTab('directory');">Go to Staff Directory &rarr;</button>
+      <button class="btn btn-outline" onclick="closeModals()">Close</button>
+    `;
+  }
+
+  modal.classList.add("active");
+}
+
+function openTodaysOnDutyModal() {
+  const modal = document.getElementById("categoryDetailModal");
+  const modalBody = document.getElementById("categoryDetailModalBody");
+  const modalTitle = document.getElementById("categoryDetailModalTitle");
+  const modalFooter = document.getElementById("categoryDetailModalFooter");
+  if (!modal || !modalBody) return;
+
+  const today = new Date().toISOString().split("T")[0];
+  const dateFormatted = formatDate(today);
+
+  // Find users currently on approved leave today
+  const onLeaveUserIds = new Set();
+  (AppState.leaves || []).forEach(l => {
+    if (l.status === "APPROVED" && l.fromDate <= today && l.toDate >= today) {
+      onLeaveUserIds.add(l.applicantId);
+    }
+  });
+
+  const onDutyUsers = (AppState.users || []).filter(u => !onLeaveUserIds.has(u.id));
+
+  if (modalTitle) {
+    modalTitle.innerHTML = `🟢 Officers Currently Present / On Duty (${onDutyUsers.length})`;
+  }
+
+  // Group by branch
+  const branchMap = new Map();
+  (AppState.branches || []).forEach(b => branchMap.set(b.id, { branch: b, users: [] }));
+  onDutyUsers.forEach(u => {
+    if (u.branchId && branchMap.has(u.branchId)) {
+      branchMap.get(u.branchId).users.push(u);
+    }
+  });
+
+  const branchGroups = [];
+  for (const g of branchMap.values()) {
+    if (g.users.length > 0) {
+      g.users = sortBranchPersonnel(g.users);
+      branchGroups.push(g);
+    }
+  }
+
+  modalBody.innerHTML = `
+    <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <strong style="color: #15803d; font-size: 0.95rem;">Effective Deployed Cyber Strength &bull; ${dateFormatted}</strong>
+        <div style="font-size: 0.78rem; color: #166534;"><strong>${onDutyUsers.length} Officers / Personnel</strong> actively deployed on cyber operations today</div>
+      </div>
+      <span class="badge" style="background: #15803d; color: #ffffff; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+        ${Math.round((onDutyUsers.length / (AppState.users.length || 1)) * 100)}% Operational
+      </span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto;">
+      ${branchGroups.map(g => `
+        <div style="background: #ffffff; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 8px;">
+            <strong style="color: #0f274c; font-size: 0.88rem;">🏢 ${g.branch.name}</strong>
+            <span class="badge" style="background: #15803d; color: #ffffff; font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700;">
+              🟢 ${g.users.length} On Duty
+            </span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${g.users.map(u => `
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; background: #f0fdf4; padding: 6px 10px; border-radius: 6px;">
+                <div>
+                  <strong style="color: #14532d;">${u.name}</strong>
+                  <span style="color: #4b5563; font-size: 0.74rem;">(${u.rank} - ${u.beltNo})</span>
+                  ${u.role === 'sp_cyber' ? '<span class="badge" style="background:#fef3c7; color:#92400e; font-size:0.65rem; padding:1px 5px; margin-left:4px;">SP Cyber</span>' : (u.role === 'branch_incharge' || u.isApprover) ? '<span class="badge" style="background:#eff6ff; color:#1d4ed8; font-size:0.65rem; padding:1px 5px; margin-left:4px;">Incharge</span>' : ''}
+                </div>
+                ${u.mobile ? `<a href="tel:${u.mobile}" style="color: #2563eb; text-decoration: none; font-size: 0.75rem; font-weight: 600;">📞 ${u.mobile}</a>` : ''}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  if (modalFooter) {
+    modalFooter.innerHTML = `
+      <button class="btn btn-outline" onclick="closeModals()">Close</button>
+    `;
+  }
+
+  modal.classList.add("active");
 }
 
 function exportBranchesToCSV() {
