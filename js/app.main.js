@@ -3457,20 +3457,10 @@ function renderPersonnelMobileCard(u) {
         <span class="branch-tag" style="margin-left: auto; font-size: 0.72rem; padding: 2px 8px;">${branchName}</span>
       </div>
 
-      <!-- LEAVE BALANCES (FULLY OPEN) -->
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0;">
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 6px; text-align: center;">
-          <div style="font-size: 0.65rem; color: #166534; font-weight: 700; text-transform: uppercase;">CL Balance</div>
-          <div style="font-size: 1.1rem; font-weight: 800; color: #15803d; line-height: 1.2; margin-top: 2px;">${u.leaveBalances?.CL ?? 0} <small style="font-size: 0.68rem; font-weight: 600;">Days</small></div>
-        </div>
-        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 6px; text-align: center;">
-          <div style="font-size: 0.65rem; color: #1e40af; font-weight: 700; text-transform: uppercase;">EL Balance</div>
-          <div style="font-size: 1.1rem; font-weight: 800; color: #1d4ed8; line-height: 1.2; margin-top: 2px;">${u.leaveBalances?.EL ?? 0} <small style="font-size: 0.68rem; font-weight: 600;">Days</small></div>
-        </div>
-        <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 8px 6px; text-align: center;">
-          <div style="font-size: 0.65rem; color: #854d0e; font-weight: 700; text-transform: uppercase;">RH Balance</div>
-          <div style="font-size: 1.1rem; font-weight: 800; color: #a16207; line-height: 1.2; margin-top: 2px;">${u.leaveBalances?.RH ?? 0} <small style="font-size: 0.68rem; font-weight: 600;">Days</small></div>
-        </div>
+      <!-- LEAVE BALANCE (CL ONLY) -->
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; margin: 4px 0;">
+        <span style="font-size: 0.72rem; color: #166534; font-weight: 700; text-transform: uppercase;">Casual Leave (CL) Balance:</span>
+        <span style="font-size: 1.05rem; font-weight: 800; color: #15803d; line-height: 1;">${u.leaveBalances?.CL ?? 0} <small style="font-size: 0.72rem; font-weight: 600;">Days</small></span>
       </div>
 
       <!-- CONTACT INFO (FULLY OPEN) -->
@@ -6018,21 +6008,20 @@ function renderPersonnelDirectory(container) {
                 <th>System Role</th>
                 <th>Contact</th>
                 <th>CL Balance</th>
-                <th>EL Balance</th>
                 <th>Action / Security</th>
               </tr>
             </thead>
             <tbody id="directoryTableBody">
               ${branchGroups.length === 0 ? `
                 <tr>
-                  <td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">
+                  <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">
                     No personnel records found for this branch.
                   </td>
                 </tr>
               ` : branchGroups.map(group => `
                 <!-- Branch Section Header Row -->
                 <tr class="dir-branch-header-row" data-branch="${group.branch.id}">
-                  <td colspan="9">
+                  <td colspan="8">
                     <div class="dir-branch-hdr-wrap">
                       <div class="dir-branch-hdr-left">
                         <span class="dir-branch-hdr-icon">🏢</span>
@@ -6063,7 +6052,6 @@ function renderPersonnelDirectory(container) {
                       <td data-label="System Role"><span style="font-size: 0.8rem; font-weight: 600;">${getRoleDisplay(u.role)}</span></td>
                       <td data-label="Contact Details"><small>${u.mobile ? `📞 ${u.mobile}` : ''}<br>${u.email || ''}</small></td>
                       <td data-label="CL Balance"><strong>${u.leaveBalances?.CL ?? 0}</strong> Days</td>
-                      <td data-label="EL Balance"><strong>${u.leaveBalances?.EL ?? 0}</strong> Days</td>
                       <td data-label="Action / Security">
                         <div style="display: flex; gap: 4px; flex-wrap: wrap;">
                           <button class="btn btn-outline btn-sm" onclick="resetUserPinPrompt('${u.id}')" title="Change / Set Security PIN Password">🔑 PIN</button>
@@ -6154,7 +6142,7 @@ function filterDirectoryTable() {
       if (!noRowsEl) {
         const tr = document.createElement("tr");
         tr.id = "dirTableNoResults";
-        tr.innerHTML = `<td colspan="9" style="text-align: center; color: #64748b; padding: 24px; font-weight: 500;">No matching personnel found for "${searchVal}".</td>`;
+        tr.innerHTML = `<td colspan="8" style="text-align: center; color: #64748b; padding: 24px; font-weight: 500;">No matching personnel found for "${searchVal}".</td>`;
         tbody.appendChild(tr);
       } else {
         noRowsEl.style.display = "";
