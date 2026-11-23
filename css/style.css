@@ -2226,6 +2226,11 @@ table.data-table tr:hover {
    RESPONSIVE MOBILE VIEW (@media max-width: 768px & Force Mobile Class)
    ========================================================================== */
 @media (max-width: 991px) {
+  /* Hide upper 3-line hamburger menu button on mobile since navigation is at the bottom */
+  body:not(.force-desktop-view) .sidebar-toggle-btn {
+    display: none !important;
+  }
+
   body:not(.force-desktop-view) {
     padding-bottom: 0 !important;
   }
@@ -3239,6 +3244,9 @@ body.force-desktop-view .app-container {
 body.force-desktop-view .nav-bar {
   display: flex !important;
 }
+body.force-desktop-view .sidebar-toggle-btn {
+  display: flex !important;
+}
 body.force-desktop-view .mobile-bottom-nav {
   display: none !important;
 }
@@ -3616,6 +3624,9 @@ body.force-mobile-view .mobile-floating-left-nav-btn {
 }
 body.force-mobile-view .mobile-bottom-nav {
   display: flex !important;
+}
+body.force-mobile-view .sidebar-toggle-btn {
+  display: none !important;
 }
 body.force-mobile-view {
   padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
