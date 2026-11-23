@@ -1455,18 +1455,37 @@ table.data-table tr:hover {
 }
 
 .close-btn {
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 1.4rem;
-  cursor: pointer;
-  line-height: 1;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background 0.15s ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 50% !important;
+  font-size: 1.3rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease !important;
+  flex-shrink: 0 !important;
+  margin-left: 10px !important;
+  padding: 0 !important;
+  user-select: none !important;
 }
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #b91c1c !important;
+  color: #ffffff !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45) !important;
+}
+.close-btn:active {
+  transform: scale(0.92) !important;
+  background: #991b1b !important;
 }
 
 .modal-body {
@@ -6896,21 +6915,30 @@ body.force-mobile-view .sanction-meta-row {
 }
 
 .pdf-viewer-header .close-btn {
-  background: transparent !important;
-  border: none !important;
-  color: #94a3b8 !important;
-  font-size: 1.6rem !important;
-  line-height: 1 !important;
-  cursor: pointer !important;
-  padding: 0 4px !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: color 0.15s ease !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 50% !important;
+  font-size: 1.3rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  padding: 0 !important;
+  transition: transform 0.16s ease, background-color 0.16s ease !important;
 }
 
 .pdf-viewer-header .close-btn:hover {
+  background: #b91c1c !important;
   color: #ffffff !important;
+  transform: scale(1.1) !important;
 }
 
 .pdf-viewer-body {
