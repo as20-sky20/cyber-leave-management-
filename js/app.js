@@ -5892,16 +5892,6 @@ function renderHolidaysCalendar(container) {
       </div>
     </div>
 
-    <!-- POLICE LEAVE ADVISORY BANNER -->
-    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 12px;">
-      <span style="font-size: 1.25rem; line-height: 1;">📅</span>
-      <div style="font-size: 0.82rem; color: #166534; line-height: 1.5;">
-        <strong>हरियाणा सरकार आधिकारिक राजपत्रित अवकाश 2026 (Gazetted Holidays - 28 GH):</strong>
-        सरकारी कैलेंडर अनुसार कार्यदिवसों पर कुल <strong>28 आधिकारिक राजपत्रित अवकाश (28 GH)</strong> घोषित हैं। 
-        अन्य 11 प्रमुख पर्व (जैसे दीपावली, गणतंत्र/स्वतंत्रता दिवस, महाशिवरात्रि आदि) रविवार या शनिवार को पड़ते हैं जो पहले से ही सरकारी साप्ताहिक अवकाश (Weekly Off) हैं।
-      </div>
-    </div>
-
     <!-- FILTER & SEARCH TOOLBAR -->
     <div class="card-table-wrap">
       <div class="table-toolbar" style="flex-wrap: wrap; gap: 10px;">
