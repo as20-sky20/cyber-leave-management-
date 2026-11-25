@@ -4599,7 +4599,7 @@ function renderBranchesView(container) {
           <div class="stat-icon" style="font-size: 1rem;">🏢</div>
         </div>
         <div class="stat-number">${totalBranches}</div>
-        <div class="stat-subtext">Active specialized units &bull; <span class="stat-open-hint">Tap to open &rarr;</span></div>
+        <div class="stat-subtext">13 Units &bull; <span class="stat-open-hint">Open &rarr;</span></div>
       </div>
 
       <div class="stat-card gold" onclick="openAllPersonnelModal()" style="cursor: pointer;" title="Click to view Total Personnel details">
@@ -4608,7 +4608,7 @@ function renderBranchesView(container) {
           <div class="stat-icon" style="font-size: 1rem;">👥</div>
         </div>
         <div class="stat-number">${totalPersonnel}</div>
-        <div class="stat-subtext">Posted cyber officers &bull; <span class="stat-open-hint">Tap to open &rarr;</span></div>
+        <div class="stat-subtext">Posted Officers &bull; <span class="stat-open-hint">Open &rarr;</span></div>
       </div>
 
       <div class="stat-card green" onclick="openTodaysOnDutyModal()" style="cursor: pointer;" title="Click to view Officer(s) on Duty today">
@@ -4617,7 +4617,7 @@ function renderBranchesView(container) {
           <div class="stat-icon" style="font-size: 1rem;">🟢</div>
         </div>
         <div class="stat-number" style="color: #16a34a;">${totalOnDuty}</div>
-        <div class="stat-subtext">Effective deployed strength &bull; <span class="stat-open-hint">Tap to open &rarr;</span></div>
+        <div class="stat-subtext">Deployed Today &bull; <span class="stat-open-hint">Open &rarr;</span></div>
       </div>
 
       <div class="stat-card red" onclick="openTodayOnLeaveDetails()" style="cursor: pointer;" title="Click to view Officer(s) on Sanctioned Leave today">
@@ -4626,7 +4626,7 @@ function renderBranchesView(container) {
           <div class="stat-icon" style="font-size: 1rem;">🔴</div>
         </div>
         <div class="stat-number" style="color: #dc2626;">${totalOnLeave}</div>
-        <div class="stat-subtext">${totalOnLeave > 0 ? 'Absent with permission &bull; ' : '0 Absent &bull; '}<span class="stat-open-hint">Tap to open &rarr;</span></div>
+        <div class="stat-subtext">${totalOnLeave > 0 ? 'On Leave' : '0 Absent'} &bull; <span class="stat-open-hint">Open &rarr;</span></div>
       </div>
     </div>
 
@@ -4763,9 +4763,9 @@ function filterBranchesTable() {
   rows.forEach(r => {
     const text = r.textContent.toLowerCase();
     if (!searchVal || text.includes(searchVal)) {
-      r.style.display = "";
+      r.style.removeProperty("display");
     } else {
-      r.style.display = "none";
+      r.style.setProperty("display", "none", "important");
     }
   });
 }
@@ -6112,8 +6112,8 @@ function filterDirectoryTable() {
     branchHeaders.forEach(header => {
       const bId = header.dataset.branch;
       if (branchVal && bId !== branchVal) {
-        header.style.display = "none";
-        tbody.querySelectorAll(`.dir-user-row[data-branch="${bId}"]`).forEach(r => r.style.display = "none");
+        header.style.setProperty("display", "none", "important");
+        tbody.querySelectorAll(`.dir-user-row[data-branch="${bId}"]`).forEach(r => r.style.setProperty("display", "none", "important"));
         return;
       }
 
@@ -6122,18 +6122,18 @@ function filterDirectoryTable() {
       memberRows.forEach(r => {
         const textMatch = !searchVal || r.textContent.toLowerCase().includes(searchVal);
         if (textMatch) {
-          r.style.display = "";
+          r.style.removeProperty("display");
           visibleInBranch++;
           totalVisibleRows++;
         } else {
-          r.style.display = "none";
+          r.style.setProperty("display", "none", "important");
         }
       });
 
       if (visibleInBranch > 0) {
-        header.style.display = "";
+        header.style.removeProperty("display");
       } else {
-        header.style.display = "none";
+        header.style.setProperty("display", "none", "important");
       }
     });
 
@@ -6145,10 +6145,11 @@ function filterDirectoryTable() {
         tr.innerHTML = `<td colspan="8" style="text-align: center; color: #64748b; padding: 24px; font-weight: 500;">No matching personnel found for "${searchVal}".</td>`;
         tbody.appendChild(tr);
       } else {
-        noRowsEl.style.display = "";
+        noRowsEl.innerHTML = `<td colspan="8" style="text-align: center; color: #64748b; padding: 24px; font-weight: 500;">No matching personnel found for "${searchVal}".</td>`;
+        noRowsEl.style.removeProperty("display");
       }
     } else if (noRowsEl) {
-      noRowsEl.style.display = "none";
+      noRowsEl.style.setProperty("display", "none", "important");
     }
   }
 
@@ -6161,7 +6162,7 @@ function filterDirectoryTable() {
     branchGroups.forEach(group => {
       const bId = group.dataset.branch;
       if (branchVal && bId !== branchVal) {
-        group.style.display = "none";
+        group.style.setProperty("display", "none", "important");
         return;
       }
 
@@ -6170,18 +6171,18 @@ function filterDirectoryTable() {
       cards.forEach(c => {
         const textMatch = !searchVal || c.textContent.toLowerCase().includes(searchVal);
         if (textMatch) {
-          c.style.display = "flex";
+          c.style.setProperty("display", "flex", "important");
           visibleInGroup++;
           totalVisibleMobile++;
         } else {
-          c.style.display = "none";
+          c.style.setProperty("display", "none", "important");
         }
       });
 
       if (visibleInGroup > 0) {
-        group.style.display = "";
+        group.style.removeProperty("display");
       } else {
-        group.style.display = "none";
+        group.style.setProperty("display", "none", "important");
       }
     });
 
@@ -6194,6 +6195,7 @@ function filterDirectoryTable() {
         div.textContent = `No matching personnel found for "${searchVal}".`;
         cardsContainer.appendChild(div);
       } else {
+        noMobileResults.textContent = `No matching personnel found for "${searchVal}".`;
         noMobileResults.style.display = "block";
       }
     } else if (noMobileResults) {
